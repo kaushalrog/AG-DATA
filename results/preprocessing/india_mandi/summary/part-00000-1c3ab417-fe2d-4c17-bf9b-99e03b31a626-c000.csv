@@ -1,0 +1,2 @@
+dataset,raw_records,records_written,duplicates_removed,undated_quarantined,valid_records,outliers_flagged,min_date,max_date,learn_bounds_seconds,write_seconds
+india_mandi,56879072,56683027,196045,0,54728238,382538,2000-10-19,2024-02-02,154.469632334,258.223187875

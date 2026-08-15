@@ -1,0 +1,86 @@
+# ================================================================
+# HDFS cluster for the Agricultural Big Data project.
+#
+# One NameNode + three DataNodes, so that replication and DataNode
+# failure are genuinely demonstrable rather than asserted: with a
+# single DataNode, dfs.replication is capped at 1 and killing it just
+# breaks the cluster. With three, `hdfs fsck` shows real replica
+# placement and a node can be stopped while reads keep working.
+#
+# Kafka is deliberately NOT here — it runs natively via Homebrew, to
+# keep container memory available for HDFS and Spark on a 16 GB machine.
+#
+#   docker compose -f docker/docker-compose.yml up -d
+#   docker compose -f docker/docker-compose.yml down     # keeps volumes
+#   docker compose -f docker/docker-compose.yml down -v  # wipes HDFS
+# ================================================================
+
+services:
+
+  namenode:
+    image: apache/hadoop:3.4.1
+    container_name: agri-namenode
+    hostname: namenode
+    platform: linux/arm64          # Apple Silicon
+    user: root
+    command: ["/bin/bash", "-c", "/opt/entrypoint/namenode-entrypoint.sh"]
+    ports:
+      - "9870:9870"   # NameNode web UI  -> http://localhost:9870
+      - "9000:9000"   # HDFS RPC (fs.defaultFS)
+    environment:
+      HADOOP_HOME: /opt/hadoop
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+      - ./entrypoint:/opt/entrypoint:ro
+      # Staging mount: lets `hdfs dfs -put` read the local datasets
+      # directly instead of copying ~11 GB into the container first.
+      - ../data:/staging:ro
+    healthcheck:
+      # The NameNode is only useful once it has left safe mode.
+      test: ["CMD-SHELL", "hdfs dfsadmin -safemode get | grep -q OFF"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
+
+  datanode1: &datanode
+    image: apache/hadoop:3.4.1
+    container_name: agri-datanode1
+    hostname: datanode1
+    platform: linux/arm64
+    user: root
+    command: ["/bin/bash", "-c", "/opt/entrypoint/datanode-entrypoint.sh"]
+    environment:
+      HADOOP_HOME: /opt/hadoop
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode1_data:/hadoop/dfs/data
+      - ./entrypoint:/opt/entrypoint:ro
+    depends_on:
+      namenode:
+        condition: service_started
+
+  datanode2:
+    <<: *datanode
+    container_name: agri-datanode2
+    hostname: datanode2
+    volumes:
+      - datanode2_data:/hadoop/dfs/data
+      - ./entrypoint:/opt/entrypoint:ro
+
+  datanode3:
+    <<: *datanode
+    container_name: agri-datanode3
+    hostname: datanode3
+    volumes:
+      - datanode3_data:/hadoop/dfs/data
+      - ./entrypoint:/opt/entrypoint:ro
+
+volumes:
+  namenode_data:
+  datanode1_data:
+  datanode2_data:
+  datanode3_data:

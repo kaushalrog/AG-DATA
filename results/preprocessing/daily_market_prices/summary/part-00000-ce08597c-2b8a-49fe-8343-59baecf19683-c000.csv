@@ -1,0 +1,2 @@
+dataset,raw_records,records_written,duplicates_removed,undated_quarantined,valid_records,outliers_flagged,min_date,max_date,learn_bounds_seconds,write_seconds
+daily_market_prices,75984017,75644801,339216,0,73859911,501432,2001-01-10,2026-04-21,141.839467291,214.463657791
