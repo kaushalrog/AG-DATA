@@ -45,8 +45,11 @@ object Readers {
         norm("Commodity").as(Canonical.commodity),
         norm("Variety").as(Canonical.variety),
         norm("Grade").as(Canonical.grade),
-        // Single ISO format confirmed across all 26 files.
-        to_date(trim(col("Arrival_Date")), "yyyy-MM-dd").as(Canonical.arrivalDate),
+        // Single ISO format confirmed across all 26 files. Still parsed
+        // with try_to_date so that one malformed value in 6.5 GB becomes
+        // a null the quality stage reports, rather than an exception that
+        // aborts the entire job.
+        expr("try_to_date(trim(Arrival_Date), 'yyyy-MM-dd')").as(Canonical.arrivalDate),
         col("Min_Price").as(Canonical.minPrice),
         col("Max_Price").as(Canonical.maxPrice),
         col("Modal_Price").as(Canonical.modalPrice),
@@ -88,12 +91,20 @@ object Readers {
         // No grade column in this source.
         lit(null).cast("string").as(Canonical.grade),
         // Two date formats are mixed across the 325 files, and the split
-        // does not follow the header split, so both are attempted per
-        // row. coalesce returns the first that parses; if neither does
-        // the result is null and the quality stage flags MISSING_DATE.
+        // does not follow the header split, so both are attempted per row.
+        //
+        // try_to_date, NOT to_date: under the CORRECTED time-parser policy
+        // to_date *throws* on a value that does not match the pattern, so
+        // a plain coalesce never reaches the second branch — the first
+        // ISO-formatted row kills the job
+        // (CANNOT_PARSE_TIMESTAMP: Text '2005-08-20' ... at index 2).
+        // try_to_date returns null instead, which is what lets coalesce
+        // fall through to the other format, and what lets a genuinely
+        // malformed date survive as null for the quality stage to flag
+        // as MISSING_DATE.
         coalesce(
-          to_date(trim(col("Reported_Date")), "dd MMM yyyy"),
-          to_date(trim(col("Reported_Date")), "yyyy-MM-dd")
+          expr("try_to_date(trim(Reported_Date), 'dd MMM yyyy')"),
+          expr("try_to_date(trim(Reported_Date), 'yyyy-MM-dd')")
         ).as(Canonical.arrivalDate),
         col("Min_Price").as(Canonical.minPrice),
         col("Max_Price").as(Canonical.maxPrice),
