@@ -312,6 +312,11 @@ The source is materially messier than the brief describes:
 | Raw→canonical readers, both sources | `ingestion/Readers.scala` | ✅ Source 1 verified |
 | Data-quality classifier + duplicate scan | `preprocessing/DataQuality.scala` | ✅ verified |
 | Distributed profiling job | `profiling/ProfileDatasets.scala` | ✅ **executed** |
+| Business-key deduplication | `preprocessing/Deduplicate.scala` | ✅ **executed, verified** |
+| Per-commodity outlier flagging | `preprocessing/OutlierTreatment.scala` | ✅ **executed, verified** |
+| Preprocessing → Parquet driver | `preprocessing/PreprocessDatasets.scala` | ✅ **executed on 132.9M rows** |
+| HDFS cluster (1 NN + 3 DN) | `docker/docker-compose.yml`, `scripts/hdfs_setup.sh` | 🔧 written, **not yet brought up** |
+| Kafka install + topic scripts | `scripts/kafka_setup.sh` | 🔧 Kafka installed; scripts **not yet run** |
 
 Reproduce:
 
@@ -418,23 +423,58 @@ canonical schema and is populated by both readers today. The final size will be
 
 ---
 
+## 7a. Phase 5–6 results (executed on the full dataset)
+
+| | Daily Market Prices | India Mandi |
+|---|---:|---:|
+| Raw records | 75,984,017 | 56,879,072 |
+| Duplicates removed | 339,216 | 196,045 |
+| **Records written** | **75,644,801** | **56,683,027** |
+| `VALID` after cleaning | 73,859,911 | 54,728,238 |
+| Outliers flagged | 501,432 (0.66%) | 382,538 (0.67%) |
+| Undated quarantined | 0 | 0 |
+| Learn-bounds time | 141.84 s | 154.47 s |
+| Parquet write time | 214.46 s | 258.22 s |
+| Year partitions | 26 | 25 |
+| Parquet size | 672 MB | 574 MB |
+
+Total: **132,327,828 records written**, 535,261 duplicates removed,
+**10.9 GB CSV → 1.2 GB Snappy Parquet (~9:1)**.
+
+**Verification performed** (not just asserted):
+
+- Duplicates removed (339,216 / 196,045) match the surplus-row counts found
+  independently during profiling, exactly.
+- A re-query of the written Parquet found **0 business keys still duplicated**.
+- Wheat's flagged rows lie outside its learned 1,817–3,294 band on both sides
+  (min 1,371; upper quartile 3,910; max 5,048).
+- Saffron: the 3 reports at 4,000,000 are flagged, and its 23 legitimate rows
+  (58,000–80,100) are not.
+
+**A gap found and fixed during verification.** The first implementation dropped
+commodities with fewer than 100 valid observations from bound-learning
+altogether, on small-sample grounds. That let Saffron's ₹4,000,000 reports pass
+unflagged against a ₹66,200 median. Rare commodities now fall back to a wide
+±10× median band instead of being skipped — blunt, but a 60× deviation is
+obviously wrong regardless of sample size.
+
+---
+
 ## 8. Next recommended action
 
-Phases 1–4 are complete and verified. Next, in order:
+Phases 1–6 are complete and verified. Next, in order:
 
-1. **Phase 5–6 — preprocessing → partitioned Parquet** under `data/processed/`,
-   written to local disk first. Deduplication on the business key, quality
-   flagging, per-commodity outlier treatment, partitioning by year. Not blocked
-   by anything.
-2. **Settle the Source 1 price-unit question** empirically, by comparing modal
-   prices for the same commodity/market/date across both sources during their
-   overlap period (2001 – Feb 2024). This is now possible because both sources
-   are profiled and their overlap is known.
-3. **Phase 7 — HDFS.** Start the Docker daemon, bring up HDFS with 2–3
-   DataNodes, load raw + processed data, verify replication.
-4. **Phase 8 onward** — feature engineering, then forecasting and anomaly
-   detection.
+1. **Phase 8 — feature engineering.** Lags, rolling mean/stddev, z-scores,
+   price spread, seasonal features, computed with Spark window functions over
+   the partitioned Parquet. Not blocked.
+2. **Phase 7 — bring up HDFS.** Docker Desktop must be started first, then
+   `./scripts/hdfs_setup.sh up && ./scripts/hdfs_setup.sh load`. The compose
+   file and scripts are written but **have not been executed**, so nothing
+   about the cluster is verified yet.
+3. **Settle the Source 1 price-unit question** empirically, comparing modal
+   prices for matching commodity/market/date rows across both sources during
+   their 2001 – Feb 2024 overlap.
+4. **Phases 9–10** — forecasting and anomaly detection.
 
-Nothing above is blocked. Phases 5–6 write to local disk and are repointed at
-`hdfs://` by changing a path prefix, so the HDFS work in step 3 can proceed in
-parallel without stalling the pipeline.
+Everything reads from local `data/processed/` today and is repointed at
+`hdfs://` by changing a path prefix, so step 2 does not block steps 1, 3 or 4.
