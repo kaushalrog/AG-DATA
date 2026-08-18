@@ -33,3 +33,7 @@ results/**/_temporary/
 .idea/
 .vscode/
 *.iml
+
+# Learned synthesis profile: regenerated deterministically by
+# SynthesisProfile from the real data, so it is not committed as binary.
+results/synthesis_profile/

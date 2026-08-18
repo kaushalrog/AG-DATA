@@ -11,7 +11,7 @@ School of AI · Faculty: Dr. Sreeja
 | Ashwin Tyagi | CB.AI.U4AID24167 |
 | Kaushal S | CB.AI.U4AID24168 |
 
-Last updated: 2026-08-15
+Last updated: 2026-08-18
 
 > Every number in this file was produced by running code in this repository.
 > Nothing here is estimated or assumed. Where a fact is not yet established,
@@ -317,6 +317,9 @@ The source is materially messier than the brief describes:
 | Preprocessing → Parquet driver | `preprocessing/PreprocessDatasets.scala` | ✅ **executed on 132.9M rows** |
 | HDFS cluster (1 NN + 3 DN) | `docker/docker-compose.yml`, `scripts/hdfs_setup.sh` | 🔧 written, **not yet brought up** |
 | Kafka install + topic scripts | `scripts/kafka_setup.sh` | 🔧 Kafka installed; scripts **not yet run** |
+| Distribution profiler for synthesis | `synthetic/SynthesisProfile.scala` | ✅ **executed** |
+| Synthetic workload generator | `synthetic/GenerateSyntheticWorkload.scala` | ✅ **executed, 350M rows** |
+| Synthetic workload verifier | `synthetic/VerifySyntheticWorkload.scala` | ✅ **executed, all checks pass** |
 
 Reproduce:
 
@@ -401,68 +404,61 @@ streaming demonstration, as the brief intends.
 
 ---
 
-## 7. Revised ~18 GB workload arithmetic
+## 7. ~18 GB workload — MEASURED (Phase 11 complete)
 
-Because the real CSV source is 10.9 GB rather than 11.5 GB:
+The synthetic scaled workload has been generated and verified. Full detail in
+[`SYNTHETIC_DATA_REPORT.md`](SYNTHETIC_DATA_REPORT.md).
 
 ```
-Real source data (CSV, both datasets)     ≈ 10.9 GB
-Synthetic scaled workload required        ≈  7.1 GB
-                                            --------
-Target experimental workload              ≈ 18.0 GB
+Real source data (CSV)                    10.9 GiB    data_source = "real"
+Synthetic scaled workload (Parquet)        7.25 GiB   data_source = "synthetic_scaled"
+                                          ----------
+Total experimental workload               18.15 GiB
 ```
 
-The synthetic portion will carry `data_source = "synthetic_scaled"` while all
-original rows carry `data_source = "real"` — the column already exists in the
-canonical schema and is populated by both readers today. The final size will be
-**measured with `du -sh` and recorded**, not asserted.
+| Quantity | Measured |
+|---|---:|
+| Synthetic records | **350,012,867** |
+| Synthetic bytes on disk | **7,786,042,726 (7.251 GiB)** |
+| Bytes per row | 22.25 |
+| Year partitions | 27 (2000–2026) |
+| Generation time | ~292 s (14 batches) |
+| **Total records (real + synthetic)** | **482,340,695** |
 
-> Note: 18 GB of CSV becomes far smaller as Snappy Parquet (the existing
-> Parquet copy compresses Source 1's CSV roughly 10:1). Volume claims will
-> therefore always state the format they refer to.
+**Target correction.** The brief specified ~6.5 GB of synthetic data, derived
+from the earlier 11.5 GB estimate of the real data. Verified measurement put the
+real CSV source at 10.9 GiB, so the target was raised to 7.1 GiB to actually
+reach ~18 GB total.
 
----
+**Unit honesty.** The 18.15 GiB total mixes formats — real CSV plus synthetic
+Parquet. In consistent Parquet terms the workload is 8.45 GiB; in records it is
+482.3M. All three framings are stated wherever the figure is used.
 
-## 7a. Phase 5–6 results (executed on the full dataset)
+**Verification summary** (all passed on the full 350M rows):
 
-| | Daily Market Prices | India Mandi |
-|---|---:|---:|
-| Raw records | 75,984,017 | 56,879,072 |
-| Duplicates removed | 339,216 | 196,045 |
-| **Records written** | **75,644,801** | **56,683,027** |
-| `VALID` after cleaning | 73,859,911 | 54,728,238 |
-| Outliers flagged | 501,432 (0.66%) | 382,538 (0.67%) |
-| Undated quarantined | 0 | 0 |
-| Learn-bounds time | 141.84 s | 154.47 s |
-| Parquet write time | 214.46 s | 258.22 s |
-| Year partitions | 26 | 25 |
-| Parquet size | 672 MB | 574 MB |
+- Every synthetic row carries `data_source='synthetic_scaled'`; every real row
+  still carries `'real'`.
+- `min ≤ modal ≤ max`: **0 violations of 340,173,220** complete reports.
+- Median price 1,995.76 synthetic vs 2,000.00 real (ratio 0.998).
+- Quality mix matches real to within 0.02 pp on every class except
+  `MODAL_OUTSIDE_RANGE`, which the generator cannot produce by construction.
+- Copy detection: 0.002% tuple collision with real data.
+- Categorical coverage: 100% of states, districts and commodities.
+- Real data confirmed untouched: **0 of 351 raw CSVs modified.**
 
-Total: **132,327,828 records written**, 535,261 duplicates removed,
-**10.9 GB CSV → 1.2 GB Snappy Parquet (~9:1)**.
-
-**Verification performed** (not just asserted):
-
-- Duplicates removed (339,216 / 196,045) match the surplus-row counts found
-  independently during profiling, exactly.
-- A re-query of the written Parquet found **0 business keys still duplicated**.
-- Wheat's flagged rows lie outside its learned 1,817–3,294 band on both sides
-  (min 1,371; upper quartile 3,910; max 5,048).
-- Saffron: the 3 reports at 4,000,000 are flagged, and its 23 legitimate rows
-  (58,000–80,100) are not.
-
-**A gap found and fixed during verification.** The first implementation dropped
-commodities with fewer than 100 valid observations from bound-learning
-altogether, on small-sample grounds. That let Saffron's ₹4,000,000 reports pass
-unflagged against a ₹66,200 median. Rare commodities now fall back to a wide
-±10× median band instead of being skipped — blunt, but a 60× deviation is
-obviously wrong regardless of sample size.
+**A generator bug caught by the verifier.** The first batch produced 40%
+`MIN_GT_MAX` and only 20% `VALID`, because `rand()`/`randn()` are
+nondeterministic expressions and reusing the same `Column` object across the
+min/max/modal outputs planted an *independent* generator in each — so the three
+were computed from different random prices. Fixed by materialising every draw as
+a named column before use.
 
 ---
 
 ## 8. Next recommended action
 
-Phases 1–6 are complete and verified. Next, in order:
+Phases 1–6 and **Phase 11 (synthetic scaling)** are complete and verified.
+Next, in order:
 
 1. **Phase 8 — feature engineering.** Lags, rolling mean/stddev, z-scores,
    price spread, seasonal features, computed with Spark window functions over
@@ -474,7 +470,12 @@ Phases 1–6 are complete and verified. Next, in order:
 3. **Settle the Source 1 price-unit question** empirically, comparing modal
    prices for matching commodity/market/date rows across both sources during
    their 2001 – Feb 2024 overlap.
-4. **Phases 9–10** — forecasting and anomaly detection.
+4. **Phases 9–10** — forecasting and anomaly detection. Note that forecasting
+   must train on **real data only**: synthetic records are drawn independently
+   per row and carry no cross-day autocorrelation, so a synthetic
+   commodity–market series is not a realistic time series.
+5. **Phase 12 — scalability experiments**, now unblocked: the ~18 GB workload
+   exists and can be swept at 5 / 10 / 18 GB.
 
 Everything reads from local `data/processed/` today and is repointed at
 `hdfs://` by changing a path prefix, so step 2 does not block steps 1, 3 or 4.
