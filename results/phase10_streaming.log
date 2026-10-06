@@ -1,0 +1,89 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+26/10/06 18:08:18 INFO SparkContext: Running Spark version 4.2.0
+26/10/06 18:08:18 INFO SparkContext: OS info Linux, 6.12.76-linuxkit, aarch64
+26/10/06 18:08:18 INFO SparkContext: Java version 21.0.11+10-LTS
+26/10/06 18:08:18 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+26/10/06 18:08:18 INFO ResourceUtils: ==============================================================
+26/10/06 18:08:18 INFO ResourceUtils: No custom resources configured for spark.driver.
+26/10/06 18:08:18 INFO ResourceUtils: ==============================================================
+26/10/06 18:08:18 INFO SparkContext: Submitted application: Phase10StructuredStreaming
+26/10/06 18:08:18 INFO SecurityManager: Changing view acls to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing modify acls to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing view acls groups to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing modify acls groups to: spark
+26/10/06 18:08:18 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: spark groups with view permissions: EMPTY; users with modify permissions: spark; groups with modify permissions: EMPTY; RPC SSL disabled
+26/10/06 18:08:18 INFO Utils: Successfully started service 'sparkDriver' on port 45383.
+26/10/06 18:08:18 INFO SparkEnv: Registering MapOutputTracker
+26/10/06 18:08:18 INFO SparkEnv: Registering BlockManagerMaster
+26/10/06 18:08:18 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+26/10/06 18:08:18 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+26/10/06 18:08:18 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+26/10/06 18:08:18 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-43639a40-ef27-4ca8-a23b-f3666a028e74
+26/10/06 18:08:18 INFO SparkEnv: Registering OutputCommitCoordinator
+26/10/06 18:08:18 INFO JettyUtils: Start Jetty 0.0.0.0:4040 for SparkUI
+26/10/06 18:08:18 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+26/10/06 18:08:18 INFO SparkContext: Added JAR file:/workspace/target/scala-2.13/agri-bigdata-assembly.jar at spark://5b356ab2c564:45383/jars/agri-bigdata-assembly.jar with timestamp 1791310098326
+26/10/06 18:08:18 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+26/10/06 18:08:18 INFO ResourceProfile: Limiting resource is cpu
+26/10/06 18:08:18 INFO ResourceProfileManager: Added ResourceProfile id: 0
+26/10/06 18:08:18 INFO SecurityManager: Changing view acls to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing modify acls to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing view acls groups to: spark
+26/10/06 18:08:18 INFO SecurityManager: Changing modify acls groups to: spark
+26/10/06 18:08:18 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: spark groups with view permissions: EMPTY; users with modify permissions: spark; groups with modify permissions: EMPTY; RPC SSL disabled
+26/10/06 18:08:18 INFO Executor: Starting executor ID driver on host 5b356ab2c564
+26/10/06 18:08:18 INFO Executor: Running Spark version 4.2.0
+26/10/06 18:08:18 INFO Executor: OS info Linux, 6.12.76-linuxkit, aarch64
+26/10/06 18:08:18 INFO Executor: Java version 21.0.11+10-LTS
+26/10/06 18:08:18 INFO Executor: Starting executor with user classpath (userClassPathFirst = false): ''
+26/10/06 18:08:18 INFO Executor: Created or updated repl class loader org.apache.spark.util.MutableURLClassLoader@3739f3c9 for default.
+26/10/06 18:08:18 INFO Executor: Fetching spark://5b356ab2c564:45383/jars/agri-bigdata-assembly.jar with timestamp 1791310098326
+26/10/06 18:08:18 INFO TransportClientFactory: Successfully created connection to 5b356ab2c564/172.19.0.6:45383 after 24 ms (0 ms spent in bootstraps)
+26/10/06 18:08:18 INFO Utils: Fetching spark://5b356ab2c564:45383/jars/agri-bigdata-assembly.jar to /tmp/spark-90432846-b691-4df9-b7c6-0241a692efb6/userFiles-4d1e871e-cbdf-4ea7-b863-3da10addad91/fetchFileTemp8123578973272688616.tmp
+26/10/06 18:08:18 INFO Executor: Adding file:/tmp/spark-90432846-b691-4df9-b7c6-0241a692efb6/userFiles-4d1e871e-cbdf-4ea7-b863-3da10addad91/agri-bigdata-assembly.jar to class loader default
+26/10/06 18:08:18 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 37497.
+26/10/06 18:08:18 INFO NettyBlockTransferService: Server created on 5b356ab2c564:37497
+26/10/06 18:08:18 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+26/10/06 18:08:18 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 5b356ab2c564, 37497, None)
+26/10/06 18:08:18 INFO BlockManagerMasterEndpoint: Registering block manager 5b356ab2c564:37497 with 434.4 MiB RAM, BlockManagerId(driver, 5b356ab2c564, 37497, None)
+26/10/06 18:08:18 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 5b356ab2c564, 37497, None)
+26/10/06 18:08:18 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 5b356ab2c564, 37497, None)
+Loading frozen ML model from hdfs://namenode:9000/agri/models/anomaly_prediction_rf ...
+Subscribing to Kafka topic: agri-market-transactions
+26/10/06 18:08:21 WARN ResolveWriteToStream: spark.sql.adaptive.enabled is not supported in streaming DataFrames/Datasets and will be disabled.
+26/10/06 18:08:21 WARN MicroBatchExecution: Disabling AQE since AQE is not supported in stateful workloads.
+26/10/06 18:08:21 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:22 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:22 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:22 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:22 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:23 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:24 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:25 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:26 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:27 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:28 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:29 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:30 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:31 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:32 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:33 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:34 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:35 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:36 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:37 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:38 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:39 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:40 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:41 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:42 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:43 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:44 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:45 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:46 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:47 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:48 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:49 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:50 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+26/10/06 18:08:51 WARN NetworkClient: [AdminClient clientId=adminclient-1] Connection to node 1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.

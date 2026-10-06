@@ -1,0 +1,103 @@
+[info] welcome to sbt 1.11.7 (Homebrew Java 21.0.12)
+[info] loading project definition from /Users/kaush/Downloads/Agricultural_BigData_Project/project/project
+[info] loading settings for project agricultural_bigdata_project-build from plugins.sbt...
+[info] loading project definition from /Users/kaush/Downloads/Agricultural_BigData_Project/project
+[info] loading settings for project root from build.sbt...
+[info] set current project to agri-bigdata (in build file:/Users/kaush/Downloads/Agricultural_BigData_Project/)
+[info] compiling 1 Scala source to /Users/kaush/Downloads/Agricultural_BigData_Project/target/scala-2.13/classes ...
+[info] done compiling
+[info] running (fork) com.agribigdata.ml.Phase9ValidationAudit 
+[error] Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+[error] 26/10/06 19:52:13 INFO SparkContext: Running Spark version 4.2.0
+[error] 26/10/06 19:52:13 INFO SparkContext: OS info Mac OS X, 27.0, aarch64
+[error] 26/10/06 19:52:13 INFO SparkContext: Java version 21.0.12
+[error] 26/10/06 19:52:13 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[error] 26/10/06 19:52:13 INFO ResourceUtils: ==============================================================
+[error] 26/10/06 19:52:13 INFO ResourceUtils: No custom resources configured for spark.driver.
+[error] 26/10/06 19:52:13 INFO ResourceUtils: ==============================================================
+[error] 26/10/06 19:52:13 INFO SparkContext: Submitted application: Phase9ValidationAudit
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing view acls to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing modify acls to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing view acls groups to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing modify acls groups to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: kaush groups with view permissions: EMPTY; users with modify permissions: kaush; groups with modify permissions: EMPTY; RPC SSL disabled
+[error] 26/10/06 19:52:13 INFO Utils: Successfully started service 'sparkDriver' on port 63054.
+[error] 26/10/06 19:52:13 INFO SparkEnv: Registering MapOutputTracker
+[error] 26/10/06 19:52:13 INFO SparkEnv: Registering BlockManagerMaster
+[error] 26/10/06 19:52:13 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+[error] 26/10/06 19:52:13 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+[error] 26/10/06 19:52:13 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+[error] 26/10/06 19:52:13 INFO DiskBlockManager: Created local directory at /private/var/folders/jm/nr0fs0310z911sqwzsdbbh4m0000gn/T/blockmgr-f5fda92a-93b4-4b32-8652-c19c4c7c0512
+[error] 26/10/06 19:52:13 INFO SparkEnv: Registering OutputCommitCoordinator
+[error] 26/10/06 19:52:13 INFO JettyUtils: Start Jetty 127.0.0.1:4040 for SparkUI
+[error] 26/10/06 19:52:13 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+[error] 26/10/06 19:52:13 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+[error] 26/10/06 19:52:13 INFO ResourceProfile: Limiting resource is cpu
+[error] 26/10/06 19:52:13 INFO ResourceProfileManager: Added ResourceProfile id: 0
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing view acls to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing modify acls to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing view acls groups to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: Changing modify acls groups to: kaush
+[error] 26/10/06 19:52:13 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: kaush groups with view permissions: EMPTY; users with modify permissions: kaush; groups with modify permissions: EMPTY; RPC SSL disabled
+[error] 26/10/06 19:52:13 INFO Executor: Starting executor ID driver on host localhost
+[error] 26/10/06 19:52:13 INFO Executor: Running Spark version 4.2.0
+[error] 26/10/06 19:52:13 INFO Executor: OS info Mac OS X, 27.0, aarch64
+[error] 26/10/06 19:52:13 INFO Executor: Java version 21.0.12
+[error] 26/10/06 19:52:13 INFO Executor: Starting executor with user classpath (userClassPathFirst = false): ''
+[error] 26/10/06 19:52:13 INFO Executor: Created or updated repl class loader org.apache.spark.util.MutableURLClassLoader@5a06904 for default.
+[error] 26/10/06 19:52:13 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 63055.
+[error] 26/10/06 19:52:13 INFO NettyBlockTransferService: Server created on 127.0.0.1:63055
+[error] 26/10/06 19:52:13 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+[error] 26/10/06 19:52:13 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 127.0.0.1, 63055, None)
+[error] 26/10/06 19:52:13 INFO BlockManagerMasterEndpoint: Registering block manager 127.0.0.1:63055 with 3.4 GiB RAM, BlockManagerId(driver, 127.0.0.1, 63055, None)
+[error] 26/10/06 19:52:13 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 127.0.0.1, 63055, None)
+[error] 26/10/06 19:52:13 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 127.0.0.1, 63055, None)
+[info] === 1. TARGET AUDIT ===
+[info] next_z_score = null: 114144
+[info] target_anomaly = null: 0
+[info] target_anomaly = 0: 804873
+[info] target_anomaly = 1: 132963
+[info] Rows excluded from ML: 114144
+[info] Explanation: next_z_score is a valid future label because it represents the market state strictly AFTER the current feature vector is observed. Since features only aggregate up to the CURRENT row, predicting the next row's z_score avoids temporal leakage.
+[info] === 2. FEATURE AUDIT ===
+[info] 9 predictors confirmed: previous_modal_price, price_change, price_change_pct, price_range, relative_price_range, previous_to_current_ratio, rolling_7_observation_avg, rolling_7_observation_stddev, z_score
+[info] Confirmed NOT features: target_anomaly, next_z_score, price_outlier, any future-row column
+[info] === 3. REUSE EXISTING VALIDATION PREDICTIONS ===
+[error] 26/10/06 19:52:54 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+[info] Thresh 0.10 -> Acc: 0.1658, BalAcc: 0.5021, Prec: 0.1623, Rec: 0.9994, F1: 0.2793, FPR: 0.9951 | TP:8038 FP:41473 FN:5 TN:205
+[info] Thresh 0.15 -> Acc: 0.7011, BalAcc: 0.6120, Prec: 0.2656, Rec: 0.4802, F1: 0.3420, FPR: 0.2563 | TP:3862 FP:10680 FN:4181 TN:30998
+[info] Thresh 0.20 -> Acc: 0.8143, BalAcc: 0.5912, Prec: 0.3898, Rec: 0.2612, F1: 0.3128, FPR: 0.0789 | TP:2101 FP:3289 FN:5942 TN:38389
+[info] Thresh 0.25 -> Acc: 0.8353, BalAcc: 0.5725, Prec: 0.4763, Rec: 0.1840, F1: 0.2655, FPR: 0.0390 | TP:1480 FP:1627 FN:6563 TN:40051
+[info] Thresh 0.30 -> Acc: 0.8421, BalAcc: 0.5606, Prec: 0.5448, Rec: 0.1445, F1: 0.2284, FPR: 0.0233 | TP:1162 FP:971 FN:6881 TN:40707
+[info] Thresh 0.35 -> Acc: 0.8439, BalAcc: 0.5511, Prec: 0.5879, Rec: 0.1181, F1: 0.1967, FPR: 0.0160 | TP:950 FP:666 FN:7093 TN:41012
+[info] Thresh 0.40 -> Acc: 0.8437, BalAcc: 0.5439, Prec: 0.6015, Rec: 0.1006, F1: 0.1723, FPR: 0.0129 | TP:809 FP:536 FN:7234 TN:41142
+[info] Thresh 0.45 -> Acc: 0.8431, BalAcc: 0.5374, Prec: 0.6056, Rec: 0.0855, F1: 0.1499, FPR: 0.0107 | TP:688 FP:448 FN:7355 TN:41230
+[info] Thresh 0.50 -> Acc: 0.8427, BalAcc: 0.5335, Prec: 0.6101, Rec: 0.0765, F1: 0.1359, FPR: 0.0094 | TP:615 FP:393 FN:7428 TN:41285
+[info] Thresh 0.55 -> Acc: 0.8426, BalAcc: 0.5303, Prec: 0.6223, Rec: 0.0686, F1: 0.1236, FPR: 0.0080 | TP:552 FP:335 FN:7491 TN:41343
+[info] Thresh 0.60 -> Acc: 0.8423, BalAcc: 0.5262, Prec: 0.6333, Rec: 0.0591, F1: 0.1080, FPR: 0.0066 | TP:475 FP:275 FN:7568 TN:41403
+[info] Thresh 0.65 -> Acc: 0.8399, BalAcc: 0.5117, Prec: 0.6192, Rec: 0.0265, F1: 0.0508, FPR: 0.0031 | TP:213 FP:131 FN:7830 TN:41547
+[info] Thresh 0.70 -> Acc: 0.8384, BalAcc: 0.5004, Prec: 0.8750, Rec: 0.0009, F1: 0.0017, FPR: 0.0000 | TP:7 FP:1 FN:8036 TN:41677
+[info] Thresh 0.75 -> Acc: 0.8382, BalAcc: 0.5000, Prec: 0.0000, Rec: 0.0000, F1: 0.0000, FPR: 0.0000 | TP:0 FP:0 FN:8043 TN:41678
+[info] Thresh 0.80 -> Acc: 0.8382, BalAcc: 0.5000, Prec: 0.0000, Rec: 0.0000, F1: 0.0000, FPR: 0.0000 | TP:0 FP:0 FN:8043 TN:41678
+[info] Thresh 0.85 -> Acc: 0.8382, BalAcc: 0.5000, Prec: 0.0000, Rec: 0.0000, F1: 0.0000, FPR: 0.0000 | TP:0 FP:0 FN:8043 TN:41678
+[info] Thresh 0.90 -> Acc: 0.8382, BalAcc: 0.5000, Prec: 0.0000, Rec: 0.0000, F1: 0.0000, FPR: 0.0000 | TP:0 FP:0 FN:8043 TN:41678
+[info] === 4. BASELINE COMPARISON ===
+[info] A. Max F1 Threshold: 0.15
+[info] B. Max Balanced Accuracy Threshold: 0.15
+[info] C. Highest Acc w/ Recall >= 0.20: 0.20
+[info] D. Highest Acc w/ Recall >= 0.30: 0.15
+[info] === 5. MODEL COMPARISON ===
+[info] A. Random Forest (Baseline):
+[info]   Accuracy: 0.8427, BalAcc: 0.5335, Prec: 0.6101, Rec: 0.0765, F1: 0.1359
+[info]   PR-AUC: 0.3222, ROC-AUC: 0.6683
+[info] B. Random Forest (Moderate Class Weight=5):
+[info]   Accuracy: 0.7023, BalAcc: 0.6157, Prec: 0.2686, Rec: 0.4878, F1: 0.3464
+[info]   PR-AUC: 0.3244, ROC-AUC: 0.6783
+[info] C. GBTClassifier (modest config):
+[info]   Accuracy: 0.8430, BalAcc: 0.5374, Prec: 0.6031, Rec: 0.0858, F1: 0.1502
+[info]   PR-AUC: 0.3273, ROC-AUC: 0.6827
+[info] === 6. RESOURCE LIMITS ===
+[info] Memory-safe: Entity sampling restricted to 1%. No full-data training. No row-level sampling. Entity histories kept intact.
+[info] === 7. TEST SET ===
+[info] Test set (2025+) remains untouched.
+[success] Total time: 587 s (0:09:47.0), completed 06-Oct-2026, 8:01:58 pm

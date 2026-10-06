@@ -1,0 +1,2 @@
+dataset,total_records,distinct_business_keys,duplicate_keys,surplus_rows,min_date,max_date,overview_seconds,duplicate_scan_seconds
+india_mandi,56879072,56683027,136378,196045,2000-10-19,2024-02-02,104.068507375,22.770081792

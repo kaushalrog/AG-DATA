@@ -1,0 +1,2 @@
+dataset,total_records,distinct_business_keys,duplicate_keys,surplus_rows,min_date,max_date,overview_seconds,duplicate_scan_seconds
+daily_market_prices,75984017,75644801,251633,339216,2001-01-10,2026-04-21,49.430455209,37.752772958

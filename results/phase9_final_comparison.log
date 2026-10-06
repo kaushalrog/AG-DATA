@@ -1,0 +1,119 @@
+[info] welcome to sbt 1.11.7 (Homebrew Java 21.0.12)
+[info] loading project definition from /Users/kaush/Downloads/Agricultural_BigData_Project/project/project
+[info] loading settings for project agricultural_bigdata_project-build from plugins.sbt...
+[info] loading project definition from /Users/kaush/Downloads/Agricultural_BigData_Project/project
+[info] loading settings for project root from build.sbt...
+[info] set current project to agri-bigdata (in build file:/Users/kaush/Downloads/Agricultural_BigData_Project/)
+[info] compiling 1 Scala source to /Users/kaush/Downloads/Agricultural_BigData_Project/target/scala-2.13/classes ...
+[info] done compiling
+[info] running (fork) com.agribigdata.ml.Phase9FinalComparison 
+[error] Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+[error] 26/10/06 22:36:07 INFO SparkContext: Running Spark version 4.2.0
+[error] 26/10/06 22:36:07 INFO SparkContext: OS info Mac OS X, 27.0, aarch64
+[error] 26/10/06 22:36:07 INFO SparkContext: Java version 21.0.12
+[error] 26/10/06 22:36:07 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[error] 26/10/06 22:36:07 INFO ResourceUtils: ==============================================================
+[error] 26/10/06 22:36:07 INFO ResourceUtils: No custom resources configured for spark.driver.
+[error] 26/10/06 22:36:07 INFO ResourceUtils: ==============================================================
+[error] 26/10/06 22:36:07 INFO SparkContext: Submitted application: Phase9FinalComparison
+[error] 26/10/06 22:36:07 INFO SecurityManager: Changing view acls to: kaush
+[error] 26/10/06 22:36:07 INFO SecurityManager: Changing modify acls to: kaush
+[error] 26/10/06 22:36:07 INFO SecurityManager: Changing view acls groups to: kaush
+[error] 26/10/06 22:36:07 INFO SecurityManager: Changing modify acls groups to: kaush
+[error] 26/10/06 22:36:07 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: kaush groups with view permissions: EMPTY; users with modify permissions: kaush; groups with modify permissions: EMPTY; RPC SSL disabled
+[error] 26/10/06 22:36:07 INFO Utils: Successfully started service 'sparkDriver' on port 50139.
+[error] 26/10/06 22:36:07 INFO SparkEnv: Registering MapOutputTracker
+[error] 26/10/06 22:36:07 INFO SparkEnv: Registering BlockManagerMaster
+[error] 26/10/06 22:36:07 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+[error] 26/10/06 22:36:07 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+[error] 26/10/06 22:36:07 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+[error] 26/10/06 22:36:07 INFO DiskBlockManager: Created local directory at /private/var/folders/jm/nr0fs0310z911sqwzsdbbh4m0000gn/T/blockmgr-845f39d3-7abb-452c-8d1f-bb10d06cc6d8
+[error] 26/10/06 22:36:07 INFO SparkEnv: Registering OutputCommitCoordinator
+[error] 26/10/06 22:36:08 INFO JettyUtils: Start Jetty 127.0.0.1:4040 for SparkUI
+[error] 26/10/06 22:36:08 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+[error] 26/10/06 22:36:08 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+[error] 26/10/06 22:36:08 INFO ResourceProfile: Limiting resource is cpu
+[error] 26/10/06 22:36:08 INFO ResourceProfileManager: Added ResourceProfile id: 0
+[error] 26/10/06 22:36:08 INFO SecurityManager: Changing view acls to: kaush
+[error] 26/10/06 22:36:08 INFO SecurityManager: Changing modify acls to: kaush
+[error] 26/10/06 22:36:08 INFO SecurityManager: Changing view acls groups to: kaush
+[error] 26/10/06 22:36:08 INFO SecurityManager: Changing modify acls groups to: kaush
+[error] 26/10/06 22:36:08 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: kaush groups with view permissions: EMPTY; users with modify permissions: kaush; groups with modify permissions: EMPTY; RPC SSL disabled
+[error] 26/10/06 22:36:08 INFO Executor: Starting executor ID driver on host localhost
+[error] 26/10/06 22:36:08 INFO Executor: Running Spark version 4.2.0
+[error] 26/10/06 22:36:08 INFO Executor: OS info Mac OS X, 27.0, aarch64
+[error] 26/10/06 22:36:08 INFO Executor: Java version 21.0.12
+[error] 26/10/06 22:36:08 INFO Executor: Starting executor with user classpath (userClassPathFirst = false): ''
+[error] 26/10/06 22:36:08 INFO Executor: Created or updated repl class loader org.apache.spark.util.MutableURLClassLoader@63f2e0b for default.
+[error] 26/10/06 22:36:08 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 50140.
+[error] 26/10/06 22:36:08 INFO NettyBlockTransferService: Server created on 127.0.0.1:50140
+[error] 26/10/06 22:36:08 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+[error] 26/10/06 22:36:08 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 127.0.0.1, 50140, None)
+[error] 26/10/06 22:36:08 INFO BlockManagerMasterEndpoint: Registering block manager 127.0.0.1:50140 with 3.4 GiB RAM, BlockManagerId(driver, 127.0.0.1, 50140, None)
+[error] 26/10/06 22:36:08 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 127.0.0.1, 50140, None)
+[error] 26/10/06 22:36:08 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 127.0.0.1, 50140, None)
+[info] === 1. PREVALENCE REPORT ===
+[info] TRAIN      | Total: 721668, Normal: 604933, Anomaly: 116735 | Prevalence: 16.18%
+[info] VALIDATION | Total: 49721, Normal: 41678, Anomaly: 8043 | Prevalence: 16.18%
+[info] TEST       | Total: 52303, Normal: 44118, Anomaly: 8185 | Prevalence: 15.65%
+[info] OVERALL    | Total: 823692, Normal: 690729, Anomaly: 132963 | Prevalence: 16.14%
+[info] === 2. MODEL TRAINING & THRESHOLD SWEEP (VALIDATION SET ONLY) ===
+[error] 26/10/06 22:38:13 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+[info] --- A. RandomForest Baseline ---
+[info] Overall PR-AUC: 0.3222, ROC-AUC: 0.6683
+[info] Thresh 0.10 | Acc: 0.1658, BalAcc: 0.5021, Prec: 0.1623, Rec: 0.9994, F1: 0.2793, FPR: 0.9951 | TP:8038 FP:41473 FN:5 TN:205
+[info] Thresh 0.15 | Acc: 0.7011, BalAcc: 0.6120, Prec: 0.2656, Rec: 0.4802, F1: 0.3420, FPR: 0.2563 | TP:3862 FP:10680 FN:4181 TN:30998
+[info] Thresh 0.20 | Acc: 0.8143, BalAcc: 0.5912, Prec: 0.3898, Rec: 0.2612, F1: 0.3128, FPR: 0.0789 | TP:2101 FP:3289 FN:5942 TN:38389
+[info] Thresh 0.25 | Acc: 0.8353, BalAcc: 0.5725, Prec: 0.4763, Rec: 0.1840, F1: 0.2655, FPR: 0.0390 | TP:1480 FP:1627 FN:6563 TN:40051
+[info] Thresh 0.30 | Acc: 0.8421, BalAcc: 0.5606, Prec: 0.5448, Rec: 0.1445, F1: 0.2284, FPR: 0.0233 | TP:1162 FP:971 FN:6881 TN:40707
+[info] Thresh 0.35 | Acc: 0.8439, BalAcc: 0.5511, Prec: 0.5879, Rec: 0.1181, F1: 0.1967, FPR: 0.0160 | TP:950 FP:666 FN:7093 TN:41012
+[info] Thresh 0.40 | Acc: 0.8437, BalAcc: 0.5439, Prec: 0.6015, Rec: 0.1006, F1: 0.1723, FPR: 0.0129 | TP:809 FP:536 FN:7234 TN:41142
+[info] Thresh 0.45 | Acc: 0.8431, BalAcc: 0.5374, Prec: 0.6056, Rec: 0.0855, F1: 0.1499, FPR: 0.0107 | TP:688 FP:448 FN:7355 TN:41230
+[info] Thresh 0.50 | Acc: 0.8427, BalAcc: 0.5335, Prec: 0.6101, Rec: 0.0765, F1: 0.1359, FPR: 0.0094 | TP:615 FP:393 FN:7428 TN:41285
+[info] Thresh 0.55 | Acc: 0.8426, BalAcc: 0.5303, Prec: 0.6223, Rec: 0.0686, F1: 0.1236, FPR: 0.0080 | TP:552 FP:335 FN:7491 TN:41343
+[info] Thresh 0.60 | Acc: 0.8423, BalAcc: 0.5262, Prec: 0.6333, Rec: 0.0591, F1: 0.1080, FPR: 0.0066 | TP:475 FP:275 FN:7568 TN:41403
+[info] Thresh 0.65 | Acc: 0.8399, BalAcc: 0.5117, Prec: 0.6192, Rec: 0.0265, F1: 0.0508, FPR: 0.0031 | TP:213 FP:131 FN:7830 TN:41547
+[info] Thresh 0.70 | Acc: 0.8384, BalAcc: 0.5004, Prec: 0.8750, Rec: 0.0009, F1: 0.0017, FPR: 0.0000 | TP:7 FP:1 FN:8036 TN:41677
+[info]   A. Max F1: Threshold 0.15 (F1: 0.3420)
+[info]   B. Max BalAcc: Threshold 0.15 (BalAcc: 0.6120)
+[info]   C. Highest Acc w/ Rec>=0.2: Threshold 0.20 (Acc: 0.8143)
+[info]   D. Highest Acc w/ Rec>=0.3: Threshold 0.15 (Acc: 0.7011)
+[info] --- B. RandomForest (Class Weight=5) ---
+[info] Overall PR-AUC: 0.3244, ROC-AUC: 0.6783
+[info] Thresh 0.10 | Acc: 0.1618, BalAcc: 0.5000, Prec: 0.1618, Rec: 1.0000, F1: 0.2785, FPR: 1.0000 | TP:8043 FP:41678 FN:0 TN:0
+[info] Thresh 0.15 | Acc: 0.1618, BalAcc: 0.5000, Prec: 0.1618, Rec: 1.0000, F1: 0.2785, FPR: 1.0000 | TP:8043 FP:41678 FN:0 TN:0
+[info] Thresh 0.20 | Acc: 0.1618, BalAcc: 0.5000, Prec: 0.1618, Rec: 1.0000, F1: 0.2785, FPR: 1.0000 | TP:8043 FP:41678 FN:0 TN:0
+[info] Thresh 0.25 | Acc: 0.1641, BalAcc: 0.5013, Prec: 0.1621, Rec: 0.9999, F1: 0.2790, FPR: 0.9972 | TP:8042 FP:41561 FN:1 TN:117
+[info] Thresh 0.30 | Acc: 0.2226, BalAcc: 0.5289, Prec: 0.1701, Rec: 0.9816, F1: 0.2900, FPR: 0.9239 | TP:7895 FP:38506 FN:148 TN:3172
+[info] Thresh 0.35 | Acc: 0.3711, BalAcc: 0.5822, Prec: 0.1912, Rec: 0.8943, F1: 0.3151, FPR: 0.7299 | TP:7193 FP:30420 FN:850 TN:11258
+[info] Thresh 0.40 | Acc: 0.4811, BalAcc: 0.6079, Prec: 0.2094, Rec: 0.7955, F1: 0.3315, FPR: 0.5796 | TP:6398 FP:24156 FN:1645 TN:17522
+[info] Thresh 0.45 | Acc: 0.6116, BalAcc: 0.6209, Prec: 0.2377, Rec: 0.6347, F1: 0.3458, FPR: 0.3929 | TP:5105 FP:16375 FN:2938 TN:25303
+[info] Thresh 0.50 | Acc: 0.7023, BalAcc: 0.6157, Prec: 0.2686, Rec: 0.4878, F1: 0.3464, FPR: 0.2563 | TP:3923 FP:10684 FN:4120 TN:30994
+[info] Thresh 0.55 | Acc: 0.7871, BalAcc: 0.6014, Prec: 0.3371, Rec: 0.3270, F1: 0.3320, FPR: 0.1241 | TP:2630 FP:5172 FN:5413 TN:36506
+[info] Thresh 0.60 | Acc: 0.8280, BalAcc: 0.5855, Prec: 0.4388, Rec: 0.2269, F1: 0.2991, FPR: 0.0560 | TP:1825 FP:2334 FN:6218 TN:39344
+[info] Thresh 0.65 | Acc: 0.8366, BalAcc: 0.5737, Prec: 0.4869, Rec: 0.1850, F1: 0.2681, FPR: 0.0376 | TP:1488 FP:1568 FN:6555 TN:40110
+[info] Thresh 0.70 | Acc: 0.8425, BalAcc: 0.5596, Prec: 0.5516, Rec: 0.1415, F1: 0.2252, FPR: 0.0222 | TP:1138 FP:925 FN:6905 TN:40753
+[info]   A. Max F1: Threshold 0.50 (F1: 0.3464)
+[info]   B. Max BalAcc: Threshold 0.45 (BalAcc: 0.6209)
+[info]   C. Highest Acc w/ Rec>=0.2: Threshold 0.60 (Acc: 0.8280)
+[info]   D. Highest Acc w/ Rec>=0.3: Threshold 0.55 (Acc: 0.7871)
+[info] --- C. GBTClassifier ---
+[info] Overall PR-AUC: 0.3267, ROC-AUC: 0.6828
+[info] Thresh 0.10 | Acc: 0.3117, BalAcc: 0.5656, Prec: 0.1832, Rec: 0.9408, F1: 0.3066, FPR: 0.8097 | TP:7567 FP:33746 FN:476 TN:7932
+[info] Thresh 0.15 | Acc: 0.6052, BalAcc: 0.6226, Prec: 0.2368, Rec: 0.6483, F1: 0.3469, FPR: 0.4031 | TP:5214 FP:16802 FN:2829 TN:24876
+[info] Thresh 0.20 | Acc: 0.7835, BalAcc: 0.6046, Prec: 0.3339, Rec: 0.3400, F1: 0.3369, FPR: 0.1309 | TP:2735 FP:5456 FN:5308 TN:36222
+[info] Thresh 0.25 | Acc: 0.8243, BalAcc: 0.5855, Prec: 0.4220, Rec: 0.2325, F1: 0.2998, FPR: 0.0614 | TP:1870 FP:2561 FN:6173 TN:39117
+[info] Thresh 0.30 | Acc: 0.8358, BalAcc: 0.5716, Prec: 0.4801, Rec: 0.1812, F1: 0.2630, FPR: 0.0379 | TP:1457 FP:1578 FN:6586 TN:40100
+[info] Thresh 0.35 | Acc: 0.8407, BalAcc: 0.5624, Prec: 0.5267, Rec: 0.1509, F1: 0.2346, FPR: 0.0262 | TP:1214 FP:1091 FN:6829 TN:40587
+[info] Thresh 0.40 | Acc: 0.8432, BalAcc: 0.5525, Prec: 0.5714, Rec: 0.1228, F1: 0.2022, FPR: 0.0178 | TP:988 FP:741 FN:7055 TN:40937
+[info] Thresh 0.45 | Acc: 0.8433, BalAcc: 0.5448, Prec: 0.5888, Rec: 0.1034, F1: 0.1760, FPR: 0.0139 | TP:832 FP:581 FN:7211 TN:41097
+[info] Thresh 0.50 | Acc: 0.8430, BalAcc: 0.5374, Prec: 0.6031, Rec: 0.0858, F1: 0.1502, FPR: 0.0109 | TP:690 FP:454 FN:7353 TN:41224
+[info] Thresh 0.55 | Acc: 0.8430, BalAcc: 0.5350, Prec: 0.6126, Rec: 0.0798, F1: 0.1412, FPR: 0.0097 | TP:642 FP:406 FN:7401 TN:41272
+[info] Thresh 0.60 | Acc: 0.8430, BalAcc: 0.5327, Prec: 0.6230, Rec: 0.0740, F1: 0.1323, FPR: 0.0086 | TP:595 FP:360 FN:7448 TN:41318
+[info] Thresh 0.65 | Acc: 0.8410, BalAcc: 0.5206, Prec: 0.6093, Rec: 0.0471, F1: 0.0875, FPR: 0.0058 | TP:379 FP:243 FN:7664 TN:41435
+[info] Thresh 0.70 | Acc: 0.8391, BalAcc: 0.5043, Prec: 0.6847, Rec: 0.0094, F1: 0.0186, FPR: 0.0008 | TP:76 FP:35 FN:7967 TN:41643
+[info]   A. Max F1: Threshold 0.15 (F1: 0.3469)
+[info]   B. Max BalAcc: Threshold 0.15 (BalAcc: 0.6226)
+[info]   C. Highest Acc w/ Rec>=0.2: Threshold 0.25 (Acc: 0.8243)
+[info]   D. Highest Acc w/ Rec>=0.3: Threshold 0.20 (Acc: 0.7835)
+[success] Total time: 414 s (0:06:54.0), completed 06-Oct-2026, 10:42:59 pm
