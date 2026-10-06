@@ -1,0 +1,24 @@
+FROM apache/spark:4.2.0
+
+USER root
+
+# Setup working directory
+WORKDIR /app
+
+# Copy requirements
+COPY src/dashboard/requirements-dashboard.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements-dashboard.txt
+
+# Copy the app
+COPY src/dashboard/app.py /app/app.py
+
+# Expose port
+EXPOSE 8501
+
+# Switch back to spark user for security
+USER spark
+
+# Run Streamlit
+CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

@@ -1,0 +1,5 @@
+streamlit==1.65.0
+pandas==2.2.3
+pyarrow==17.0.0
+streamlit-autorefresh==1.0.1
+pyspark==3.5.1
