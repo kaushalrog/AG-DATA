@@ -21,7 +21,7 @@ services:
     image: apache/hadoop:3.4.1
     container_name: agri-namenode
     hostname: namenode
-    platform: linux/arm64          # Apple Silicon
+    platform: linux/amd64          # Apple Silicon
     user: root
     command: ["/bin/bash", "-c", "/opt/entrypoint/namenode-entrypoint.sh"]
     ports:
@@ -49,7 +49,7 @@ services:
     image: apache/hadoop:3.4.1
     container_name: agri-datanode1
     hostname: datanode1
-    platform: linux/arm64
+    platform: linux/amd64
     user: root
     command: ["/bin/bash", "-c", "/opt/entrypoint/datanode-entrypoint.sh"]
     environment:

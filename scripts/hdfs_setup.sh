@@ -70,10 +70,8 @@ case "${1:-up}" in
     # -f overwrites, so the script is re-runnable. The local data is
     # bind-mounted read-only at /staging, so nothing is copied into the
     # container image first.
-    hdfs_cmd dfs -put -f /staging/raw/Daily_Market_Prices_2001_2026/csv/*.csv \
-      /agri/raw/daily_market_prices/
-    hdfs_cmd dfs -put -f /staging/raw/india_mandi/*.csv \
-      /agri/raw/india_mandi/
+    docker exec agri-namenode bash -c "/opt/hadoop/bin/hdfs dfs -put -f /staging/raw/Daily_Market_Prices_2001_2026/csv/*.csv /agri/raw/daily_market_prices/"
+    docker exec agri-namenode bash -c "/opt/hadoop/bin/hdfs dfs -rm -r -f /agri/raw/india_mandi && /opt/hadoop/bin/hdfs dfs -put /staging/raw/india_mandi /agri/raw/"
 
     if [ -d data/processed/daily_market_prices ]; then
       echo "==> loading PROCESSED parquet into HDFS"
