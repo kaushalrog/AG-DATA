@@ -34,6 +34,9 @@ results/**/_temporary/
 .vscode/
 *.iml
 
-# Learned synthesis profile: regenerated deterministically by
-# SynthesisProfile from the real data, so it is not committed as binary.
 results/synthesis_profile/
+data/validate_engineered/
+data/features/
+.metals/
+.scala-build/
+data/

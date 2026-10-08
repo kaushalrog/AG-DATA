@@ -57,10 +57,10 @@ object Phase9FinalTestEval {
     val imputer = new Imputer().setInputCols(featureCols).setOutputCols(imputedCols).setStrategy("median")
     val assembler = new VectorAssembler().setInputCols(imputedCols).setOutputCol("features").setHandleInvalid("skip")
 
-    val w1 = 5.0
+    val w1 = 1.2
     val trainDataWeighted = trainValData.withColumn("classWeight", when(col("target_anomaly") === 1.0, w1).otherwise(1.0))
     
-    val rfWeight = new RandomForestClassifier().setLabelCol("target_anomaly").setFeaturesCol("features").setNumTrees(20).setMaxDepth(8).setSeed(42L).setWeightCol("classWeight")
+    val rfWeight = new RandomForestClassifier().setLabelCol("target_anomaly").setFeaturesCol("features").setNumTrees(100).setMaxDepth(12).setMaxBins(128).setSeed(42L).setWeightCol("classWeight")
 
     val pipeline = new Pipeline().setStages(Array(imputer, assembler, rfWeight))
     val model = pipeline.fit(trainDataWeighted)
