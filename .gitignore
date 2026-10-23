@@ -58,3 +58,6 @@ results/streaming*/sent.ndjson
 
 # refresh runtime state (status, history, alerts) is per-machine
 results/refresh/
+
+# assembled deploy bundles
+build/

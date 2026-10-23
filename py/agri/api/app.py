@@ -10,6 +10,8 @@ Configuration (environment):
     AGRI_RESULTS_ROOT        experiment results (default results/forecast)
     AGRI_API_CORS_ORIGINS    comma-separated allowed origins (default http://localhost:8000)
     AGRI_API_RATE_PER_MIN    requests per minute per client IP (default 120)
+    AGRI_API_TRUST_PROXY     1 behind a reverse proxy (e.g. a hosted Space): rate-limit by the first
+                             X-Forwarded-For address instead of the proxy's own address (default off)
     AGRI_APP_DIR             static PWA directory served at / (default app; unset to disable)
     AGRI_API_DOCS            1 to serve /api/docs and /api/openapi.json (default off)
 """
@@ -131,6 +133,7 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
     origins = [o.strip() for o in os.environ.get("AGRI_API_CORS_ORIGINS", "http://localhost:8000").split(",") if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET"], allow_headers=["*"])
     limiter = RateLimiter(int(os.environ.get("AGRI_API_RATE_PER_MIN", "120")))
+    trust_proxy = os.environ.get("AGRI_API_TRUST_PROXY", "0") == "1"
     state: dict[str, Any] = {"store": None, "error": None, "target": None}
 
     def load() -> None:
@@ -163,6 +166,8 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
         if request.url.path.startswith("/api/v1"):
             maybe_reload()
             ip = request.client.host if request.client else "unknown"
+            if trust_proxy:  # every visitor reaches us through the proxy, so its address is shared
+                ip = (request.headers.get("x-forwarded-for") or ip).split(",")[0].strip() or ip
             if not limiter.allow(ip):
                 return JSONResponse({"error": {"code": "rate_limited", "message": "too many requests"}}, status_code=429)
         resp = await call_next(request)

@@ -141,6 +141,16 @@ def test_rate_limit(tmp_path, monkeypatch, client):
     assert codes[:3] == [200] * 3 and 429 in codes
 
 
+def test_rate_limit_behind_proxy_is_per_visitor_only_when_trusted(tmp_path, monkeypatch, client):
+    monkeypatch.setenv("AGRI_API_RATE_PER_MIN", "3")
+    def codes(c):
+        return [c.get("/api/v1/health", headers={"X-Forwarded-For": f"203.0.113.{i}, 10.0.0.1"}).status_code for i in range(6)]
+    # without trust, a spoofable header must not bypass the limit
+    assert 429 in codes(TestClient(create_app(gold=str(tmp_path), results=str(tmp_path), app_dir="")))
+    monkeypatch.setenv("AGRI_API_TRUST_PROXY", "1")  # each visitor has its own budget behind the proxy
+    assert codes(TestClient(create_app(gold=str(tmp_path), results=str(tmp_path), app_dir=""))) == [200] * 6
+
+
 def test_cors_only_allows_configured_origin(client):
     ok = client.get("/api/v1/health", headers={"Origin": "http://localhost:8000"})
     bad = client.get("/api/v1/health", headers={"Origin": "https://evil.example"})
