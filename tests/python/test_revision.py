@@ -24,3 +24,9 @@ def test_paired_bootstrap_preserves_known_ratio_and_effect():
     ci=block_ci(np.tile([8.,10.,2.],(100,1)),28,50)
     assert np.allclose(ci['relative_mae_95'],[.8,.8])
     assert np.allclose(ci['mae_difference_95'],[-1.,-1.])
+
+
+def test_seasonal_naive_is_a_return_not_a_log_price():
+    # Last-year/today ratio=1.2 must produce INR 1200 from INR 1000.
+    p0=np.array([1000.,2000.]);returns=pd.Series([np.log(1.2),np.nan])
+    assert np.allclose(p0*np.exp(returns.fillna(0.)),[1200.,2000.])

@@ -33,7 +33,7 @@ confirmation because all 2026 prices have already been inspected.
 ## Statistical reporting
 
 Primary family: candidate vs persistence, 4 horizons × 2 cleaning regimes = 8
-comparisons, two-sided DM p values corrected together using Holm at alpha .05.
+comparisons, two-sided DM p values on calendar-day total loss differences (scaled by a constant, so they target pooled MAE) corrected together using Holm at alpha .05.
 Preserve raw p values. Circular moving-block bootstrap of calendar-day error sums,
 block sizes 14 and 28 days, 500 repetitions, seed 20261023; report percentile 95%
 intervals for relative MAE and difference in MAE. Separately bootstrap entity clusters
@@ -47,7 +47,7 @@ prominent regardless of whether they favour the candidate.
 Capture exact source commit, SHA256 of source files, config, input Parquet files,
 model files, dependencies, runtime and split row/date bounds. Abort training when
 tracked implementation differs from the locked commit. Output manifests and tables
-are generated from the saved predictions; no manually entered numeric tables.
+are regenerated from checksum-verified saved predictions; no manually entered numeric tables. Imported helper and dependency paths are recorded. Feature reuse requires a sealed build manifest binding input/output hashes, builder source hashes and settings. Untracked implementation files are rejected. Historical cleaned-feature construction is disclosed separately; byte hashes do not prove its original build code.
 
 ## Independent future confirmation
 

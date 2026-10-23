@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
 COMMIT=$(git rev-parse HEAD)
-[ -z "$(git diff HEAD -- py src scripts conf docs/REVISION_PROTOCOL.md)" ] || { echo 'Commit implementation first' >&2; exit 1; }
+[ -z "$(git status --porcelain --untracked-files=all -- py src scripts conf docs/REVISION_PROTOCOL.md)" ] || { echo 'Commit implementation first' >&2; exit 1; }
 mkdir -p logs results/revision_q1
 sbt -batch assembly > logs/revision_assembly.log 2>&1
 if [ ! -f data/revision_unfiltered/RESEARCH_COMPLETE ]; then
@@ -22,5 +22,7 @@ if [ ! -f data/revision_unfiltered/RESEARCH_COMPLETE ]; then
     mode=append
   done
   touch data/revision_unfiltered/RESEARCH_COMPLETE
+  PYTHONPATH=py .venv/bin/python -m agri.research.build_manifest seal
 fi
+PYTHONPATH=py .venv/bin/python -m agri.research.build_manifest verify
 PYTHONPATH=py .venv/bin/python -m agri.research.revision run --commit "$COMMIT" > logs/revision_experiment.log 2>&1

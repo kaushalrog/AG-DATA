@@ -28,9 +28,13 @@ def provenance(commit, roots):
     if actual!=commit: raise RuntimeError('HEAD differs from locked source commit')
     dirty=subprocess.check_output(['git','diff','HEAD','--','py','src','scripts','conf','docs/REVISION_PROTOCOL.md'],text=True)
     if dirty: raise RuntimeError('Tracked experimental implementation is dirty')
+    untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard','py','src','scripts','conf'],text=True).strip()
+    if untracked: raise RuntimeError('Untracked implementation files: '+untracked)
+    import inspect
+    imported={name:str(Path(inspect.getfile(module)).resolve()) for name,module in [('lightgbm',lgb),('duckdb',duckdb),('candidate_helpers',L)]}
     source=subprocess.check_output(['git','ls-files','py','src','scripts','conf','docs/REVISION_PROTOCOL.md'],text=True).splitlines()
     inputs=[p for root in roots for p in sorted(Path(root).glob('features/*/*.parquet'))]
-    return {'source_commit':actual,'source_sha256':{p:sha(p) for p in source},
+    return {'source_commit':actual,'resolved_modules':imported,'source_sha256':{p:sha(p) for p in source},
             'inputs':{str(p):{'size':p.stat().st_size,'sha256':sha(p)} for p in inputs},
             'python':platform.python_version(),'platform':platform.platform(),
             'versions':{n:importlib.metadata.version(n) for n in ['lightgbm','numpy','pandas','duckdb','scipy','pyarrow']}}
@@ -85,9 +89,11 @@ def statistics(pred,h):
     z=pd.DataFrame({'date':pred.arrival_date,'entity_id':pred.entity_id,
                     'candidate':abs(pred.candidate-pred.actual),'persistence':abs(pred.persistence-pred.actual),'n':1})
     daily=z.groupby('date')[['candidate','persistence','n']].sum()
-    means=(daily.candidate-daily.persistence)/daily.n
-    st,p=dm_test(means.to_numpy(),7 if h=='next' else L.HORIZONS[h]+3)
     calendar=daily.reindex(pd.date_range(daily.index.min(),daily.index.max()),fill_value=0.)
+    # Daily TOTAL loss differences on a calendar index, scaled by a constant:
+    # their mean has the same sign/estimand as pooled row-weighted MAE.
+    loss=(calendar.candidate-calendar.persistence)/calendar.n.mean()
+    st,p=dm_test(loss.to_numpy(),7 if h=='next' else L.HORIZONS[h]+3)
     entities=z.groupby('entity_id')[['candidate','persistence','n']].sum()
     rng=np.random.default_rng(SEED); data=entities.to_numpy(); ratios=[]
     for _ in range(500):
@@ -103,7 +109,9 @@ def run(a):
     roots={'cleaned':a.cleaned,'unfiltered':a.unfiltered}
     manifest={'status':'running','splits':SPLITS,'protocol':'docs/REVISION_PROTOCOL.md','seed':SEED,
               'max_train':a.max_train,'classification':'retrospective robustness; no independent confirmation',
-              'provenance':provenance(a.commit,list(roots.values())), 'runs':{}}
+              'provenance':provenance(a.commit,list(roots.values())),
+              'cleaned_feature_provenance':'Historical fc_main_v3/v3 features: input bytes hashed; original build exact code unproven',
+              'unfiltered_build':json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text()), 'runs':{}}
     (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2))
     con=duckdb.connect();con.execute('SET threads=4'); started=time.time()
     for variant,root in roots.items():
@@ -133,7 +141,7 @@ def run(a):
             p0=te.modal_price.to_numpy(); pred=te[['entity_id','arrival_date','commodity',f'tday_{h}','scale']].copy()
             pred['p0']=p0; pred['actual']=p0*np.exp(te[f'y_{h}']);pred['candidate']=p0*np.exp(pp);pred['persistence']=p0
             pred['ma7']=np.exp(te.mean7);pred['ma30']=np.exp(te.mean30)
-            pred['snaive']=np.exp(te[f'snaive_{h}'].fillna(te.lp))
+            pred['snaive']=p0*np.exp(te[f'snaive_{h}'].fillna(0.))
             # Seasonal-adjusted naive is the last-year change, not the year-on-year level deviation.
             pred['sadj']=p0*np.exp(te[f'ly_chg_{h}'])
             for name,v in iv.items():pred[name]=p0*np.exp(v)
@@ -142,7 +150,10 @@ def run(a):
             r={'candidates':candidates,'selected_leaves':int(model.params['num_leaves']),
                'bounds':{name:bounds(df) for name,df in [('training_sample',tr),('selection',va),('calibration',ca),('evaluation',te)]},
                'metrics':metrics(pred),'statistics':statistics(pred,h),'model_sha256':sha(modeldir/'model.txt'),
-               'calibration_sha256':sha(modeldir/'calibration.json'),'seconds':time.time()-t}
+               'calibration_sha256':sha(modeldir/'calibration.json'),
+               'prediction_path':f'data/revision_q1/predictions_{key}.parquet',
+               'prediction_sha256':sha(f'data/revision_q1/predictions_{key}.parquet'),
+               'seasonal_fallback_rows':int(te[f'snaive_{h}'].isna().sum()),'seconds':time.time()-t}
             manifest['runs'][key]=r;(OUT/'manifest.json').write_text(json.dumps(manifest,indent=2))
             print(key,'relative',r['metrics']['candidate']['relative_mae'],'coverage',r['metrics']['interval']['coverage80'],flush=True)
     keys=list(manifest['runs']); adjusted=holm([manifest['runs'][k]['statistics']['dm_p_raw'] for k in keys])
@@ -156,12 +167,32 @@ def run(a):
     (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2));report(manifest)
 
 def report(m):
+    for key,r in m['runs'].items():
+        if sha(r['prediction_path'])!=r['prediction_sha256']: raise RuntimeError('Prediction artifact changed: '+key)
+        pred=pd.read_parquet(r['prediction_path'])
+        recomputed=metrics(pred)
+        if abs(recomputed['candidate']['mae']-r['metrics']['candidate']['mae'])>1e-9:
+            raise RuntimeError('Saved aggregate does not reproduce: '+key)
+        r['metrics']=recomputed
     lines=['# Retrospective robustness results','',f"Source commit: `{m['provenance']['source_commit']}`. Generated from saved predictions.",'',
            '| Regime | Horizon | n | Rel. MAE | MASE candidate / persistence | 80% coverage | Rel. width | 95% block CI (28 d) | Holm p |',
            '|---|---|---:|---:|---:|---:|---:|---|---:|']
     for key,r in m['runs'].items():
         v,h=key.rsplit('_',1);me=r['metrics'];st=r['statistics'];ci=st['calendar_bootstrap'][1]['relative_mae_95']
         lines.append(f"| {v} | {h} | {me['candidate']['n']:,} | {me['candidate']['relative_mae']:.3f} | {me['candidate']['mase']:.3f} / {me['persistence']['mase']:.3f} | {me['interval']['coverage80']:.3f} | {me['interval']['relative_width80']:.3f} | [{ci[0]:.3f}, {ci[1]:.3f}] | {st['dm_p_holm8']:.2g} |")
+    lines += ['', '## All baselines', '', '| Regime/horizon | Predictor | n | MAE | MASE | Relative MAE |', '|---|---|---:|---:|---:|---:|']
+    for key,r in m['runs'].items():
+        for name,v in r['metrics'].items():
+            if name=='interval':continue
+            lines.append(f"| {key} | {name} | {v['n']:,} | {v['mae']:.2f} | {v['mase']:.3f} | {v['relative_mae']:.3f} |")
+    lines += ['', '## Monthly and series uncertainty', '', '| Regime/horizon | Entity cluster ratio 95% CI | Share series better | MAE difference 95% CI (28 days) | Seasonal fallbacks |', '|---|---|---:|---|---:|']
+    for key,r in m['runs'].items():
+        st=r['statistics'];lines.append(f"| {key} | {st['entity_cluster_relative_mae_95']} | {st['share_entities_better']:.3f} | {st['calendar_bootstrap'][1]['mae_difference_95']} | {r['seasonal_fallback_rows']} |")
+        lines.append('')
+        for mon,v in st['monthly'].items():lines.append(f"* {key}, {mon}: {v['n']:,} rows; relative MAE {v['relative_mae']:.3f}")
+    lines += ['', '## Common origins (targets and features may differ)', '', '| Horizon | Regime | n | Rel. MAE | Coverage80 |', '|---|---|---:|---:|---:|']
+    for h,regimes in m['common_origins'].items():
+        for regime,r in regimes.items():lines.append(f"| {h} | {regime} | {r['candidate']['n']:,} | {r['candidate']['relative_mae']:.3f} | {r['interval']['coverage80']:.3f} |")
     (OUT/'TABLES.md').write_text('\n'.join(lines)+'\n')
     tex=[]
     for key,r in m['runs'].items():
