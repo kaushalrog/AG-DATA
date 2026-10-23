@@ -1,35 +1,37 @@
 \section{Introduction}\label{sec:intro}
 
-A large share of Indian agricultural produce is traded through regulated wholesale markets (\emph{mandis}), although much is also sold outside them.
-Each mandi publishes a daily minimum, maximum and modal price per commodity and variety through AGMARKNET, mirrored on the Open Government Data platform.
-These reports provide public price information for farmers comparing sale timing and markets.
+Indian agricultural wholesale markets (\emph{mandis}) report minimum, maximum and modal prices by commodity and variety through AGMARKNET and public data mirrors.
+These reports provide price information for farmers comparing markets and sale timing, but their value as forecasting data depends on reporting continuity, source completeness and the evaluation protocol.
+The empirical question is how much a learned forecast improves on simply retaining the latest reported price, and how cautiously that improvement should be interpreted.
 
-Forecasting them has a large literature (Section~\ref{sec:related}), dominated by studies of one market, a few markets, or monthly indices.
-These studies typically use a single proportional hold-out, report deep or hybrid models against ARIMA, and rarely report naive baselines or prediction intervals \cite{paul2022brinjal,manogna2025deep,kumar2021onion}.
-Forecast-evaluation research shows why this matters:
-\begin{itemize}
-  \item simple benchmarks are hard to beat \cite{makridakis2018statistical,makridakis2020m4};
-  \item scaled errors are needed across heterogeneous series \cite{hyndman2006another};
-  \item the point forecast that is optimal depends on the scoring function \cite{gneiting2011making,kolassa2016evaluating};
-  \item leakage and data vintage can dominate conclusions \cite{hewamalage2022pitfalls,bokun2023fredsd}.
-\end{itemize}
+The mandi forecasting literature includes studies of individual markets, small groups of markets and monthly indices (Section~\ref{sec:related}), often comparing deep or hybrid models with ARIMA \cite{paul2022brinjal,manogna2025deep,kumar2021onion}.
+Forecast-evaluation research motivates a complementary emphasis: strong simple benchmarks \cite{makridakis2018statistical,makridakis2020m4}, appropriate scaling across heterogeneous series \cite{hyndman2006another}, alignment between the training loss and the scoring function \cite{gneiting2011making,kolassa2016evaluating}, and explicit treatment of leakage and data vintage \cite{hewamalage2022pitfalls,bokun2023fredsd}.
+These considerations motivate an auditable empirical study rather than a claim of model superiority across published studies with different data and protocols.
 
-We ask how much of the apparent skill in mandi price forecasting survives an evaluation that is leakage-resistant, baseline-honest, provenance-audited and assessed on later reports.
-Our contributions are empirical, and we state them with their limits.
+Our primary contribution is a smaller, resource-limited \emph{clean-source release study} of daily mandi modal-price forecasting.
+For each horizon and filtering regime, the learner uses \num{500000} deterministically sampled training rows from 2024; January--June 2025 is used for model selection and early stopping, July--December 2025 for interval calibration, and January--October 2026 for retrospective evaluation.
+Targets are purged at period boundaries.
+The release documents the feature builds and saved predictions, but retains a fixed historical panel as an external input.
+It therefore supports claims about this release and observed panel, rather than validation of the earlier full national benchmark.
 
+We make three empirical contributions, with their limits stated alongside the findings.
 \begin{enumerate}
-  \item \textbf{A national-scale, leakage-resistant benchmark} of daily mandi modal-price forecasts.
-    It covers \num{11845} market--commodity--variety series of 36 commodities at four horizons, with chronological target-purged splits.
-    It includes five naive and seasonal baselines, a per-series exponential smoother and a global gradient-boosting baseline.
-    Results are reported with MASE, Diebold--Mariano tests and per-series win rates.
-  \item \textbf{The scoring function is decisive.} Between 17\% and 34\% of target changes are exactly zero, because mandis re-quote unchanged prices.
-    Under absolute error, squared-loss global learners do not beat persistence at the next-report horizon, whereas an absolute-loss learner does.
-    This is a predictable consequence of elicitation theory \cite{gneiting2011making}. We quantify it at scale for this domain.
-  \item \textbf{A data-provenance effect.} A public mirror of AGMARKNET holds only 30\% of the official reports from October 2025 onwards.
-    On the mirror, forecasts appear to degrade and conformal intervals appear to lose calibration after a change of the publishing portal.
-    Scored on the same (series, origin) rows, the complete official record gives near-nominal coverage, although the 7-day gain over persistence still shrinks after the change. The gap statistics are consistent with a mechanism: the mirror's median gap between reports is three times longer.
-  \item \textbf{Later-period retrospective evaluation.} Models trained on data up to 2023 are saved, and only then are six months of later official reports (April--October 2026) first downloaded and scored. This is a post-development hold-out, not a real-time evaluation, because the forecasts were not issued as the data arrived. We also run a retraining experiment whose final test period was not used for any retraining choice.
+  \item \textbf{A chronological, baseline-explicit release comparison.}
+    We compare an absolute-loss LightGBM candidate with persistence and four other simple baselines at the next-report, 3-, 7- and 14-day horizons.
+    The two regimes exclude or retain reports flagged by the fivefold jump rule while preserving the other validity checks and panel membership.
+    Across the eight fits, pooled MAE is 4.4--5.9\% lower than persistence on the retrospective evaluation rows.
+    These are descriptive historical gains; adoption of LightGBM remains exploratory, with no independent confirmation of its superiority over the earlier Spark models or of benefits to farmer decisions.
+  \item \textbf{Explicit separation of pooled error and scaled error.}
+    Pooled MAE and MASE answer different questions: MASE divides errors by each series' training-period, horizon-specific naive error scale, whereas the pooled MAE comparison uses evaluation-period persistence error as its reference.
+    MASE also omits approximately 4.4--4.5\% of forecast rows because their training scales are not positive and finite.
+    It consequently describes a different population from full-row MAE; a MASE value above one is compatible with a pooled MAE gain over evaluation-period persistence.
+  \item \textbf{Dependence-aware sensitivity analysis and interval assessment.}
+    We report calendar-day block-resampling and dependence sensitivities alongside retrospective prediction-interval coverage.
+    Forecast rows are not independent replicates, and the inference relies on approximate weak-dependence and stationarity assumptions conditional on the fitted models and observed panel.
+    Neither small test probabilities nor narrow resampling intervals establish validated inferential coverage or generalisation to independent new markets.
 \end{enumerate}
 
-Gains over persistence are modest: 3--8\% in MAE. We do not claim superiority over published models, whose data, horizons and protocols differ (Section~\ref{sec:discussion}).
-The prototype system (single machine) is described in the supplementary material: Spark/Kafka/HDFS pipeline, API and a six-language farmer application.
+An earlier source-completeness audit provides historical supporting evidence that incomplete public mirrors can alter apparent forecast accuracy and interval coverage.
+That audit is not reproduced as the principal validation of this release, and the release does not establish the original full benchmark's source state.
+Similarly, the 2026 evaluation is retrospective: its forecasts were not issued as the reports arrived, so it does not constitute prospective confirmation.
+Independent confirmation, expert statistical review and future-issued evaluation remain outstanding.

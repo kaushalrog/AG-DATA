@@ -1,0 +1,33 @@
+{
+  "issued_at": "2026-10-23T17:15:12.232515+00:00",
+  "rows": 4956,
+  "lock_sha256": "189690e05d73044509cb22ea70c0f6a3ae8ce4f5eeae7da3df36eca4239328ad",
+  "input_sha256": {
+    "data/forecast_v2/features/year=2023/part-00004-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "1cbbda42f34eb784f406900e3e8bb00dec214f15b94f805fa10835a353d73bac",
+    "data/forecast_v2/features/year=2023/part-00008-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "274471589e084500bd8d210371d58c6bf75d6765cefe02bc44188493b6f6ebd1",
+    "data/forecast_v2/features/year=2023/part-00009-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "dc29e384c2361b9640c3504fee892a88f8edaeb653ff29b95c8d22f7b4525891",
+    "data/forecast_v2/features/year=2023/part-00011-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "7da17b284ab6269ea69f3d74320a715fb99bdbd03ccf51bd3281422221742f19",
+    "data/forecast_v2/features/year=2024/part-00001-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "cd17726b332d37a1861c98162430a290ed604fe777341024d6ee5dd28fc1ea13",
+    "data/forecast_v2/features/year=2024/part-00002-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "5e873d464ff29b0f893d482c6a2580329090cb7e03adf9b7ff2a490f43b8a2da",
+    "data/forecast_v2/features/year=2024/part-00006-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "235891a35d0129590b22c9545d778ad3d6cefd5d3479e4dfb44dc9c28d0871f8",
+    "data/forecast_v2/features/year=2024/part-00007-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "aac1bf5c5e3381eeb527f058059b66c5bbdae6de72a9a4694baef1f2dc4010d6",
+    "data/forecast_v2/features/year=2025/part-00003-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "81146b1813006ba82f5e718cfe380b175858b422f9b6738823770f0068e53f3d",
+    "data/forecast_v2/features/year=2025/part-00004-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "d46af78d51efe51455a5809b773d813174a76685281379acc01314e645a241b7",
+    "data/forecast_v2/features/year=2025/part-00005-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "9399679203b33341db00c8ca26e6f8293276ad7aafc4815fee70913dac729f95",
+    "data/forecast_v2/features/year=2025/part-00010-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "a0e37dc769ce2f654fe927c37703bb65e48f89ae235669b798cb75df39346288",
+    "data/forecast_v2/features/year=2026/part-00000-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "bbdc61d4dc1e14ca165f18ce0b6c1632e3a8d1510654eef9b305e86bc38c20d3",
+    "data/forecast_v2/features/year=2026/part-00003-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "b7f06d2e1fd040541ab220192095df11e451eb5fe81fc173198492a165d709e4",
+    "data/forecast_v2/features/year=2026/part-00008-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "43461513808fb4d2b175839b6b24182bf0904d6ddf280207f27603e652263443",
+    "data/forecast_v2/features/year=2026/part-00010-f2754c96-1ea4-48ad-8c1e-05fdbefa07ea.c000.snappy.parquet": "fc96b8fea0fb18fdbb93722090a390d443aa8549ff0371f9e4e8b3900b225efc"
+  },
+  "previous_manifest_sha256": null,
+  "predictions_sha256": "90ebf6e527cfe9da6f16e0d61d70d959487aa679811e6a4e64b64338b50605b1",
+  "counts_by_horizon": {
+    "h3": 1652,
+    "h7": 1652,
+    "h14": 1652
+  },
+  "earliest_target": "2026-10-24",
+  "timestamp_assurance": "Local system clock and hash chain only; not externally witnessed",
+  "status": "ISSUED_LOCALLY_NOT_EVALUATED"
+}

@@ -1,0 +1,21 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,booktabs,graphicx,amsmath,siunitx,xcolor,hyperref,url}
+\usepackage[numbers,sort&compress]{natbib}
+\sisetup{group-separator={,},group-minimum-digits=4}
+\graphicspath{{figures/}}
+\title{Historical supporting results: AG-DATA forecast benchmark}
+\author{}\date{}
+\begin{document}\maketitle
+\noindent This separate supporting document preserves analyses from commit \texttt{2a97a7e}. It is not the primary reproduced study. Original full-size execution and panel construction remain incompletely attributable; historical model choices, source-completeness comparisons, retraining, timing ablations and decision-rule backtests are exploratory supporting evidence. Older p values use dependence heuristics, not validated inferential guarantees. These results do not independently confirm LightGBM superiority or causal effects of missingness. Cross-references below are internal to this historical account; the primary paper supplies the current interpretation and limitations.
+\input{historical/s03_data}
+\input{historical/s04_protocol}
+\input{historical/s05_methods}
+\input{historical/s06_point}
+\input{historical/s07_intervals}
+\input{historical/s08_prospective}
+\input{historical/s09_discussion}
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

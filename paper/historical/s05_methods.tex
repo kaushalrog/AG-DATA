@@ -1,0 +1,46 @@
+\section{Methods}\label{sec:methods}
+
+\paragraph{Features.}
+Each origin carries 24 base features plus one horizon-specific seasonal feature, all computed from reports dated $\le t$ (Table~\ref{tab:features}).
+Missing values are set to zero. Each feature that can be missing has an indicator or count, so no fitted imputation can leak.
+The cross-market features use other markets' reports of the \emph{same day}, which assumes those are published by the end of day $t$.
+We test this assumption with a variant that uses the previous day's cross-market values instead (Section~\ref{sec:point}).
+
+\begin{table}[t]\centering\small
+\caption{Feature groups ($\ell=\ln P$); all frames end at the origin.}\label{tab:features}
+\begin{tabular}{@{}lp{0.74\linewidth}@{}}\toprule
+Group & Features\\\midrule
+Level and lags & $\ell_t$; differences to the 1st, 2nd and 5th previous reports; days since the previous report\\
+Rolling (7/30/90 d) & deviation from the rolling mean; standard deviation (30, 90); report counts (30, 90); distance to the 30-day max and min\\
+Range & $(\max-\min)/\text{modal}$ on day $t$\\
+Seasonal & deviation from the level at $t-365\pm3$; availability indicator; last year's change from $t-365$ to $t+h-365$\\
+Cross-market & same-day mean 30-day deviation and last return of the commodity, nationally and within the state; number of reporting markets\\
+Calendar & day of year (sine, cosine); day of week\\
+Categorical & commodity\\\bottomrule
+\end{tabular}\end{table}
+
+\paragraph{Baselines.}
+\begin{itemize}
+  \item Persistence ($\hat y=0$).
+  \item Geometric moving averages over 7 and 30 days.
+  \item Seasonal naive: last year's level around $t+h-365$, falling back to persistence when that is missing.
+  \item Seasonal-adjusted persistence: today's level times last year's change over the same horizon.
+  \item Per-series simple exponential smoothing (SES) on $\ell$, with the smoothing weight chosen per series on training origins.
+  \item A global LightGBM model with an L1 objective, trained on the same features and training sample, tuned and early-stopped on validation only; predictions of three seeds are ensembled.
+\end{itemize}
+
+\paragraph{Learners.}
+Each horizon has its own Spark MLlib model (direct strategy). The candidates are:
+\begin{itemize}
+  \item ridge and Huber regression on standardised features with one-hot commodity;
+  \item a random forest (60 trees, depth 10);
+  \item gradient-boosted trees with squared loss;
+  \item gradient-boosted trees with absolute loss.
+\end{itemize}
+MLlib's absolute-loss boosting fits trees after the first to the sign of the residual, without a leaf line search, so each iteration moves predictions by up to the step size.
+We therefore train these models on the target in percent, with step sizes of 0.25--0.5, and rescale inside the persisted pipeline. A unit test shows that this recovers the conditional median of a zero-inflated target.
+
+\paragraph{Intervals.}
+For the selected model, validation residuals are grouped into five bins by 30-day log-price volatility, with bin edges from validation quantiles.
+Each bin's 5/10/90/95\% residual quantiles give 80\% and 90\% intervals.
+Exchangeability does not hold for time series, so coverage is measured on test data \cite{gibbs2021adaptive}.

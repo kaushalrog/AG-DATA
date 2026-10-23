@@ -1,0 +1,53 @@
+{
+  "status": "locked",
+  "created_utc": "2026-10-23T17:18:55.455496+00:00",
+  "model_version": "fc_lgbm_2025",
+  "source_commit": "7dcaecba841a6ad8184c14360b23db48c0f54382",
+  "source_sha256": {
+    "py/agri/research/prospective.py": "b3a5beca6ba2464a622e080b854f5a81d7d292a066f7603a69572407a4db58a3",
+    "py/agri/forecast/lgbm.py": "51909cde4afca37fc7811851e6d03cd2d84f366fdd1e004e847acf03c493b784",
+    "src/main/scala/com/agribigdata/forecast/Features.scala": "5817420247bc4b6e90d00dc07d6e7bb6bb4d2b2d01c08e766c7e229a7cfe9a0b",
+    "src/main/scala/com/agribigdata/forecast/ForecastConfig.scala": "c8ea7729efc8eb75e30d1ade0c92d83aeb159569d9584c822b85e5cc09c42c21"
+  },
+  "versions": {
+    "lightgbm": "4.7.0",
+    "duckdb": "2.0.0",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "pyarrow": "26.0.0"
+  },
+  "original_hashes": {
+    "data/forecast_v3/models/fc_lgbm_2025/next/lgbm/model.txt": "ab5ad80aa565046e558fe98da102f5e911f1a433c336dd43ed40105333f3195e",
+    "data/forecast_v3/models/fc_lgbm_2025/next/lgbm/meta.json": "86ec825406b36edd651c0757d6752540ee1f4876e9b1ea3b741aabee90e70b04",
+    "results/forecast/fc_lgbm_2025/conformal_next.csv": "6e5a06e918fe57704470d1b5a1570f26c3762ca2b5900bfd7577ed6ae8f50845",
+    "data/forecast_v3/models/fc_lgbm_2025/h3/lgbm/model.txt": "4e2afe08e66676e009ead25fc1b24110133ba9b98f846fbbd42d5e9a1fbbf342",
+    "data/forecast_v3/models/fc_lgbm_2025/h3/lgbm/meta.json": "5c17b5a406968e8e2b593ff1bc724900a3cbf999e1fdb7568c80529391addae4",
+    "results/forecast/fc_lgbm_2025/conformal_h3.csv": "75e208a8b3fef2909a778e732afd005466b1b4902ab65f0b6a077e15adcadd9d",
+    "data/forecast_v3/models/fc_lgbm_2025/h7/lgbm/model.txt": "e9256a422ead478906e5a2a875ccc75a299b1d13927618a39fe14ed9d316fe2c",
+    "data/forecast_v3/models/fc_lgbm_2025/h7/lgbm/meta.json": "c4a93d46b5f6efed85f557f51f3c66ddad5528530e6d1ecb98caec7d3fb25140",
+    "results/forecast/fc_lgbm_2025/conformal_h7.csv": "0e22291a7e5988e6bf96ebf06b04c8656a53ff61b6402ce8150852aa62f7ec2e",
+    "data/forecast_v3/models/fc_lgbm_2025/h14/lgbm/model.txt": "03f88945f103d955fb06670f2091fa74dad75eed8d16b4efb357649f7a8b55b1",
+    "data/forecast_v3/models/fc_lgbm_2025/h14/lgbm/meta.json": "57a93c95afac095b090f002f8fd782cea89a478722e2bd6a1ab3a2e75affde64",
+    "results/forecast/fc_lgbm_2025/conformal_h14.csv": "ca007d36827fc6136338ef4052d1722cf43ab32b7674e493f1c5d6b200602528"
+  },
+  "protocol": {
+    "minimum_completed_days": 90,
+    "latest_origin_max_age_days": 2,
+    "eligible": "in-panel, known commodity; issued strictly before target-window local date",
+    "scope": "future-window issuance; same-day/next-report rows can be ineligible; not an exact repeat of retrospective origin protocol"
+  },
+  "artifacts": {
+    "artifacts/next/model.txt": "ab5ad80aa565046e558fe98da102f5e911f1a433c336dd43ed40105333f3195e",
+    "artifacts/next/meta.json": "86ec825406b36edd651c0757d6752540ee1f4876e9b1ea3b741aabee90e70b04",
+    "artifacts/next/conformal.csv": "6e5a06e918fe57704470d1b5a1570f26c3762ca2b5900bfd7577ed6ae8f50845",
+    "artifacts/h3/model.txt": "4e2afe08e66676e009ead25fc1b24110133ba9b98f846fbbd42d5e9a1fbbf342",
+    "artifacts/h3/meta.json": "5c17b5a406968e8e2b593ff1bc724900a3cbf999e1fdb7568c80529391addae4",
+    "artifacts/h3/conformal.csv": "75e208a8b3fef2909a778e732afd005466b1b4902ab65f0b6a077e15adcadd9d",
+    "artifacts/h7/model.txt": "e9256a422ead478906e5a2a875ccc75a299b1d13927618a39fe14ed9d316fe2c",
+    "artifacts/h7/meta.json": "c4a93d46b5f6efed85f557f51f3c66ddad5528530e6d1ecb98caec7d3fb25140",
+    "artifacts/h7/conformal.csv": "0e22291a7e5988e6bf96ebf06b04c8656a53ff61b6402ce8150852aa62f7ec2e",
+    "artifacts/h14/model.txt": "03f88945f103d955fb06670f2091fa74dad75eed8d16b4efb357649f7a8b55b1",
+    "artifacts/h14/meta.json": "57a93c95afac095b090f002f8fd782cea89a478722e2bd6a1ab3a2e75affde64",
+    "artifacts/h14/conformal.csv": "ca007d36827fc6136338ef4052d1722cf43ab32b7674e493f1c5d6b200602528"
+  }
+}

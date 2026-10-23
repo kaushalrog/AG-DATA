@@ -1,54 +1,7 @@
-\section{Data and provenance audit}\label{sec:data}
+\section{Retained data and fixed-panel scope}\label{sec:data}
+The primary experiment uses retained silver v2 mandi reports, combining the AGMARKNET Kaggle archive before October 2025 with official data.gov.in reports thereafter. Prices are INR per quintal. Input Parquet bytes and shard lists are hashed before and after feature execution; these retained bytes, rather than an assurance of identical later API responses, define the reproduced dataset. Official resource access requires a key, which is excluded from source and archives.
 
-\paragraph{Sources.}
-Model development used an archive of AGMARKNET daily reports for 2001-01-10 to 2026-04-21: a Kaggle dataset (\texttt{khandelwalmanas/daily-commodity-prices-india}, version 134, GODL-India).
-It has \num{75984017} rows; after quality classification and business-key de-duplication, \num{75644801} rows remain.
-Its columns match the official data.gov.in resource \emph{Variety-wise Daily Market Prices Data of Commodity}.
-After development, an API key became available. We back-filled \num{7720662} official records for 2025-10-01 to 2026-10-22, one request series per date, 387 dates with no failure.
-Our second layer combines the archive before 2025-10-01 with the official record afterwards, for \num{82114083} rows in total.
+The 36-commodity panel is an existing table of 11,845 eligible market--commodity--variety series, supplied as a fixed, hashed external input. Its original selection is not reproduced or independently certified here. Depending on horizon and cleaning regime, the evaluation contains 4,602--5,182 series, rather than all panel members. Findings apply to these eligible report-days and cannot represent every Indian market or farmer.
+Both cleaning variants are newly built from the same inputs, with history beginning 2022-10-01, for warm-up before 2024 training. The cleaned variant removes reports flagged by a fivefold deviation from the prior ten-report geometric mean; the unfiltered variant retains them. Other validity checks, harmonisation, panel and build settings are held fixed. This does not create manual error labels: unusual prices can be genuine. Common origins may still carry different targets and features after filtering, so the comparison is pipeline sensitivity, not a causal effect of cleaning.
 
-\paragraph{Scope and panel.}
-We use 36 staple commodities: vegetables, fruits, cereals, pulses, oilseeds and cotton.
-They were chosen from training-period data:
-\begin{enumerate}
-  \item take an a-priori list of crop-name patterns;
-  \item keep matches with more than \num{50000} valid reports in 2021--2023;
-  \item drop two duplicate or processed forms;
-  \item keep the 36 most-reported.
-\end{enumerate}
-An entity (series) is (state, district, market, commodity, variety).
-It is in the panel if it has at least 300 report days in 2021--2023, which gives \num{11845} series and \num{21.06}M feature rows.
-A causal sanity rule removes reports more than a factor of five from the geometric mean of the previous ten reports (\num{28567} reports, 0.086\%).
-
-\paragraph{Identifier drift.}
-Several changes in how identifiers are published would break series if left untreated:
-\begin{itemize}
-  \item many series switch their grade label from \emph{FAQ} to \emph{Local} in January 2025. No (state, district, market, commodity, variety, date) key carries two grades in the archive since 2023, so grade is an attribute. The official record is different: there, 1.2\% of entity-days (\num{85315}) carry several grades, and a deterministic rule keeps one of them;
-  \item markets gain an `` APMC'' suffix with the AGMARKNET~2.0 portal (live 2025-11-07);
-  \item the official API writes no space before ``('' and uses ``Keralam'' for Kerala.
-\end{itemize}
-One normalisation rule, shared by the batch and streaming paths, maps all of these. On 2026-04-20, all \num{5152} valid archive keys are found among the \num{22716} official records.
-
-\paragraph{Mirror completeness.}
-Table~\ref{tab:mirror} compares daily volumes.
-On the sample days in Table~\ref{tab:mirror} the mirror holds 94--100\% of official reports before October 2025 and 0--54\% afterwards. By month, it holds 70.4\% in October 2025 and 5.9--38.9\% from November 2025 to April 2026, which is 30.0\% overall for 2025-10-01 to 2026-04-21.
-Every mirror record in that window exists in the official data, and 99.33\% have an identical modal price. The mirror is incomplete, not corrupt.
-Missing reports lengthen the gaps between consecutive reports of a series:
-\begin{itemize}
-  \item the median gap is 3 days in the mirror and 1 day in the official record;
-  \item 16.2\% of mirror gaps exceed a week, against 2.4\% in the official record.
-\end{itemize}
-Longer gaps push ``next report'' targets further ahead and thin the trailing windows the features rely on.
-
-\begin{table}[t]\centering\small
-\caption{Daily report counts, official API versus the public mirror (sample days).}\label{tab:mirror}
-\begin{tabular}{@{}lrrr@{}}\toprule
-Date & Official & Mirror & Share\\\midrule
-2025-03-12 & 22,040 & 21,967 & 0.997\\
-2025-09-17 & 20,703 & 19,542 & 0.944\\
-2025-10-15 & 21,899 & 20,611 & 0.941\\
-2025-11-20 & 17,824 & 0 & 0.000\\
-2025-12-17 & 19,566 & 10,559 & 0.540\\
-2026-02-18 & 18,979 & 5,992 & 0.316\\
-2026-04-20 & 22,716 & 5,162 & 0.227\\\bottomrule
-\end{tabular}\end{table}
+Build records bind the committed source, executed assembly JAR, commands, runtime versions and exit codes to output checksums. This is observed execution attestation, not an independent build witness. Large inputs are retained locally outside Git; a public immutable archival package and independent-environment reproduction remain outstanding. The earlier national-scale source audit and full-size experiments are historical supporting material in the historical supplement, not acceptance-critical validation of this primary study.

@@ -27,15 +27,17 @@ def main():
     m=json.loads(M.read_text());assert m['status']=='completed' and m['verified_builds']
     for r in m['runs'].values():
         assert digest(ROOT/r['prediction_path'])==r['prediction_sha256'],'Changed prediction artifact'
-    rows=[];ct=[];nt=[]
+    rows=[];ct=[];nt=[];scaled=[]
     for k,r in m['runs'].items():
         v,h=k.rsplit('_',1);me=r['metrics'];st=r['statistics'];a=me['candidate'];b=me['persistence']
         prefix=f'{v} & {h}'
         rows.append(prefix+f" & {a['n']:,} & {st['calendar_days']} & {a['mae']:.2f}/{b['mae']:.2f} & {a['relative_mae']:.3f} & {a['n']-a['mase_n']:,}"+r' \\')
+        scaled.append(prefix+f" & {a['mase']:.3f} & {b['mase']:.3f} & {100*me['interval']['coverage80']:.1f}\\% & {me['interval']['relative_width80']:.3f}"+r' \\')
         for circ,dest in [(True,ct),(False,nt)]:
             items=[x for x in st['block_sensitivity'] if x['circular']==circ]
             dest.append(prefix+' & '+' & '.join(interval(x) for x in items)+r' \\')
     table('release_points','Regime & Horizon & Rows & Days & MAE C/P & Rel. MAE & MASE omitted',rows,'llrrrrr')
+    table('release_scaled','Regime & Horizon & MASE C & MASE P & Coverage 80\\% & Rel. width',scaled,'llrrrr')
     for name,rows in [('release_circular',ct),('release_noncircular',nt)]:
         table(name,'Regime & Horizon & 28 days & 42 days & 56 days',rows,'llrrr')
     runs=list(m['runs'].values());ratios=[r['metrics']['candidate']['relative_mae'] for r in runs]

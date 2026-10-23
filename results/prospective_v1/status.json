@@ -1,0 +1,9 @@
+{
+  "status": "SUPERSEDED_DEVELOPMENT_BEFORE_OUTCOMES",
+  "batches": 1,
+  "issued_rows": 4956,
+  "first_issued_at": "2026-10-23T17:15:12.232515+00:00",
+  "minimum_completed_days": 90,
+  "limitations": "No external timestamp witness; no outcomes scored; no installed schedule; human review pending",
+  "active_cohort": "prospective_v2"
+}

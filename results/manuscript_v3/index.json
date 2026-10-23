@@ -1,0 +1,24 @@
+{
+  "scope": "Smaller clean-source study primary; older benchmark historical supporting material",
+  "retrospective_release_tag": "agdata-research-release-v1",
+  "prospective_source_commit": "7dcaecb",
+  "future_status": "NOT_EVALUATED",
+  "active_cohort": "prospective_v2",
+  "superseded_development_cohort": "prospective_v1",
+  "outputs": {
+    "paper/main.pdf": "b7987a325bb3a3bf7ed4c4434aeebf677f796b546a7cc8ef6b2df267401eb4c1",
+    "paper/ieee/main.pdf": "886f8d6c5e467982dd786df73bb68753a89e702a43e8e6c2aad9885847e73e2a",
+    "paper/historical_results.pdf": "4418ae727b3c6be4e930b99da69f26d1254a0f968a9a418a8f76f7c5240deb7c",
+    "paper/tables/release_points.tex": "0aa355e78b8cfd29bbcdedfb67f3c32ae333e052e3ab53520a51e5fa3da6b065",
+    "paper/tables/release_circular.tex": "c7473979961103e310e7129e1a2f4070828d0741d45a31008501d914a37daeda",
+    "paper/tables/release_noncircular.tex": "7d91056f73ad472a22c62d5404ffe2cfe04d7e6ac540dc76967efd4755f7b3f7",
+    "paper/tables/release_scaled.tex": "349c806b0be116cb3f25fbff24785c851f67ed6782d35c830bf639cfe1b8edf2",
+    "results/prospective_v2/lock.json": "c368967663e023b5676cc144091889a91fa91c37f5d543c2d42a379488d7a0d5",
+    "results/prospective_v2/first_issue.json": "d452c1d89fb9a56af1cd3f5479cec55bc095391044487989481040b5d0f58f8b",
+    "results/prospective_v2/ledger_head.json": "a9a5a8cd98c375b9b1a34e426a18a41141bc125a3883bb7674581769afcafe15"
+  },
+  "local_python_tests": {
+    "passed": 106,
+    "warnings": 1
+  }
+}

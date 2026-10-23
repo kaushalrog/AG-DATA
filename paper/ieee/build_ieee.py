@@ -13,7 +13,7 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[1] / "ijf"
 OUT = Path(__file__).resolve().parent / "sections"
-WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp", "tab:revision", "tab:release_point", "tab:release_circular", "tab:release_noncircular"}  # too wide for one column -> table*
+WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp", "tab:revision", "tab:release_point", "tab:release_circular", "tab:release_noncircular", "tab:release_scaled"}  # too wide for one column -> table*
 REPO = "https://github.com/kaushalrog/AG-DATA"
 DEMO = "https://kaushalrog.github.io/AG-DATA/"
 

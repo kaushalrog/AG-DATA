@@ -1,0 +1,8 @@
+{
+  "status": "identical_predictions_hardened_ledger",
+  "rows": 4956,
+  "maximum_absolute_difference": 0.0,
+  "development_cohort": "prospective_v1",
+  "active_cohort": "prospective_v2",
+  "reason": "Tail deletion and timestamp mutation guard fixes before target outcomes; no model changes or outcome-driven selection"
+}

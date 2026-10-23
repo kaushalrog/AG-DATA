@@ -1,7 +1,7 @@
 # Frozen-model future-window issuance v2
 
 This is a local prospective collection protocol, not completed confirmation.
-The existing prototype model fc_lgbm_2025 is an exploratory chosen model. A successful
+The existing prototype model fc_lgbm_2025 is an exploratory chosen model, not the smaller release-study fit. This collection cannot directly confirm the latter model. A successful
 future evaluation could assess it forward in time; it would not retroactively make
 historical selection independent or reproduce the original test population.
 

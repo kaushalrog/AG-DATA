@@ -1,55 +1,8 @@
-\section{Decision-rule back-test, discussion and limitations}\label{sec:discussion}
+\section{Discussion, limitations and practical meaning}\label{sec:discussion}
+The primary evidence is a modest reduction of pooled rupee error under two cleaning pipelines in one already observed evaluation period. MASE near or above one, omitted scales and worse-performing subgroups constrain its interpretation. Some error gains may matter operationally, but modal price is a published market summary, not a farmer's transaction price; transport, fees, perishability and storage can outweigh these differences. No profit or welfare effect is estimated \cite{fafchamps2012sms,mitra2018asymmetric}.
 
-\paragraph{Decision rule.}
-The application maps the 7-day 80\% interval $[\ell_7,u_7]$ (on the log-return scale) to cautious market-outlook cards. Holding cost is $c=1\%+$ 5\%/week for perishables (1\%/week for durables); these costs are placeholders that the farmer can edit.
-\begin{itemize}
-  \item \textsc{hold} if $\ell_7\ge\ln(1+c)$;
-  \item \textsc{sell} if $u_7\le0$;
-  \item \textsc{compare} if a market in the same state reported a price at least 5\% higher within three days, before transport costs (which the farmer enters; the default is zero);
-  \item \textsc{watch} otherwise.
-\end{itemize}
-On the main test the rule (configuration version 2026-10-22.1) abstains on 98.5\% of report-days.
-\textsc{hold} fires on 0.5\%, and the realised price exceeds today's plus cost 80.0\% of the time. \textsc{sell} fires on 1.0\%, with a hit rate of 67.8\%.
-\textsc{hold} fires mostly after reports far below a series' recent level that then revert (median realised change $+46.8\%$). Some of these may be reporting errors below the sanity threshold.
-These are hit rates on published modal prices, not farm-gate profits, and \textsc{compare} is not back-tested because transport costs are unknown.
+The statistical sample includes 281--294 calendar days, not hundreds of thousands of independent trials. Shared shocks, overlapping targets, changing report counts and long-range autocorrelation complicate inference. A 56-day block yields only about five non-overlapping temporal spans; 2,000 resamples cannot create independent seasons. The sensitivity grid is useful disclosure, not validated coverage or a substitute for human statistical review. Independent entity resampling does not make correlated markets independent. Training-sample and hyperparameter-search uncertainty are not captured.
 
-\paragraph{Comparison with published results.}
-Published mandi studies use different markets, horizons, aggregation and splits. Their MAPE values (e.g.\ \cite{manogna2025deep}) are not comparable with our WAPE.
-The historical comparisons are internal and exploratory; they are not independently confirmed by the smaller release study:
-\begin{itemize}
-  \item learned models beat persistence by 3--8\%;
-  \item they match a per-series smoother at 1--3 days;
-  \item cross-market features account for 17--29\% of the 7-day gain, depending on the learner;
-  \item a global LightGBM beats the MLlib model by a further 0.023--0.031 in relative MAE.
-\end{itemize}
-These effects are far smaller than gains over ARIMA reported elsewhere, which suggests that baselines and protocol may explain much of the spread in reported accuracy.
+Other limitations are the fixed historical panel, one training year, one seed, two leaf settings, source revisions, irregular target availability, omitted weather/arrivals, and assumed end-of-day availability of same-day cross-market features. The evaluation year was visible during design. The clean execution is not independent confirmation or a reconstruction of the older national-scale benchmark. We do not extend the primary evaluation into the selection/calibration periods merely to obtain more observations: doing so would change their roles and would not add independent seasons. Longer independent observation requires time-forward collection or a separately defined rolling-origin study.
 
-\paragraph{Threats to validity.}
-\begin{itemize}
-  \item Model choice, conformal calibration and the panel definition use pre-test data, but the conformal quantiles are calibrated on the same validation year used for selection.
-  \item For backtest folds within 2021--2023, the panel was selected on reporting density in those years. No prices enter this density rule, but later reporting availability still influences early-fold membership.
-  \item Original Diebold--Mariano tests treat daily cross-sectional mean losses as one series. We report one test per model and horizon against persistence without a multiplicity correction; these p values are descriptive historical results, not the corrected primary family of the separate robustness experiment; a historical sensitivity at Newey--West lag 20 also gave small heuristic p values ($p\le8\times10^{-13}$ at every horizon).
-  \item Forecast rows are not independent statistical replicates. The temporal unit is the aggregated calendar day; even those days are correlated. Limited seasons, panel changes and common shocks constrain inference. Holm correction cannot repair misspecified dependence or exploratory selection.
-  \item The automated independent statistical-method review is not human expert sign-off; submission requires that additional review.
-  \item Results describe well-reported mandis of 36 commodities.
-  \item Modal price is the published summary, not an individual farmer's price.
-\end{itemize}
-
-\paragraph{Limitations.}
-\begin{itemize}
-  \item The MLlib search space is small (8 configurations per horizon), and the LightGBM model now in service was adopted on a final period that had already been used twice (Section~\ref{sec:prospective}).
-  \item Only one retraining was evaluated (Section~\ref{sec:prospective}).
-  \item No deep or foundation-model baselines were run.
-  \item Arrivals and weather covariates are absent.
-  \item Adaptive conformal methods were not implemented.
-  \item A validated refresh job exists, but no schedule is installed. Freshness therefore depends on operator runs.
-\end{itemize}
-
-\paragraph{Ethics.}
-Forecasts can hurt farmers who over-trust them. The interface therefore:
-\begin{itemize}
-  \item shows intervals, measured error and data age;
-  \item defaults to \textsc{watch};
-  \item never states a guaranteed price.
-\end{itemize}
-No personal data is collected. Interface translations into five Indian languages are machine-drafted and await native-speaker review. Welfare effects are not claimed \cite{fafchamps2012sms,mitra2018asymmetric}.
+The main reproducibility claim is scoped to this smaller retained-input execution. A public immutable archive of exact large input bytes, a separate-environment run, and a human statistician's assessment remain outstanding. IJF is the intended empirical forecast-evaluation venue, not a claim of readiness or acceptance. We do not propose a new learner, new conformal theory, causal missingness effect or superiority over papers with incompatible data and protocols. The six-language prototype and historical decision cards are supporting system work, not experimentally demonstrated farmer benefit; native-speaker, device and farmer reviews remain pending.

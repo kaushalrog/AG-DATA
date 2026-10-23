@@ -1,5 +1,10 @@
 # AG-DATA 2.0: mandi price forecasting and farmer decision support
 
+> Current paper scope: the **smaller clean-source study is primary**; older national-scale
+> results are separate historical supporting material. See [third-review response](docs/THIRD_REVIEW_RESPONSE.md).
+> Frozen prototype future-window collection has started locally, with **no outcomes evaluated**.
+
+
 > Research evidence update: [second-review response](docs/SECOND_REVIEW_RESPONSE.md)
 > separates the clean-source smaller-study reproduction from historical full-size
 > results. Statistical intervals remain approximate; LightGBM adoption is exploratory.

@@ -1,0 +1,63 @@
+\section{Later-period evaluation and retraining}\label{sec:prospective}
+
+\paragraph{Frozen models on later data.}
+The models, conformal quantiles and MASE scales of the main experiment were saved on 2026-10-22. The official back-fill that first brought reports after 2026-04-21 into the project ran on 2026-10-23.
+The saved models were scored, without refitting, on official reports for 2026-04-22 to 2026-10-22.
+This is a post-development hold-out rather than a real-time evaluation: the reports existed when the models were saved, but no development step had access to them.
+The scope is the same panel of series, with 0.27--0.31 million forecasts per horizon.
+Table~\ref{tab:prosp} shows the results. The relative MAE is 0.963, 0.955, 0.958 and 0.952, and the DM tests reject equal accuracy with persistence at every horizon ($p<2\times10^{-15}$).
+The 80\% intervals cover 76.9--80.1\%.
+At 7 and 14 days the gain is smaller than in the main test (0.958 against 0.938 at 7 days), The evaluated refit did not recover the earlier gain (Table~\ref{tab:retrain}); this comparison alone cannot attribute the difference to model age or market conditions.
+
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Frozen models (trained up to 2023), with relative MAE and 80\% coverage. The first block re-scores the main test period on the complete official record. The second is post-development retrospective scoring (2026-04-22 to 2026-10-22).}\label{tab:prosp}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+ & next & 3 d & 7 d & 14 d\\\midrule
+Rel.\ MAE, main test (official) & 0.972 & 0.954 & 0.943 & 0.925\\
+80\% coverage, main test (official) & 79.2\% & 79.6\% & 80.0\% & 80.3\%\\
+Rel.\ MAE, later-period & 0.963 & 0.955 & 0.958 & 0.952\\
+80\% coverage, later-period & 76.9\% & 78.8\% & 79.6\% & 80.1\%\\
+Series better than persistence, later-period$^a$ & 59.3\% & 64.1\% & 66.6\% & 66.0\%\\\bottomrule
+\end{tabular}
+\par\smallskip\footnotesize $^a$ Among 2,497--2,701 series with at least 30 later-period rows (about 8,600 in the main test).\end{table}
+
+\paragraph{Does retraining help?}
+We retrained under the protocol fixed in Section~\ref{sec:protocol}: training up to 2024, validation on 2025, and a final test from 2026-01-01 to 2026-10-22 that was not used for any retraining choice.
+The search space, selection rule, sample size and features were the same as before.
+Validation selected absolute-loss boosting at the next report and at 3 days, the random forest at 7 days and squared-loss boosting at 14 days.
+Table~\ref{tab:retrain} compares the retrained and frozen models on identical final-test rows.
+No difference is significant (DM $p$ between 0.12 and 0.99). The retrained model is numerically worse at 14 days (0.950 against 0.946).
+Both models beat persistence at every horizon ($p\le1.4\times10^{-12}$). The moving-average, seasonal-naive and seasonal-adjusted baselines are again worse than persistence (relative MAE 1.007--3.98).
+
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Final test, 2026-01-01 to 2026-10-22, with identical rows for both models. The DM test compares the retrained model with the frozen one.}\label{tab:retrain}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+Horizon & Test rows & Rel.\ MAE, frozen & Rel.\ MAE, retrained & DM $p$ & 80\% coverage (frozen / retrained)\\\midrule
+next & \num{553801} & 0.965 & 0.966 & 0.12 & 77.0\% / 77.5\%\\
+3 d & \num{531321} & 0.955 & 0.955 & 0.99 & 78.6\% / 78.8\%\\
+7 d & \num{519251} & 0.958 & 0.958 & 0.74 & 79.3\% / 78.9\%\\
+14 d & \num{496306} & 0.946 & 0.950 & 0.35 & 79.7\% / 78.1\%\\\bottomrule
+\end{tabular}\end{table}
+
+\paragraph{Exploratory operational adoption of LightGBM.}
+Before that candidate training run, we committed an operational rule for replacing the served model; the evaluation period had already been examined, so this was not confirmatory pre-registration. The candidate had to beat the frozen model at 7 days after a Holm correction, be significantly worse at no horizon, and keep 80\% coverage within 75--85\%, losing no more than two points relative to the frozen model. Its published forecasts also had to reproduce its offline predictions exactly.
+A LightGBM candidate trained under the retraining protocol (validation used only for the number of leaves, early stopping and calibration) reached relative MAE 0.944, 0.933, 0.934 and 0.922 on the rows of Table~\ref{tab:retrain}. It was better than both Spark models at every horizon (Holm-adjusted $p\le4\times10^{-16}$), with 80\% coverage of 77.5--79.0\%. It was adopted for the prototype on this exploratory evidence.
+Because this final period had already been used twice, and an earlier LightGBM result on overlapping data had motivated the test, neither the adoption nor subsequent cleaning sensitivity independently confirms LightGBM superiority. The later smaller-model experiments compare LightGBM with simple baselines, not with newly refitted Spark alternatives.
+
+\paragraph{Interpretation and disclosure.}
+Two more years of data did not measurably improve this model class on 2026.
+This is a single refit on one final period. It does not show that retraining never helps, and it does not make the frozen models current: they encode no information after 2023.
+The final test is not pristine. January to April 2026 belonged to the main test, and April to October 2026 had already been used to score the frozen models (above), before the retraining protocol was fixed. No choice in the retraining run used any 2026 data.
+
+\paragraph{Separate-calibration and cleaning sensitivity.}
+The locked smaller-model experiment in Section~\ref{sec:protocol} completed on clean fitting-source commit \texttt{e7abad9}; reporting code \texttt{059e8e2} recomputes aggregate metrics and statistical summaries from checksum-verified predictions. The unfiltered feature fingerprint was captured after the build: it supports subsequent integrity checks but does not prove the exact executed builder and input state at build time. Original cleaned-feature construction likewise remains incompletely attributed.
+Table~\ref{tab:revision} reports the results. Candidate MAE on cleaned rows rises from INR 192.30 at the next report to INR 393.83 at 14 days, compared with persistence MAE of INR 202.26 and INR 411.51. Unfiltered values are INR 197.04 and INR 397.39, against INR 207.30 and INR 416.21. All other simple baselines are worse than persistence in each regime (relative MAE 1.001--3.980). Holm-adjusted p values for the eight candidate--persistence comparisons are below $5\times10^{-23}$, but their small values do not establish practical value for individual farmers.
+
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Retrospective robustness with disjoint selection and calibration periods. MASE columns show candidate/persistence. Confidence intervals are paired 28-calendar-day block bootstrap intervals for relative MAE (500 replicates), conditional on fitted models.}\label{tab:revision}
+\input{tables/revision_robustness}
+\end{table}
+
+MASE exceeds one in every regime/horizon, despite gains against contemporaneous persistence: the training-period scale and current-period persistence error are different denominators. Intervals under-cover most noticeably at the next report (77.7--77.8\%). Across the eight fits, monthly relative MAE ranges from 0.931 to 0.972; 60.6--68.5\% of entities have lower aggregate candidate error. Separate entity-cluster confidence intervals also lie below one; these do not combine temporal and cross-sectional uncertainty into a two-way guarantee. Full baselines, 14-day-block estimates, monthly values, interval widths and cluster estimates are retained in the reproducible result tables.
+On common origins, cleaned/unfiltered relative MAE is 0.951/0.952, 0.943/0.944, 0.952/0.951 and 0.957/0.956. The direction of the gain therefore survives this sensitivity, but its magnitude is pipeline-dependent; targets and features may differ even on common origins. Of 14,098,524 valid reports in the unfiltered build scope, 18,775 trigger the jump flag. Inspection of 120 deterministically selected reports cannot distinguish reporting errors from genuine economic shocks and supplies no manual ground truth.
+No serving model was changed by this study. A genuine confirmation must archive forecasts before their outcomes and remains future work.

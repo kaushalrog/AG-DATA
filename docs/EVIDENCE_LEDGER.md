@@ -1,5 +1,10 @@
 # Evidence classes for the revised manuscript
 
+Current scope after the third review: the smaller clean-source study is primary.
+Historical full-size analyses now live in a separate supporting document, not in
+the primary benchmark results. Local prototype issuance v2 has begun; no outcomes
+have been scored. These forecasts do not use the smaller release-study model.
+
 | Class | Files | What is established | What is not established |
 |---|---|---|---|
 | Historical analyses | `results/forecast/fc_main_v3`, `fc_retrain_2025`, `fc_lgbm_2025` | Saved metrics/artifacts, historical comparisons, operational adoption | Exact original dirty-code feature build; independent confirmation; entire full-size rerun |
