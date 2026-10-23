@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f6b3a">
+<title>Offline</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<main class="main">
+  <section class="card notice" style="margin-top:24px">
+    <h1 class="h1" id="t">You are offline</h1>
+    <p id="b">This page is not saved on your phone yet. Connect to the internet and try again.</p>
+    <button class="btn btn-primary" type="button" id="r">Try again</button>
+  </section>
+</main>
+<script>
+(function () {
+  var l = 'en';
+  try { l = JSON.parse(localStorage.getItem('agri.lang')) || 'en'; } catch (e) {}
+  if (!/^(en|ta|te|ml|hi|kn)$/.test(l)) l = 'en';
+  document.documentElement.lang = l;
+  document.getElementById('r').onclick = function () { location.href = './'; };
+  fetch('i18n/' + l + '.json').then(function (r) { return r.json(); }).then(function (d) {
+    document.getElementById('t').textContent = d['offline.title'];
+    document.getElementById('b').textContent = d['offline.body'];
+    document.getElementById('r').textContent = d['common.retry'];
+    document.title = d['offline.title'];
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+{
+ "_doc": "Shared decision-rule fixtures (prices in INR/quintal; h7; costs from conf/decision_rules.json). Run by tests/python/test_decisions.py, app/tests/decision.test.mjs and ForecastEvalSpec.",
+ "rules_version": "2026-10-23.1",
+ "cases": [
+  {
+   "name": "hold_durable",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1030.0,
+    "hi80": 1200.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "HOLD",
+    "reasons": [
+     "lower_bound_above_cost"
+    ]
+   }
+  },
+  {
+   "name": "hold_blocked_by_perishable_cost",
+   "input": {
+    "commodity": "Tomato",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1030.0,
+    "hi80": 1200.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "uncertain",
+     "perishable_cost_applied"
+    ]
+   }
+  },
+  {
+   "name": "hold_perishable",
+   "input": {
+    "commodity": "Tomato",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1070.0,
+    "hi80": 1300.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "HOLD",
+    "reasons": [
+     "lower_bound_above_cost",
+     "perishable_cost_applied"
+    ]
+   }
+  },
+  {
+   "name": "sell",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 850.0,
+    "hi80": 990.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "SELL",
+    "reasons": [
+     "upper_bound_below_today"
+    ]
+   }
+  },
+  {
+   "name": "sell_beats_compare",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 850.0,
+    "hi80": 990.0,
+    "transport": 0.0,
+    "compare": [
+     {
+      "modal_price": 1200.0,
+      "days_old": 0,
+      "comparable": true
+     }
+    ]
+   },
+   "expected": {
+    "signal": "SELL",
+    "reasons": [
+     "upper_bound_below_today"
+    ]
+   }
+  },
+  {
+   "name": "compare",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": [
+     {
+      "modal_price": 1100.0,
+      "days_old": 1,
+      "comparable": true
+     }
+    ]
+   },
+   "expected": {
+    "signal": "COMPARE",
+    "reasons": [
+     "better_market_nearby"
+    ]
+   }
+  },
+  {
+   "name": "compare_killed_by_transport",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 80.0,
+    "compare": [
+     {
+      "modal_price": 1100.0,
+      "days_old": 1,
+      "comparable": true
+     }
+    ]
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "uncertain"
+    ]
+   }
+  },
+  {
+   "name": "compare_ignores_stale_market",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": [
+     {
+      "modal_price": 1300.0,
+      "days_old": 6,
+      "comparable": true
+     }
+    ]
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "uncertain"
+    ]
+   }
+  },
+  {
+   "name": "compare_ignores_not_comparable",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": [
+     {
+      "modal_price": 1300.0,
+      "days_old": 0,
+      "comparable": false
+     }
+    ]
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "uncertain"
+    ]
+   }
+  },
+  {
+   "name": "watch",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "uncertain"
+    ]
+   }
+  },
+  {
+   "name": "stale_report",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": true,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1030.0,
+    "hi80": 1200.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "stale_data"
+    ]
+   }
+  },
+  {
+   "name": "expired_beats_hold",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": true,
+    "stale": true,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1030.0,
+    "hi80": 1200.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "forecast_expired"
+    ]
+   }
+  },
+  {
+   "name": "unsupported_history",
+   "input": {
+    "commodity": "Wheat",
+    "supported": false,
+    "unsupported_reason": "insufficient_history",
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "insufficient_history"
+    ]
+   }
+  },
+  {
+   "name": "unsupported_stale",
+   "input": {
+    "commodity": "Wheat",
+    "supported": false,
+    "unsupported_reason": "stale_beyond_limit",
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": [
+     "stale_data"
+    ]
+   }
+  },
+  {
+   "name": "unsupported_commodity",
+   "input": {
+    "commodity": "Wheat",
+    "supported": false,
+    "unsupported_reason": "not_in_forecast_commodities",
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 950.0,
+    "hi80": 1080.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "WATCH",
+    "reasons": []
+   }
+  },
+  {
+   "name": "boundary_hold_exact",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 1020.0,
+    "hi80": 1100.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "HOLD",
+    "reasons": [
+     "lower_bound_above_cost"
+    ]
+   }
+  },
+  {
+   "name": "boundary_sell_exact",
+   "input": {
+    "commodity": "Wheat",
+    "supported": true,
+    "unsupported_reason": null,
+    "expired": false,
+    "stale": false,
+    "today": 1000.0,
+    "days": 7,
+    "lo80": 900.0,
+    "hi80": 1000.0,
+    "transport": 0.0,
+    "compare": []
+   },
+   "expected": {
+    "signal": "SELL",
+    "reasons": [
+     "upper_bound_below_today"
+    ]
+   }
+  }
+ ]
+}

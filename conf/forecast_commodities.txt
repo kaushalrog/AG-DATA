@@ -1,0 +1,50 @@
+# Commodities in the forecasting panel (exact names as published in the
+# Daily Market Prices archive). Selection used training-period data only:
+#  1. an a-priori list of staple crop-name patterns (case-insensitive regex):
+#     onion|potato|tomato|brinjal|green chilli|cabbage|cauliflower|bhindi|cucumbar|
+#     bitter gourd|bottle gourd|carrot|pumpkin|garlic|ginger|drumstick|beans|capsicum|
+#     coriander|banana|apple|pomegranate|coconut|lemon|wheat|paddy|^rice|maize|bajra|
+#     jowar|ragi|arhar|bengal gram|green gram|black gram|lentil|mustard|soyabean|
+#     groundnut|cotton|turmeric|tapioca|mango
+#  2. keep matches with > 50,000 VALID reports in 2021-2023 (41 commodities)
+#  3. drop two duplicate/processed forms: "Banana - Green", "Arhar Dal (Tur Dal)"
+#  4. keep the 36 with the most reports (drops Drumstick, Mango, French Beans).
+# This is NOT "the top 36 overall": Raddish, Papaya, Gur (Jaggery), Mousambi,
+# Ridgeguard and Spinach rank in the overall top 39 but were not in the a-priori
+# list (red-team RT-09).
+Potato
+Onion
+Tomato
+Brinjal
+Wheat
+Green Chilli
+Cauliflower
+Paddy (Dhan)(Common)
+Bhindi (Ladies Finger)
+Cucumbar (Kheera)
+Cabbage
+Banana
+Bottle gourd
+Bengal Gram (Gram)(Whole)
+Pumpkin
+Bitter gourd
+Mustard
+Apple
+Rice
+Ginger (Green)
+Carrot
+Maize
+Garlic
+Soyabean
+Lemon
+Pomegranate
+Arhar (Tur/Red Gram)(Whole)
+Capsicum
+Bajra (Pearl Millet/Cumbu)
+Green Gram (Moong)(Whole)
+Black Gram (Urd Beans)(Whole)
+Cotton
+Lentil (Masur)(Whole)
+Coriander (Leaves)
+Jowar (Sorghum)
+Groundnut

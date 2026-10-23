@@ -1,0 +1,2 @@
+datanode2 stopped at 2026-10-22T22:33:32Z
+checksums identical with a DataNode down

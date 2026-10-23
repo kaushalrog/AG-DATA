@@ -1,0 +1,1 @@
+/agri/silver/daily_market_prices/year=2025/part-00000-5f09de8c-1e21-49ea-bd67-73e7ea9020cf.c000.snappy.parquet

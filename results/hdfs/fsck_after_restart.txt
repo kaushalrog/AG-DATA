@@ -1,0 +1,5 @@
+Status: HEALTHY
+ Under-replicated blocks:	13 (0.74626863 %)
+ Average block replication:	2.9925373
+ Missing blocks:		0
+ Corrupt blocks:		0

@@ -1,0 +1,74 @@
+\section{Farmer application and decision support}\label{sec:app}
+
+\paragraph{Design constraints.}
+The intended users have entry-level Android phones (about 4\,GB of RAM), limited data plans and varied literacy.
+The application is a progressive web app written in plain JavaScript modules, with no framework, CDN or build step:
+\begin{itemize}
+  \item 69\,KB of JavaScript in total, of which about 29\,KB loads for the first screen; the chart and the other screens are loaded lazily;
+  \item a service worker precaches the application shell and fetches API data network-first with a timeout;
+  \item when offline, it falls back to cached responses and labels them with the time they were saved.
+\end{itemize}
+All 264 interface strings, including decision reasons, warnings, errors, accessibility labels and a ten-topic farmer guide, exist in English, Tamil, Telugu, Malayalam, Hindi and Kannada.
+Automated tests enforce identical key sets, identical placeholders and native-script content in every language.
+Commodity names are always shown in their original published form, with a localised label from a reviewed dictionary where one exists.
+The translations are AI-drafted and \emph{provisional} until reviewed by native speakers with agricultural vocabulary.
+
+\paragraph{Freshness and provenance.}
+Every price shows its report date and age.
+A banner appears whenever the dataset is more than three days old.
+Because our deployment serves an archive that ends on 2026-04-21, it says that the data is a historical snapshot and never calls it ``live''.
+Forecast screens show the model version, the source and licence, the measured test error for that commodity and horizon, and the measured coverage of the interval.
+
+\paragraph{Decision cards.}
+The cards turn the 80\% interval $[\ell_h,u_h]$ (on the log-return scale) into a transparent rule.
+The holding cost is $c_h = c_0 + w\cdot h/7$: a fixed 1\% plus 5\% per week for perishables, or 1\% per week for durables.
+These costs are placeholders that the farmer can edit.
+\begin{itemize}
+  \item \textsc{hold} if $\ell_h\ge\ln(1+c_h)$;
+  \item \textsc{sell} if $u_h\le 0$;
+  \item \textsc{compare} if a market in the same district reported a price at least 5\% higher within three days;
+  \item \textsc{watch} otherwise.
+\end{itemize}
+Every card is labelled a \emph{market outlook}, not a profit recommendation, and has a ``Why am I seeing this?'' panel listing the interval, costs, accuracy and freshness.
+The client recomputes the card when the farmer enters transport or holding costs.
+The rule's test-period hit rates are reported in Section~\ref{sec:decisions}.
+
+\section{Threats to validity}\label{sec:threats}
+\begin{itemize}
+  \item \textbf{Internal.}
+    Hyper-parameters, model family and conformal quantiles were all chosen on 2024 data.
+    The search space was amended once, after a validation-only observation (Section~\ref{sec:protocol}).
+    The panel was selected on 2021--2023 reporting density.
+    For backtest folds inside that window, this selection uses within-fold information about which series report often, but no prices.
+  \item \textbf{External.}
+    Results describe well-reported mandis of 36 commodities.
+    The test period includes a change in the publishing system, and the source is a third-party mirror of official data.
+  \item \textbf{Construct.}
+    Modal price is the published summary statistic, not the price an individual farmer received.
+    Exactly-zero changes may partly reflect reporting practice rather than market stability.
+  \item \textbf{Statistical.}
+    Diebold--Mariano tests treat daily cross-sectional mean losses as one time series.
+    We report one test per horizon and model against persistence, without a multiplicity correction; $p$-values are descriptive.
+    The Newey--West lag equals the far edge of the target window ($h+3$; 7 for the next report). Doubling it to 20 at the 7-day horizon still gives $p\approx10^{-32}$.
+\end{itemize}
+
+\section{Ethical considerations}\label{sec:ethics}
+\begin{itemize}
+  \item \textbf{Harm from false certainty.} Forecast errors can hurt farmers who act on them. The interface therefore shows intervals, measured error and data age, never guarantees a price, and offers \textsc{watch} by default.
+  \item \textbf{Privacy.} No personal data is collected, and there are no accounts or analytics.
+  \item \textbf{Licensing.} The data is used under GODL-India with attribution.
+  \item \textbf{Language.} Machine-drafted translations are marked provisional, because a mistranslated warning is itself a harm.
+  \item \textbf{Evidence on information services.} Information services do not reliably raise farm-gate prices \cite{fafchamps2012sms,mitra2018asymmetric}. Welfare claims would require a field study, which we have not done.
+\end{itemize}
+
+\section{Reproducibility}\label{sec:repro}
+All code, configuration and the experiment registry are in the repository.
+The following are deterministic given the archive:
+\begin{itemize}
+  \item the silver, feature, model, prediction and gold layers;
+  \item every table and figure in this paper.
+\end{itemize}
+These are produced by \texttt{scripts/run\_forecast\_pipeline.sh} and the analysis modules under \texttt{py/agri/analysis}.
+Each experiment writes a manifest recording the git commit, the Spark and Java versions, the seed, the periods, row counts, the search space, the selected models and any warnings.
+The test suites cover leakage, metric definitions, split purging, conformal calibration, the decision rule, batch/stream parity, de-duplication, late events, checkpoint recovery, the ingestion adapter, API contracts and internationalisation.
+The raw archive is not redistributed and can be downloaded from its public source.

@@ -1,0 +1,16 @@
+\begin{abstract}
+Most studies of Indian agricultural price forecasting model a few markets, use a single proportional hold-out, and omit naive baselines and prediction intervals.
+We built AG-DATA, a Scala/Spark/Kafka/HDFS system, and used it to benchmark mandi-level modal-price forecasts at national scale.
+The benchmark covers \num{11845} market--commodity--variety series for 36 staple commodities.
+It has four horizons (next report, 3, 7 and 14 days) and uses chronological, target-purged train (2016--2023), validation (2024) and test (2025--April 2026) periods.
+Five naive and seasonal baselines are compared with Spark MLlib learners.
+Three findings stand out.
+First, 17--34\% of target price changes are exactly zero. As a result, squared-loss learners do not beat persistence under absolute error, while absolute-loss gradient boosting does.
+Second, the gains of the validation-selected models over persistence are modest but significant and broad: MAE is 2.9\%, 4.7\%, 6.2\% and 7.7\% lower at the four horizons (Diebold--Mariano $p<10^{-8}$), with improvements on 58--76\% of series and on all 36 commodities at 7 days. A per-series exponential smoother matches the learned models at 1--3 days.
+Third, split-conformal intervals with volatility bins reach 78.6--80.5\% test coverage at a nominal 80\%, but only 68--73\% after a change in the publishing system in November 2025. That change also fragments series identifiers unless they are harmonised.
+The forecasts are served through a read-only API to an installable, offline-capable web application in six Indian languages.
+The application presents cautious \textsc{sell}/\textsc{hold}/\textsc{watch}/\textsc{compare} market-outlook cards. Their rule abstains on about 98\% of report-days and is back-tested on the test period.
+We release the code, tests and experiment manifests, and we discuss why published accuracy gains over ARIMA are not comparable with these results.
+\end{abstract}
+
+\noindent\textbf{Keywords:} agricultural price forecasting; AGMARKNET; mandi; Apache Spark; conformal prediction; forecast evaluation; decision support; multilingual mobile application

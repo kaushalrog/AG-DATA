@@ -1,0 +1,62 @@
+{
+  "data_origin": [
+    "replay"
+  ],
+  "micro_batches_with_data": 5,
+  "rows_silver": 20000,
+  "rows_quarantined": 207,
+  "rows_dropped_by_watermark": 0,
+  "duplicate_rows_removed": 1317,
+  "silver_input_rows": 21524,
+  "alerts": 516,
+  "latency_producer_to_sink_p50_s_median_over_batches": 1.69,
+  "latency_producer_to_sink_p95_s_max_over_batches": 3.909,
+  "processed_rows_per_s_median": 4508.0,
+  "processed_rows_per_s_max": 6343.4,
+  "avg_offsets_behind_latest_max": 0.0,
+  "producer": {
+    "sent": 21524,
+    "delivery_errors": 0,
+    "first_errors": [],
+    "seconds": 10.766,
+    "mode": "replay",
+    "data_origin": "replay",
+    "archive_rows": 20000
+  },
+  "parity": {
+    "date_range": [
+      "2026-04-15",
+      "2026-04-21"
+    ],
+    "mismatched_batch_rows": 0,
+    "records_streamed": 19536,
+    "compared_columns": [
+      "entity_id",
+      "state",
+      "district",
+      "market",
+      "commodity",
+      "variety",
+      "grade",
+      "market_raw",
+      "arrival_date",
+      "min_price",
+      "max_price",
+      "modal_price",
+      "quality_flag",
+      "price_hash"
+    ],
+    "batch_records_same_keys": 19536,
+    "mismatched_stream_rows": 0,
+    "delivery": {
+      "sent_valid_distinct_ids": 20000,
+      "sent_lines_total": 21524,
+      "received_distinct_ids": 20000,
+      "in_silver_but_never_sent": 0,
+      "sent_but_missing_in_silver": 0
+    },
+    "parity": true
+  },
+  "parity_note": "records_streamed counts original replay events only; where a labelled duplicate/late copy won de-duplication, that event is excluded from the column comparison (it is still in the id comparison).",
+  "note": "Replay of archived real reports through a local single-broker Kafka and local-mode Spark; not a live source, not a cluster."
+}

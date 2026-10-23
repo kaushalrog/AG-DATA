@@ -40,3 +40,17 @@ data/features/
 .metals/
 .scala-build/
 data/
+
+# AG-DATA 2.0 local artefacts
+.venv/
+.env
+logs/
+__pycache__/
+*.pyc
+data/ingest/
+app/demo_new/
+paper/*.aux
+paper/*.log
+paper/*.out
+results/streaming/sent.ndjson
+paper/main.pdf.tmp

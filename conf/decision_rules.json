@@ -1,0 +1,48 @@
+{
+  "_doc": "Single source of the decision-support rule, shared by the Spark backtest (ForecastEval.decisions), the API (py/agri/api/decisions.py) and the app (app/js/decision.js). All three are tested against conf/decision_fixtures.json. Costs are fractions of today's price: placeholders for storage, handling and quality loss, NOT measured farm costs; farmers can override them in the app. Precedence: unsupported > forecast_expired > stale report > HOLD > SELL > COMPARE > WATCH, all evaluated on primary_horizon only. COMPARE is not back-tested (no transport data). See docs/MODEL_CARD.md#decision-support.",
+  "version": "2026-10-23.1",
+  "interval_level": 0.8,
+  "weekly_holding_cost": {
+    "perishable": 0.05,
+    "durable": 0.01
+  },
+  "fixed_transaction_cost": 0.01,
+  "compare_min_gain": 0.05,
+  "compare_max_staleness_days": 3,
+  "stale_after_days": 3,
+  "min_history_obs_30d": 4,
+  "perishable_commodities": [
+    "Potato",
+    "Onion",
+    "Tomato",
+    "Brinjal",
+    "Green Chilli",
+    "Cauliflower",
+    "Bhindi (Ladies Finger)",
+    "Cucumbar (Kheera)",
+    "Cabbage",
+    "Banana",
+    "Bottle gourd",
+    "Pumpkin",
+    "Bitter gourd",
+    "Apple",
+    "Ginger (Green)",
+    "Carrot",
+    "Lemon",
+    "Pomegranate",
+    "Capsicum",
+    "Coriander (Leaves)"
+  ],
+  "primary_horizon": "h7",
+  "compare_scope": "state",
+  "default_transport_inr_per_quintal": 0,
+  "precedence": [
+    "unsupported",
+    "forecast_expired",
+    "stale_data",
+    "HOLD",
+    "SELL",
+    "COMPARE",
+    "WATCH"
+  ]
+}

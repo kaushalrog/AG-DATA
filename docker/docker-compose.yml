@@ -25,8 +25,8 @@ services:
     user: root
     command: ["/bin/bash", "-c", "/opt/entrypoint/namenode-entrypoint.sh"]
     ports:
-      - "9870:9870"   # NameNode web UI  -> http://localhost:9870
-      - "9000:9000"   # HDFS RPC (fs.defaultFS)
+      - "127.0.0.1:9870:9870"   # NameNode web UI, localhost only (no auth: never expose)
+      - "127.0.0.1:${HDFS_RPC_HOST_PORT:-19000}:9000"   # HDFS RPC, localhost only (host port 19000: 9000 is often taken, e.g. by php-fpm)
     environment:
       HADOOP_HOME: /opt/hadoop
     env_file:
@@ -78,6 +78,42 @@ services:
     volumes:
       - datanode3_data:/hadoop/dfs/data
       - ./entrypoint:/opt/entrypoint:ro
+
+  # ---------------------------------------------------------------
+  # Spark standalone cluster (profile "spark"): 1 master + 2 workers on
+  # the same Docker network as HDFS, so executors read blocks directly
+  # from the DataNodes. This is a multi-process cluster on ONE host:
+  # it exercises the distributed code paths (driver/executor split,
+  # network shuffle, HDFS block locality) but is not a multi-machine
+  # benchmark.
+  #   docker compose -f docker/docker-compose.yml --profile spark up -d
+  # ---------------------------------------------------------------
+  spark-master:
+    image: apache/spark:4.2.0
+    container_name: agri-spark-master
+    hostname: spark-master
+    profiles: ["spark"]
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master"]
+    ports:
+      - "127.0.0.1:8080:8080"   # master UI, localhost only
+    volumes:
+      - ..:/opt/agri
+
+  spark-worker-1: &sparkworker
+    image: apache/spark:4.2.0
+    container_name: agri-spark-worker-1
+    hostname: spark-worker-1
+    profiles: ["spark"]
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077",
+              "--cores", "3", "--memory", "3g"]
+    depends_on: [spark-master]
+    volumes:
+      - ..:/opt/agri
+
+  spark-worker-2:
+    <<: *sparkworker
+    container_name: agri-spark-worker-2
+    hostname: spark-worker-2
 
 volumes:
   namenode_data:

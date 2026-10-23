@@ -1,0 +1,73 @@
+{
+  "sampled_entities": 400,
+  "seed": 5,
+  "alpha_grid": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95,
+    1.0
+  ],
+  "selection": "alpha minimising in-sample MAE on 2016-2023 origins",
+  "rows": [
+    {
+      "n": 69123,
+      "mae_persistence": 187.6156479044602,
+      "mae_ses": 182.89649300312516,
+      "mae_selected": 183.05290563896534,
+      "mean_alpha": 0.8346910579689952,
+      "entities": 399,
+      "horizon": "next",
+      "rel_mae_ses": 0.9748466881411822,
+      "rel_mae_selected": 0.9756803746571376
+    },
+    {
+      "n": 65774,
+      "mae_persistence": 245.30030194301705,
+      "mae_ses": 235.86523602937325,
+      "mae_selected": 235.43544880156634,
+      "mean_alpha": 0.7661720436646924,
+      "entities": 399,
+      "horizon": "h3",
+      "rel_mae_ses": 0.9615366722384404,
+      "rel_mae_selected": 0.9597845862263051
+    },
+    {
+      "n": 65099,
+      "mae_persistence": 316.9927250787262,
+      "mae_ses": 306.4810016646245,
+      "mae_selected": 299.72517167408654,
+      "mean_alpha": 0.7221416611622073,
+      "entities": 400,
+      "horizon": "h7",
+      "rel_mae_ses": 0.9668392282141772,
+      "rel_mae_selected": 0.9455269725816224
+    },
+    {
+      "n": 63612,
+      "mae_persistence": 406.04512591806576,
+      "mae_ses": 395.71502756161834,
+      "mae_selected": 379.7335222632955,
+      "mean_alpha": 0.6835408413506647,
+      "entities": 397,
+      "horizon": "h14",
+      "rel_mae_ses": 0.9745592356684712,
+      "rel_mae_selected": 0.9352002967766702
+    }
+  ]
+}

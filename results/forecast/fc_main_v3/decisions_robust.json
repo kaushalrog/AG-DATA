@@ -1,0 +1,101 @@
+[
+ {
+  "horizon": "h3",
+  "signal": "HOLD",
+  "n": 16285,
+  "median_return": 0.2000000000000004,
+  "mean_return": 0.3966225561396223,
+  "hit_rate": 0.7657967454712926,
+  "median_net_hold": 0.17909774436090248,
+  "commodities": 36,
+  "share_post_migration": 0.028185446730119742
+ },
+ {
+  "horizon": "h3",
+  "signal": "SELL",
+  "n": 19201,
+  "median_return": -0.12,
+  "mean_return": -0.1609697241438375,
+  "hit_rate": 0.7202229050570282,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.07457944898703192
+ },
+ {
+  "horizon": "h3",
+  "signal": "WATCH",
+  "n": 1562282,
+  "median_return": 0.0,
+  "mean_return": 0.011998488262070868,
+  "hit_rate": null,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.044604623237034034
+ },
+ {
+  "horizon": "h7",
+  "signal": "HOLD",
+  "n": 8544,
+  "median_return": 0.46806090625573493,
+  "mean_return": 0.6735588284141224,
+  "hit_rate": 0.8004447565543071,
+  "median_net_hold": 0.42625874125874186,
+  "commodities": 36,
+  "share_post_migration": 0.04201779026217228
+ },
+ {
+  "horizon": "h7",
+  "signal": "SELL",
+  "n": 15028,
+  "median_return": -0.11111111111111138,
+  "mean_return": -0.16640210767210697,
+  "hit_rate": 0.6780676071333511,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.12077455416555763
+ },
+ {
+  "horizon": "h7",
+  "signal": "WATCH",
+  "n": 1556823,
+  "median_return": 0.0,
+  "mean_return": 0.01754658956231579,
+  "hit_rate": null,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.04250001445251002
+ },
+ {
+  "horizon": "h14",
+  "signal": "HOLD",
+  "n": 8096,
+  "median_return": 0.41491294337722184,
+  "mean_return": 0.7048559027657183,
+  "hit_rate": 0.7338191699604744,
+  "median_net_hold": 0.3185714285714286,
+  "commodities": 36,
+  "share_post_migration": 0.027420948616600792
+ },
+ {
+  "horizon": "h14",
+  "signal": "SELL",
+  "n": 14551,
+  "median_return": -0.1363636363636359,
+  "mean_return": -0.1779227055783321,
+  "hit_rate": 0.7081987492268572,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.15531578585664216
+ },
+ {
+  "horizon": "h14",
+  "signal": "WATCH",
+  "n": 1524267,
+  "median_return": 0.0,
+  "mean_return": 0.02729095347597404,
+  "hit_rate": null,
+  "median_net_hold": null,
+  "commodities": 36,
+  "share_post_migration": 0.03960132968830264
+ }
+]

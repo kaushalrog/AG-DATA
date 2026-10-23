@@ -1,0 +1,67 @@
+\section{System design}\label{sec:system}
+
+Figure~\ref{fig:arch} shows the data flow. Each component exists for a stated reason; the full rationale is in the
+repository's \texttt{docs/ARCHITECTURE.md}.
+
+\begin{figure}[t]
+\centering
+\small
+\begin{verbatim}
+ data.gov.in API --(key)--> adapter --+                      +-> bronze (raw JSON + offsets)
+ AGMARKNET archive -------> replay ---+--> Kafka topic ------+-> silver (stream) --> alerts
+                                           agri.prices.v1     |    shared standardize()
+ raw CSV -> readers -> quality -> dedup -> silver (batch, Parquet, year=)
+              -> harmonise -> sanity rule -> panel -> window features (<= t) -> targets (> t)
+              -> baselines + MLlib (LR, Huber, RF, GBT-L2, GBT-L1) -> validation choice
+              -> split conformal (validation) -> test once -> gold (Parquet)
+              -> FastAPI + DuckDB (read-only) -> PWA (6 languages, offline)
+\end{verbatim}
+\caption{AG-DATA data flow. Historical data takes the batch path; Kafka carries only incremental reports.}
+\label{fig:arch}
+\end{figure}
+
+\paragraph{Batch layer.}
+Scala jobs on Spark 4.2 DataFrames read the raw CSVs with explicit schemas, so no schema inference is needed.
+They classify each record against seven quality rules and de-duplicate on a seven-column business key with grouped aggregation rather than a whole-row \texttt{distinct}, which had run out of memory in an earlier version.
+The output is a year-partitioned Parquet silver layer.
+
+\paragraph{Feature pipeline.}
+Features are computed with window functions partitioned by entity and ordered by an integer day number:
+\begin{itemize}
+  \item 5 level, lag and return features;
+  \item 10 rolling and range features over 7/30/90 calendar days, using \texttt{rangeBetween};
+  \item 3 seasonal features at $t-365$ and the same-horizon change one year earlier;
+  \item 4 same-day cross-sectional aggregates for the commodity, nationally and within the state;
+  \item 3 calendar terms;
+  \item the commodity index.
+\end{itemize}
+Every feature frame ends at offset~0 and every target frame starts at offset $+h\ge 1$.
+A perturbation test multiplies all future prices, and all prices of another entity, by arbitrary factors.
+It asserts that no feature at the origin changes, so any forward-looking or cross-entity window fails the test.
+The job stages intermediate results as Parquet.
+An earlier version persisted 33M-row frames with \texttt{DISK\_ONLY} caching and exhausted the development machine's disk.
+
+\paragraph{Models.}
+MLlib pipelines wrap each candidate: ridge regression and Huber regression on standardised features with one-hot commodity, and random forests and gradient-boosted trees on raw features with an indexed commodity.
+The indexer and scaler are fitted on training rows only.
+Fitted pipelines are persisted per experiment and applied unchanged when forecasts are published, so serving needs no separate model runtime.
+
+\paragraph{Streaming layer.}
+A Python adapter publishes canonical JSON events to a six-partition Kafka topic.
+The adapter has retry with jittered exponential backoff, client-side rate limiting, atomic checkpoints and key redaction.
+The message key is the business key, and the event id is a content hash.
+Spark Structured Streaming writes two outputs:
+\begin{itemize}
+  \item a \emph{bronze} file sink with every record and its offsets;
+  \item a \emph{silver} \texttt{foreachBatch} sink.
+\end{itemize}
+The silver path parses, quarantines unknown schema versions and malformed messages, and canonicalises with the same function as the batch layer.
+It then drops exact re-sends by event id within a 10-day event-time watermark and scores alerts against batch-computed trailing statistics.
+Writing each micro-batch to its own \texttt{batch\_id} directory makes replays idempotent.
+The claimed guarantee is effectively-once output per offset range; end-to-end exactly-once from the government source is \emph{not} claimed.
+Rolling features and forecasts are recomputed only by the batch layer. This trade-off keeps a single feature implementation.
+
+\paragraph{Storage.}
+A three-DataNode HDFS cluster (replication~3, 128\,MB blocks) holds the same layers under \texttt{/agri/\{raw, bronze, silver, features, models, predictions, gold, checkpoints, metadata\}}.
+Directories are partitioned only by low-cardinality columns (year, horizon) to avoid creating tens of thousands of small files.
+There is a single NameNode, so the store is not highly available.

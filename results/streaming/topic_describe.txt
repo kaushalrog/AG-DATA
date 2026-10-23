@@ -1,0 +1,7 @@
+Topic: agri.prices.v1	TopicId: bZi66kH-SIO4KJu6ObebwQ	PartitionCount: 6	ReplicationFactor: 1	Configs: min.insync.replicas=1,segment.bytes=1073741824,retention.ms=1209600000
+	Topic: agri.prices.v1	Partition: 0	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
+	Topic: agri.prices.v1	Partition: 1	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
+	Topic: agri.prices.v1	Partition: 2	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
+	Topic: agri.prices.v1	Partition: 3	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
+	Topic: agri.prices.v1	Partition: 4	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 
+	Topic: agri.prices.v1	Partition: 5	Leader: 1	Replicas: 1	Isr: 1	Elr: 	LastKnownElr: 

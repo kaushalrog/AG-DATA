@@ -1,0 +1,14 @@
+7.5 M    22.4 M  /agri/analytics
+0        0       /agri/bronze
+1.5 M    4.6 M   /agri/checkpoints
+2.6 G    7.9 G   /agri/features
+0        0       /agri/gold
+0        0       /agri/metadata
+25.5 M   76.4 M  /agri/models
+0        0       /agri/predictions
+965.5 M  2.8 G   /agri/processed
+10.9 G   32.6 G  /agri/raw
+0        0       /agri/results
+0        0       /agri/scaled
+659.7 M  1.9 G   /agri/silver
+8.5 M    25.5 M  /agri/streaming

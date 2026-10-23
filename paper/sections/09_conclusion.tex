@@ -1,0 +1,27 @@
+\section{Limitations}\label{sec:limitations}
+\begin{itemize}
+  \item \textbf{Archived data.} The system runs on an archive that ends on 2026-04-21. The live API adapter has been tested only against fixtures, because no key was available.
+  \item \textbf{Training and coverage of the panel.} Models were trained once on data up to 2023. The panel favours well-reported mandis, so thinly reported markets receive forecasts of unknown accuracy.
+  \item \textbf{Features.} Same-day cross-market features assume timely publication of other markets' reports. They are also the most useful feature group, so this assumption matters.
+  \item \textbf{Intervals.} Coverage degrades under the source change, and we did not implement adaptive conformal inference.
+  \item \textbf{Decision support.} \textsc{compare} is not back-tested.
+  \item \textbf{Infrastructure.} All distributed runs used one physical machine (local mode, and a containerised standalone cluster). There is a single NameNode and a single Kafka broker.
+  \item \textbf{Application.} Interface translations are AI-drafted and provisional. No user study and no test on a physical low-end phone was carried out.
+\end{itemize}
+
+\section{Conclusion and future work}\label{sec:conclusion}
+On a national panel of Indian mandi series evaluated with a leakage-resistant protocol, learned models improve on persistence by 3--8\% in MAE.
+They improve on a per-series smoother only beyond three days.
+Most of the added skill comes from same-day cross-market information.
+Conformal intervals are close to nominal until the data source changes.
+These results are less dramatic than many published gains, and we argue they are a more realistic basis for farmer-facing tools.
+
+Future work, in order of expected value:
+\begin{enumerate}
+  \item live ingestion with a data.gov.in key, followed by monthly retraining evaluated with rolling origins;
+  \item adaptive conformal intervals that recover coverage after source changes;
+  \item arrivals and weather covariates;
+  \item native-speaker review of all translations, and a field usability study with farmers;
+  \item a transport-cost model so that \textsc{compare} can be evaluated;
+  \item a multi-machine cluster for scalability evidence beyond one host.
+\end{enumerate}

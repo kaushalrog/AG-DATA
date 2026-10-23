@@ -1,0 +1,9 @@
+{
+  "_fixture_note": "SYNTHETIC test fixture. Field names follow the resource metadata verified on 2026-10-22 (api.data.gov.in/lists for 9ef84268-d588-465a-a308-a864a43d0070). Values are invented and are NOT government data.",
+  "status": "ok", "total": 3, "count": 3, "limit": 500, "offset": 0, "updated_date": "2026-10-22T10:00:00Z",
+  "records": [
+    {"state": "Tamil Nadu", "district": "Salem", "market": "Salem(Uzhavar Sandhai )", "commodity": "Tomato", "variety": "Hybrid", "grade": "FAQ", "arrival_date": "22/10/2026", "min_price": "1800", "max_price": "2200", "modal_price": "2000"},
+    {"state": "Tamil Nadu", "district": "Salem", "market": "Salem(Uzhavar Sandhai )", "commodity": "Onion", "variety": "Bellary", "grade": "FAQ", "arrival_date": "22/10/2026", "min_price": "0", "max_price": "0", "modal_price": "2500"},
+    {"state": "Kerala", "district": "Ernakulam", "market": "Aluva", "commodity": "Banana", "variety": "Nendra Bale", "grade": "FAQ", "arrival_date": "22/10/2026", "min_price": "4000", "max_price": "3800", "modal_price": "3900"}
+  ]
+}

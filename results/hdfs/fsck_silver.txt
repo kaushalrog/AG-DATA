@@ -1,0 +1,16 @@
+Status: HEALTHY
+ Total size:	691714074 B
+ Total files:	1743
+ Total blocks (validated):	1742 (avg. block size 397080 B)
+ Minimally replicated blocks:	1742 (100.0 %)
+ Under-replicated blocks:	146 (8.381171 %)
+ Default replication factor:	3
+ Average block replication:	2.9161882
+ Missing blocks:		0
+ Corrupt blocks:		0
+ Missing replicas:		146 (2.7937236 %)
+ Total size:	0 B
+ Total files:	0
+ Missing block groups:		0
+ Corrupt block groups:		0
+ Missing internal blocks:	0

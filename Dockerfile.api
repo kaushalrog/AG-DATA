@@ -1,0 +1,18 @@
+# AG-DATA public API + PWA. Serves the gold layer read-only; no Spark at request time.
+#   docker build -f Dockerfile.api -t agri-api .
+#   docker run --rm -p 8000:8000 -v "$PWD/data/gold:/srv/data/gold:ro" -v "$PWD/results/forecast:/srv/results/forecast:ro" agri-api
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    AGRI_GOLD_ROOT=/srv/data/gold AGRI_RESULTS_ROOT=/srv/results/forecast AGRI_APP_DIR=/srv/app \
+    AGRI_API_CORS_ORIGINS=http://localhost:8000 AGRI_API_RATE_PER_MIN=120
+WORKDIR /srv
+RUN pip install --no-cache-dir "duckdb>=1.1" "pyarrow>=17" "fastapi>=0.115" "uvicorn[standard]>=0.30" "pydantic>=2.7"
+COPY py/agri/__init__.py py/agri/__init__.py
+COPY py/agri/api py/agri/api
+COPY conf/decision_rules.json conf/decision_rules.json
+COPY app app
+RUN useradd --create-home --uid 10001 agri && chown -R agri /srv
+USER agri
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready').status==200 else 1)"
+CMD ["uvicorn", "agri.api.app:app", "--app-dir", "py", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers"]

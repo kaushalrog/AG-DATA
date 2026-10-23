@@ -1,0 +1,14 @@
+data/
+target/
+project/target/
+project/project/
+results/
+logs/
+.venv/
+.git/
+agri_sample_1pct/
+docs/
+paper/
+*.png
+!app/icons/*.png
+streaming.log
