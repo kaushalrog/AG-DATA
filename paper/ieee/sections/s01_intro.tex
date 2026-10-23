@@ -1,0 +1,35 @@
+\section{Introduction}\label{sec:intro}
+
+A large share of Indian agricultural produce is traded through regulated wholesale markets (\emph{mandis}), although much is also sold outside them.
+Each mandi publishes a daily minimum, maximum and modal price per commodity and variety through AGMARKNET, mirrored on the Open Government Data platform.
+These reports are the most detailed public price signal available to a farmer deciding whether to sell today, wait, or travel to another market.
+
+Forecasting them has a large literature (Section~\ref{sec:related}), dominated by studies of one market, a few markets, or monthly indices.
+These studies typically use a single proportional hold-out, report deep or hybrid models against ARIMA, and rarely report naive baselines or prediction intervals \cite{paul2022brinjal,manogna2025deep,kumar2021onion}.
+Forecast-evaluation research shows why this matters:
+\begin{itemize}
+  \item simple benchmarks are hard to beat \cite{makridakis2018statistical,makridakis2020m4};
+  \item scaled errors are needed across heterogeneous series \cite{hyndman2006another};
+  \item the point forecast that is optimal depends on the scoring function \cite{gneiting2011making,kolassa2016evaluating};
+  \item leakage and data vintage can dominate conclusions \cite{hewamalage2022pitfalls,bokun2023fredsd}.
+\end{itemize}
+
+We ask how much of the apparent skill in mandi price forecasting survives an evaluation that is leakage-resistant, baseline-honest, provenance-audited and prospective.
+Our contributions are empirical, and we state them with their limits.
+
+\begin{enumerate}
+  \item \textbf{A national-scale, leakage-resistant benchmark} of daily mandi modal-price forecasts.
+    It covers \num{11845} market--commodity--variety series of 36 commodities at four horizons, with chronological target-purged splits.
+    It includes five naive and seasonal baselines, a per-series exponential smoother and a global gradient-boosting baseline.
+    Results are reported with MASE, Diebold--Mariano tests and per-series win rates.
+  \item \textbf{The scoring function is decisive.} Between 17\% and 34\% of target changes are exactly zero, because mandis re-quote unchanged prices.
+    Under absolute error, squared-loss global learners do not beat persistence at the next-report horizon, whereas an absolute-loss learner does.
+    This is a predictable consequence of elicitation theory \cite{gneiting2011making}. We quantify it at scale for this domain.
+  \item \textbf{A data-provenance effect.} A public mirror of AGMARKNET holds only 30\% of the official reports from October 2025 onwards.
+    On the mirror, forecasts appear to degrade and conformal intervals appear to lose calibration after a change of the publishing portal.
+    Scored on the same (series, origin) rows, the complete official record gives near-nominal coverage, although the 7-day gain over persistence still shrinks after the change. The gap statistics are consistent with a mechanism: the mirror's median gap between reports is three times longer.
+  \item \textbf{Prospective evaluation.} Models trained on data up to 2023 are saved, and only then are six months of later official reports (April--October 2026) first downloaded and scored. This is a post-development hold-out, not a real-time evaluation, because the forecasts were not issued as the data arrived. We also run a retraining experiment whose final test period was not used for any retraining choice.
+\end{enumerate}
+
+Gains over persistence are modest: 3--8\% in MAE. We do not claim superiority over published models, whose data, horizons and protocols differ (Section~\ref{sec:discussion}).
+The prototype system (single machine) is described in the supplementary material: Spark/Kafka/HDFS pipeline, API and a six-language farmer application.

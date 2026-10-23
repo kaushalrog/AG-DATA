@@ -1,0 +1,53 @@
+\section{Decision-rule back-test, discussion and limitations}\label{sec:discussion}
+
+\paragraph{Decision rule.}
+The application maps the 7-day 80\% interval $[\ell_7,u_7]$ (on the log-return scale) to cautious market-outlook cards. Holding cost is $c=1\%+$ 5\%/week for perishables (1\%/week for durables); these costs are placeholders that the farmer can edit.
+\begin{itemize}
+  \item \textsc{hold} if $\ell_7\ge\ln(1+c)$;
+  \item \textsc{sell} if $u_7\le0$;
+  \item \textsc{compare} if a market in the same state reported a price at least 5\% higher within three days, before transport costs (which the farmer enters; the default is zero);
+  \item \textsc{watch} otherwise.
+\end{itemize}
+On the main test the rule (configuration version 2026-10-22.1) abstains on 98.5\% of report-days.
+\textsc{hold} fires on 0.5\%, and the realised price exceeds today's plus cost 80.0\% of the time. \textsc{sell} fires on 1.0\%, with a hit rate of 67.8\%.
+\textsc{hold} fires mostly after reports far below a series' recent level that then revert (median realised change $+46.8\%$). Some of these may be reporting errors below the sanity threshold.
+These are hit rates on published modal prices, not farm-gate profits, and \textsc{compare} is not back-tested because transport costs are unknown.
+
+\paragraph{Comparison with published results.}
+Published mandi studies use different markets, horizons, aggregation and splits. Their MAPE values (e.g.\ \cite{manogna2025deep}) are not comparable with our WAPE.
+The comparisons we can defend are internal:
+\begin{itemize}
+  \item learned models beat persistence by 3--8\%;
+  \item they match a per-series smoother at 1--3 days;
+  \item cross-market features account for 17--29\% of the 7-day gain, depending on the learner;
+  \item a global LightGBM beats the MLlib model by a further 0.023--0.031 in relative MAE.
+\end{itemize}
+These effects are far smaller than gains over ARIMA reported elsewhere, which suggests that baselines and protocol may explain much of the spread in reported accuracy.
+
+\paragraph{Threats to validity.}
+\begin{itemize}
+  \item Model choice, conformal calibration and the panel definition use pre-test data, but the conformal quantiles are calibrated on the same validation year used for selection.
+  \item For backtest folds within 2021--2023, the panel was selected on reporting density in those years. No prices are involved.
+  \item Diebold--Mariano tests treat daily cross-sectional mean losses as one series. We report one test per model and horizon against persistence without a multiplicity correction; the conclusions are unchanged with a Newey--West lag of 20 ($p\le8\times10^{-13}$ at every horizon).
+  \item Results describe well-reported mandis of 36 commodities.
+  \item Modal price is the published summary, not an individual farmer's price.
+\end{itemize}
+
+\paragraph{Limitations.}
+\begin{itemize}
+  \item The MLlib search space is small (8 configurations per horizon), and the LightGBM model now in service was adopted on a final period that had already been used twice (Section~\ref{sec:prospective}).
+  \item Only one retraining was evaluated (Section~\ref{sec:prospective}).
+  \item No deep or foundation-model baselines were run.
+  \item Arrivals and weather covariates are absent.
+  \item Adaptive conformal methods were not implemented.
+  \item A validated refresh job exists, but no schedule is installed. Freshness therefore depends on operator runs.
+\end{itemize}
+
+\paragraph{Ethics.}
+Forecasts can hurt farmers who over-trust them. The interface therefore:
+\begin{itemize}
+  \item shows intervals, measured error and data age;
+  \item defaults to \textsc{watch};
+  \item never states a guaranteed price.
+\end{itemize}
+No personal data is collected. Interface translations into five Indian languages are machine-drafted and await native-speaker review. Welfare effects are not claimed \cite{fafchamps2012sms,mitra2018asymmetric}.

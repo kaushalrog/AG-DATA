@@ -1,0 +1,41 @@
+% IEEE journal format (IEEEtran, journal mode), e.g. for IEEE Access.
+% Sections are generated from paper/ijf/ by build_ieee.py; edit those, not sections/.
+\documentclass[journal]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{cite,amsmath,amssymb,graphicx,booktabs,siunitx,url,xcolor}
+\usepackage[hidelinks]{hyperref}
+\sisetup{group-separator={,},group-minimum-digits=4}
+\graphicspath{{../figures/}}
+% IEEEtran has no \paragraph spacing tuned for run-in heads; keep them compact
+\makeatletter\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}{1.2ex plus .4ex}{-1em}{\normalfont\normalsize\itshape}}\makeatother
+
+\begin{document}
+\title{Strong Baselines, Data Provenance and Post-Development Evaluation of Daily Mandi Price Forecasts at National Scale}
+
+\author{C~Rishitha, Karthikeya~Y, Ashwin~Tyagi and Kaushal~S%
+\thanks{The authors are with the Department of Artificial Intelligence and Data Science, Amrita Vishwa Vidyapeetham, Coimbatore, India.}%
+\thanks{Corresponding author: [to be completed].}}
+
+\markboth{Manuscript submitted for review}{Rishitha \MakeLowercase{\textit{et al.}}: Daily Mandi Price Forecast Evaluation}
+
+\maketitle
+
+\input{sections/s00_abstract}
+
+\input{sections/s01_intro}
+\input{sections/s02_related}
+\input{sections/s03_data}
+\input{sections/s04_protocol}
+\input{sections/s05_methods}
+\input{sections/s06_point}
+\input{sections/s07_intervals}
+\input{sections/s08_prospective}
+\input{sections/s09_discussion}
+\input{sections/s10_conclusion}
+
+\section*{Acknowledgment}
+The authors thank Dr.~Sreeja (Amrita Vishwa Vidyapeetham) for guidance. AGMARKNET data are published by the Government of India under the GODL-India licence.
+
+\bibliographystyle{IEEEtran}
+\bibliography{../references}
+\end{document}

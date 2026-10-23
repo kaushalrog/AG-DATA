@@ -1,0 +1,87 @@
+\section{Point-forecast results}\label{sec:point}
+
+\paragraph{Validation: the scoring function decides.}
+On the 2024 validation tuning sample (\num{600000} rows) at the next-report horizon, persistence has an MAE of 210.7 rupees per quintal. The squared-loss learners do not beat it:
+\begin{itemize}
+  \item ridge regression: 228.1;
+  \item squared-loss boosting: 214.8;
+  \item the random forest: 211.1, a tie with persistence;
+  \item Huber regression: 212.5.
+\end{itemize}
+Absolute-loss boosting reaches 205.3.
+At 7 and 14 days, every learner beats persistence on validation, and the random forest is selected.
+This is the pattern that elicitation theory predicts when a large share of the targets is exactly zero \cite{gneiting2011making}. The conditional median of the change is then often zero, while the conditional mean is not.
+
+\paragraph{Main test.}
+Table~\ref{tab:main} reports the selected models on 1.55--1.67 million test forecasts per horizon.
+Their MAE is 2.9--7.7\% below persistence, and the Diebold--Mariano tests reject equal accuracy at every horizon.
+On test data the random forest does not beat persistence at the next report either (DM $p=0.28$).
+All other baselines are worse than persistence at every horizon:
+\begin{itemize}
+  \item moving averages: relative MAE 1.005--1.795;
+  \item seasonal naive: 2.50--5.11;
+  \item seasonal-adjusted persistence: 1.10--1.34.
+\end{itemize}
+The improvement is broad. The selected model beats persistence on 58.5\%, 68.8\%, 75.0\% and 76.4\% of series with at least 30 test rows.
+
+\begin{table*}[!t]\centering\small
+\caption{Main test, 2025-01-01 to 2026-04-20 (mirror data). The relative MAE is the model's MAE divided by that of persistence on identical rows. DM: Diebold--Mariano test against persistence.}\label{tab:main}
+\begin{tabular}{@{}lrrrrrr@{}}\toprule
+Horizon & Persistence MAE & Selected & MAE & Rel.\ MAE & DM $p$ & Series better\\\midrule
+next & 189.0 & GBT, abs.\ loss & 183.5 & 0.971 & $1\times10^{-22}$ & 58.5\%\\
+3 d & 242.6 & GBT, abs.\ loss & 231.1 & 0.953 & $4\times10^{-47}$ & 68.8\%\\
+7 d & 308.8 & random forest & 289.7 & 0.938 & $4\times10^{-39}$ & 75.0\%\\
+14 d & 397.0 & random forest & 366.4 & 0.923 & $9\times10^{-29}$ & 76.4\%\\\bottomrule
+\end{tabular}\end{table*}
+
+\paragraph{Scaled errors disagree.}
+Averaged over rows, MASE does not favour the learned models everywhere:
+\begin{itemize}
+  \item next report: 1.559 for the selected model against 1.520 for persistence;
+  \item 7 days: 1.430 against 1.257;
+  \item 3 days: 1.680 against 1.716;
+  \item 14 days: 1.056 against 1.113.
+\end{itemize}
+The rupee gains therefore come mainly from series and days with large absolute price moves. On rows that are small relative to the series' own naive error, the models are no better than persistence and sometimes worse.
+We report both measures, because they answer different questions: aggregate rupee error, and an equal-weighted error per row.
+
+\paragraph{Stronger and simpler baselines.}
+Two further baselines bracket the MLlib model.
+\begin{itemize}
+  \item \textbf{Exponential smoothing.} Per-series simple exponential smoothing, evaluated on a random sample of 400 series, matches the global model at the next report (relative MAE 0.975 against 0.976) and at 3 days (0.962 against 0.960). The global model is clearly better only at 7 days (0.946 against 0.967) and 14 days (0.935 against 0.975).
+  \item \textbf{LightGBM.} The global LightGBM baseline, tuned on validation only and ensembled over three seeds, is more accurate than the MLlib model at every horizon: relative MAE 0.944, 0.926, 0.915 and 0.892. The DM $p$ against the MLlib model is at most $3\times10^{-9}$, and the seed-to-seed spread in MAE is at most 1.2 rupees. A single seed gives 0.946 at the next report.
+\end{itemize}
+The modest gains of the MLlib model are therefore partly a property of the MLlib learners and their small search space, not a ceiling for this feature set.
+
+\paragraph{Ablation and feature timing.}
+Removing feature groups from the 7-day absolute-loss boosting model (not the selected random forest) has these effects:
+\begin{itemize}
+  \item without the cross-market group, the relative MAE rises from 0.944 to 0.960;
+  \item using only the three recent returns gives 0.970;
+  \item removing the calendar, level or seasonal groups changes it by at most 0.004.
+\end{itemize}
+Because the cross-market features use same-day reports from other markets, we refitted the LightGBM baseline with three versions of them:
+\begin{itemize}
+  \item same-day values;
+  \item values recomputed from the previous day, which are always published before the origin;
+  \item no cross-market features.
+\end{itemize}
+Table~\ref{tab:timing} shows the result. Lagging costs 0.002--0.006, whereas removing the group costs 0.009--0.015. Most of the cross-market signal does not depend on same-day publication. The cross-market group accounts for about 29\% of the boosting model's 7-day gain over persistence and about 17\% of LightGBM's.
+
+\begin{table}[!t]\centering\small
+\caption{Relative MAE of LightGBM (seed 1) on the main test, by timing of the cross-market features.}\label{tab:timing}
+\begin{tabular}{@{}lrrr@{}}\toprule
+Horizon & Same day & Previous day & None\\\midrule
+next & 0.946 & 0.948 & 0.955\\
+7 d & 0.918 & 0.922 & 0.932\\
+14 d & 0.893 & 0.899 & 0.908\\\bottomrule
+\end{tabular}\end{table}
+
+\paragraph{Stability across years.}
+In rolling-origin folds for 2021--2024 the relative MAE stays in narrow ranges: 0.970--0.976 (next), 0.952--0.960 (3 days), 0.936--0.946 (7 days) and 0.920--0.936 (14 days). Each fold retrains on all earlier years and holds out one year.
+The main-test result is therefore not specific to one year.
+Two caveats apply to these folds:
+\begin{itemize}
+  \item the 2024 fold is the validation year on which the configurations were chosen, so the 2021--2023 folds also use hyper-parameters chosen on later data;
+  \item the panel for the 2021--2023 folds was selected by its reporting density in 2021--2023. This selects series only and uses no prices.
+\end{itemize}

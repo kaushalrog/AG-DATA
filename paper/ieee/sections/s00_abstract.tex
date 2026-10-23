@@ -1,0 +1,16 @@
+\begin{abstract}
+We evaluate daily wholesale price forecasts for 11,845 Indian mandi series (36 commodities) at four horizons.
+The evaluation uses target-purged chronological splits, strong baselines, a provenance audit and post-development scoring.
+Persistence is hard to beat, because a fifth to a third of price changes are exactly zero.
+Among global learners only absolute-loss models beat it at the next report, and gains reach 3--8\%.
+A public mirror holds only 30\% of official reports from October 2025, around a change of publishing portal.
+On the mirror's own rows, interval coverage drops to 68--72\%; on the complete record the same rows give 79--80\%.
+Frozen models still beat persistence on six later months of official reports.
+Retraining the Spark models on two further years gave no measurable gain.
+A global LightGBM beat the Spark models and, under a pre-registered rule, replaced them in service.
+Provenance audits should precede claims of drift.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Agricultural prices, Forecast evaluation, Data provenance, Prospective evaluation, Conformal prediction, Benchmarks
+\end{IEEEkeywords}
