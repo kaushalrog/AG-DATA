@@ -84,3 +84,18 @@ To roll back, point the symlink at a previous release; the last 3 releases are k
 ```bash
 ln -sfn "$PWD/data/gold_releases/<run_id>" data/gold.tmp && mv -f data/gold.tmp data/gold
 ```
+
+## Public demo links
+| Link | Data | Availability |
+|---|---|---|
+| https://kaushalrog.github.io/AG-DATA/ (GitHub Pages) | A demo snapshot of real reports: 40 whole markets in 10 states, labelled "Demo snapshot" | Always on |
+| `scripts/demo_tunnel.sh` → `https://<random>.trycloudflare.com` | **The full real app and API**: every market (3,899), forecast and comparison of the served release | Only while the script runs on this laptop. The link changes on every start |
+
+`scripts/demo_tunnel.sh` does three things:
+1. assembles the bundle with `scripts/build_space.sh`;
+2. runs it in Docker, bound to 127.0.0.1 only;
+3. exposes it through a free Cloudflare quick tunnel (no account needed). Ctrl-C stops both the tunnel and the container.
+
+The bundle contains no API key and no raw data. It was verified on 2026-10-23 through the tunnel: 15/15 headless-Chrome checks, plus real prices for every market.
+
+**Hosts tried.** Hugging Face Docker Spaces now need a paid PRO plan (HTTP 402 on create), so no Space was created. The same bundle also runs on any Docker host (`deploy/hf-space/Dockerfile`, port 7860, about 190 MB RAM).
