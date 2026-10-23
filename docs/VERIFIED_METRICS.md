@@ -95,6 +95,45 @@ Both models beat persistence at every horizon (DM p ≤ 1.4e-12). The other base
 
 Lagging the cross-market features by one day (always published before the forecast origin) costs only 0.002–0.006. Most of their value is therefore not an artefact of same-day publication timing.
 
+## 4b. Serving switch to LightGBM `fc_lgbm_2025` (2026-10-23)
+**Pre-registration.** The rule was committed before training (`docs/PREREG_LGBM_SWITCH.md`, commit `662c2c7`).
+
+**Candidate.**
+* Global LightGBM, L1 loss, one booster per horizon, seed 1.
+* Same features, panel and periods as `fc_retrain_2025`: train 2016–2024 on a 2 M-row sample; validation 2025, used only for `num_leaves` ∈ {63, 255}, early stopping and the conformal fit.
+* Chosen: next: 255 leaves, 503 rounds; h3: 255 leaves, 908 rounds; h7: 255 leaves, 320 rounds; h14: 255 leaves, 106 rounds.
+* Validation MAE: next 177.5 vs persistence 187.3; h3 226.5 vs persistence 243.7; h7 287.2 vs persistence 313.2; h14 365.0 vs persistence 405.8.
+* Command: `python -m agri.forecast.lgbm train`, then `test`. Sources: `results/forecast/fc_lgbm_2025/{manifest.json, tuning.csv, final_test_2026.json, switch_decision_statistical.json, publish_parity.json}`.
+
+**Final test 2026-01-01 .. 2026-10-22, identical rows for all three models.** The Holm-adjusted DM p compares LightGBM with frozen `fc_main_v3`.
+
+| Horizon | Rows | Rel. MAE frozen | Rel. MAE retrained (Spark) | Rel. MAE LightGBM | Holm p | 80% coverage frozen / LightGBM |
+|---|---:|---:|---:|---:|---:|---:|
+| next | 553,801 | 0.965 | 0.966 | **0.944** | 2e-102 | 77.0% / 77.5% |
+| h3 | 531,321 | 0.955 | 0.955 | **0.933** | 4e-93 | 78.6% / 78.7% |
+| h7 | 519,251 | 0.958 | 0.958 | **0.934** | 1e-30 | 79.3% / 79.0% |
+| h14 | 496,306 | 0.946 | 0.950 | **0.922** | 4e-16 | 79.7% / 78.7% |
+
+**Decision rule outcome.**
+1. Better at h7 after Holm correction: **pass**.
+2. No horizon significantly worse: **pass**. LightGBM is better at every horizon, and also better than the retrained Spark models (p ≤ 4e-30).
+3. Coverage within 75–85% and no more than 2 points worse than frozen: **pass**.
+4. Operational: **pass**.
+   * The staged candidate release passed `validate_release`.
+   * The published medians equal the scored predictions and an offline re-prediction, max |Δ| = 0.0 over 56,848 rows (`publish_parity.json`).
+
+**Decision.**
+* The serving default is now `AGRI_SERVING_MODEL=fc_lgbm_2025`.
+* The live gold was switched by a normal refresh: run `20261023T083639194149Z`, `ok: true`.
+* Roll back with `AGRI_SERVING_MODEL=fc_main_v3 scripts/refresh.sh --skip-fetch`, or re-point `data/gold` to release `20261023T062346924428Z`.
+
+**Caveats (from the pre-registration).**
+* The 2026 test had been used twice before.
+* This is the third model scored on it.
+* The earlier LightGBM result on overlapping data motivated the test.
+
+The gain (0.021–0.024 rel. MAE against frozen) is real on this test, but it is not an independent confirmation. LightGBM still uses same-day cross-market features. With a one-day lag it loses only 0.002–0.006 (§4).
+
 ## 5. Systems
 | Quantity | Value | Source |
 |---|---|---|
@@ -103,7 +142,7 @@ Lagging the cross-market features by one day (always published before the foreca
 | HDFS | 692 MB silver, replication 3, HEALTHY; readable with 1 DataNode down | `results/hdfs/summary.md` |
 | Spark cluster (Docker, 2 workers × 3 cores, one host) | 11.27 M rows: W1 9.2 s, W2 14.4 s | `results/hdfs/cluster_bench.txt` |
 | Local scaling (Apple M5, 10 cores) | full 75.6 M rows: W1 42.2 s, W2 65.9 s; speed-up at 10 cores: 2.4× (W1), 3.0× (W2) | `results/scalability/runs.jsonl` |
-| Tests | Scala 21, Python 74 locally (71 + 3 skipped in CI without data), app 56, browser end-to-end 15 checks | local runs 2026-10-23 (`logs/final_sbt.log`); CI run 39899466902 |
+| Tests | Scala 22, Python 80 locally (some skipped in CI without data), app 56, browser end-to-end 15 checks | local runs 2026-10-23 (`logs/final_sbt.log`); CI run 39899466902 |
 
 ## 6. Withdrawn claims (never use)
 | Claim | Why |

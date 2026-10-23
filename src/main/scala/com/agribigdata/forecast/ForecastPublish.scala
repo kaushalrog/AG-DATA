@@ -130,7 +130,9 @@ object ForecastPublish {
         if (Seq("gbt", "rf", "lr").contains(sel)) {
           val model = PipelineModel.load(s"$modelsRoot/${h.name}/$sel")
           model.transform(base).select((base.columns :+ pred).map(col): _*)
-        } else ForecastBenchmark.withBaselines(base, h)
+        } else if (sel == "lgbm") externalPredictions(base, h.name, pred,
+          o.getOrElse("lgbmPredictions", sys.error("a horizon selects lgbm: lgbmPredictions=<parquet> is required")))
+        else ForecastBenchmark.withBaselines(base, h)
       val conf = readConformal(s"$expDir/conformal_${h.name}.csv")
       ForecastEval.applyConformal(withPred, conf, pred)
         .select(col(Features.EntityId).cast("string"), col("commodity"), col("arrival_date").as("origin_date"),
@@ -168,6 +170,21 @@ object ForecastPublish {
     Files.writeString(Paths.get(s"$GoldRoot/meta.json"), ResultsIO.json(meta))
     println(ResultsIO.json(meta))
     spark.stop()
+  }
+
+  /**
+   * Joins predictions scored outside Spark (`python -m agri.forecast.lgbm score`) on
+   * (entity_id, arrival_date). Every origin row must have one: a missing prediction
+   * fails the publish, so a partial scoring run can never be served.
+   */
+  def externalPredictions(base: DataFrame, horizon: String, pred: String, path: String): DataFrame = {
+    val p = base.sparkSession.read.parquet(path).filter(col("horizon") === horizon)
+      .select(col("entity_id").cast("long").as(Features.EntityId), to_date(col("arrival_date")).as("arrival_date"),
+        col("pred_lgbm").as(pred))
+    val joined = base.join(p, Seq(Features.EntityId, "arrival_date"), "left")
+    val missing = joined.filter(col(pred).isNull).count()
+    require(missing == 0, s"$missing $horizon origin rows have no lgbm prediction in $path; refusing to publish")
+    joined
   }
 
   def readConformal(path: String): ForecastEval.Conformal = {

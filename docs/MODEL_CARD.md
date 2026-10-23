@@ -1,6 +1,32 @@
-# Model card: AG-DATA mandi price forecaster `fc_main_v3`
+# Model card: AG-DATA mandi price forecaster
 
-## Model details
+## Served model: `fc_lgbm_2025` (since 2026-10-23)
+* **Model.**
+  * One global LightGBM booster per horizon: L1 objective, learning rate 0.05, 255 leaves, min_data_in_leaf 200, feature/bagging fractions 0.8/0.7.
+  * The rounds were chosen by early stopping on 2025: 503 (next), 908 (h3), 320 (h7) and 106 (h14).
+  * Features are the same 25 as below; commodity is categorical.
+* **Training data.**
+  * Origins 2016-01-01 to 2024-12-31, with targets purged at the boundary, on a uniform 2 M-row sample.
+  * Features come from silver v2 (official data.gov.in records from 2025-10-01).
+* **Uncertainty.** Split-conformal 80/90% intervals with the same five std30 bins, calibrated on 2025 residuals.
+* **Evaluation.** Final test 2026-01-01 .. 2026-10-22, on rows identical to the previous model:
+
+  | | next | h3 | h7 | h14 |
+  |---|---:|---:|---:|---:|
+  | Rel. MAE vs persistence | 0.944 | 0.933 | 0.934 | 0.922 |
+  | 80% coverage | 77.5% | 78.7% | 79.0% | 78.7% |
+
+  The previous model `fc_main_v3` scored 0.965 / 0.955 / 0.958 / 0.946. The test had been used for earlier comparisons (`docs/PREREG_LGBM_SWITCH.md`).
+* **Serving.**
+  * `python -m agri.forecast.lgbm score` predicts on the refreshed features, and `ForecastPublish` joins the predictions (`lgbmPredictions=`).
+  * If any origin has no prediction, the publish is refused.
+  * Artifacts: `data/forecast_v3/models/fc_lgbm_2025/<h>/lgbm/{model.txt, meta.json}`; results in `results/forecast/fc_lgbm_2025/`.
+* **Roll back.** `AGRI_SERVING_MODEL=fc_main_v3 scripts/refresh.sh --skip-fetch`.
+* **Not changed.** The intended use, out-of-scope uses, decision rule and limitations below apply unchanged. The new model also uses same-day cross-market features (limitation below).
+
+## Previous model `fc_main_v3` (served until 2026-10-23)
+
+### Model details
 * **What it predicts.** The modal price (INR/quintal) that a mandi will report for a commodity–variety. Horizons:
   * **next:** the next report, if it falls within 7 days;
   * **h3, h7, h14:** the first report dated in [t+h, t+h+3].

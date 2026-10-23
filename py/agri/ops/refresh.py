@@ -37,7 +37,9 @@ GOLD_LINK = ROOT / "data" / "gold"
 RELEASES = ROOT / "data" / "gold_releases"
 STATE = ROOT / "results" / "refresh"
 LOCK = ROOT / "data" / "refresh" / ".lock"
-MODEL_EXP = os.environ.get("AGRI_SERVING_MODEL", "fc_main_v3")
+# Serving model. fc_lgbm_2025 replaced fc_main_v3 on 2026-10-23 under docs/PREREG_LGBM_SWITCH.md;
+# set AGRI_SERVING_MODEL=fc_main_v3 to roll back.
+MODEL_EXP = os.environ.get("AGRI_SERVING_MODEL", "fc_lgbm_2025")
 CUTOFF = "2025-10-01"
 
 
@@ -99,14 +101,28 @@ def plan(run_dir: Path, today: date, revision_days: int, skip_fetch: bool) -> li
     steps.append(Step("features_v2", ["scripts/submit.sh", "com.agribigdata.forecast.BuildForecastFeatures"],
                       spark_env | {"AGRI_HISTORY_START": "2023-10-01", "AGRI_PANEL_FROM": "data/forecast/panel_entities",
                                    "AGRI_RESULTS_ROOT": "results/forecast_v2"}, retries=1))
-    steps.append(Step("publish_staged", ["scripts/submit.sh", "com.agribigdata.forecast.ForecastPublish", f"exp={MODEL_EXP}",
-                                         "origin=official", f"models=data/forecast/models/{MODEL_EXP}"],
-                      spark_env | {"AGRI_GOLD_ROOT": str(run_dir)}, retries=1))
+    serving = serving_manifest()
+    models = serving.get("models_path", f"data/forecast/models/{MODEL_EXP}")
+    publish = ["scripts/submit.sh", "com.agribigdata.forecast.ForecastPublish", f"exp={MODEL_EXP}", "origin=official", f"models={models}"]
+    if "lgbm" in serving.get("selected_on_validation", {}).values():
+        # LightGBM is scored outside Spark on the freshly built features; the publish joins the predictions
+        preds = str(ROOT / "data" / "refresh" / run_dir.name / "lgbm_predictions.parquet")
+        steps.append(Step("score_lgbm", py + ["agri.forecast.lgbm", "score", "--exp", MODEL_EXP, "--features-root", "data/forecast_v2",
+                                             "--models-root", str(Path(models).parent), "--out", preds], pyenv, retries=1))
+        publish.append(f"lgbmPredictions={preds}")
+    steps.append(Step("publish_staged", publish, spark_env | {"AGRI_GOLD_ROOT": str(run_dir)}, retries=1))
     return steps
 
 
-def validate_release(release: Path, live: Path | None, model_exp: str = MODEL_EXP) -> dict:
+def serving_manifest(model_exp: str | None = None) -> dict:
+    model_exp = model_exp or MODEL_EXP
+    p = ROOT / os.environ.get("AGRI_RESULTS_ROOT", "results/forecast") / model_exp / "manifest.json"
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def validate_release(release: Path, live: Path | None, model_exp: str | None = None) -> dict:
     """Raises RefreshError if the staged gold must not be served."""
+    model_exp = model_exp or MODEL_EXP
     import duckdb
     meta_p = release / "meta.json"
     if not meta_p.exists():
@@ -114,7 +130,8 @@ def validate_release(release: Path, live: Path | None, model_exp: str = MODEL_EX
     meta = json.loads(meta_p.read_text())
     if meta.get("model_version") != model_exp:
         raise RefreshError("validate", f"model_version {meta.get('model_version')} != {model_exp}")
-    models = Path(os.environ.get("AGRI_MODELS_ROOT", ROOT / "data" / "forecast" / "models")) / model_exp
+    mp = serving_manifest(model_exp).get("models_path")
+    models = ROOT / mp if mp else Path(os.environ.get("AGRI_MODELS_ROOT", ROOT / "data" / "forecast" / "models")) / model_exp
     if not models.exists():
         raise RefreshError("validate", f"model artifacts for {model_exp} not found")
     if live is not None and (live / "meta.json").exists():

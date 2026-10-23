@@ -114,4 +114,18 @@ class ForecastEvalSpec extends AnyFunSuite with BeforeAndAfterAll {
     val c = ForecastEval.Conformal(Array(0.1), Map((0, ForecastEval.qkey((1 - 0.8) / 2)) -> -0.2))
     assert(c.q.contains((0, ForecastEval.qkey("0.100000".toDouble))))
   }
+
+  test("externally scored (lgbm) predictions join on entity and origin, and a missing one refuses to publish") {
+    val s = spark; import s.implicits._
+    val dir = java.nio.file.Files.createTempDirectory("lgbm-preds").toString
+    Seq((1L, "2026-10-22", "h7", 0.05), (2L, "2026-10-21", "h7", -0.02), (1L, "2026-10-22", "next", 0.01))
+      .toDF("entity_id", "d", "horizon", "pred_lgbm").select($"entity_id", to_date($"d").as("arrival_date"), $"horizon", $"pred_lgbm")
+      .write.parquet(s"$dir/ok")
+    val base = Seq((1L, "2026-10-22"), (2L, "2026-10-21")).toDF("entity_id", "d").select($"entity_id", to_date($"d").as("arrival_date"))
+    val out = ForecastPublish.externalPredictions(base, "h7", "pred_lgbm", s"$dir/ok").collect()
+      .map(r => r.getLong(0) -> r.getAs[Double]("pred_lgbm")).toMap
+    assert(out == Map(1L -> 0.05, 2L -> -0.02))
+    val e = intercept[IllegalArgumentException](ForecastPublish.externalPredictions(base, "next", "pred_lgbm", s"$dir/ok"))
+    assert(e.getMessage.contains("refusing to publish"))
+  }
 }

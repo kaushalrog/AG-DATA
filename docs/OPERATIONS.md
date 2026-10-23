@@ -44,7 +44,9 @@ Every failure is appended to `results/refresh/alerts.log`. In addition:
 An alert that fails to send is logged and never hides the refresh failure.
 
 ## Model-version tracking
-* The serving experiment is set by `AGRI_SERVING_MODEL` (default `fc_main_v3`).
+* The serving experiment is set by `AGRI_SERVING_MODEL`. The default has been `fc_lgbm_2025` since 2026-10-23 (`docs/PREREG_LGBM_SWITCH.md`); before that it was `fc_main_v3`.
+* The models directory is taken from the experiment's `manifest.json` (`models_path`).
+* If any horizon selects `lgbm`, the plan inserts a **`score_lgbm`** step before `publish_staged`. That step runs `python -m agri.forecast.lgbm score` on the refreshed features. The publish then joins the predictions and refuses to run if any origin row is unscored. A failed scoring step is handled like any other failed step (`test_failed_lgbm_scoring_never_changes_served_gold`).
 * Each release's `meta.json` records `model_version` and `selected_models`.
 * The status file records the version actually being served.
 * Changing the serving model is a deliberate edit, made after the evaluation in `docs/EXPERIMENTS.md` Part E. The refresh never retrains.
@@ -58,6 +60,12 @@ An alert that fails to send is logged and never hides the refresh failure.
 This run did not exercise network fetching (`--skip-fetch`). Fetching was exercised separately by the back-fill (`results/ingest/backfill_*.json`). A failure in a real run is covered only by the unit tests above.
 
 **Known side effect.** Step 3 rewrites `results/ingest/revision_report.json` and `results/forecast_v2/panel_report.json` in the working tree. The row counts were unchanged, but hand-added fields (the 2025-10-01..2026-04-21 overlap window) were dropped. These files were restored from Git. Until the job writes run-scoped report copies, do not commit those two files after a refresh. The 30.0% share is also recorded in `results/ingest/mirror_monthly_share.json`.
+
+**Serving switch (2026-10-23).**
+* First, a candidate release was staged outside the live path (`data/gold_releases/candidate_fc_lgbm_2025`) and validated.
+* Then `scripts/refresh.sh --skip-fetch` with the new default switched the live gold: run `20261023T083639194149Z`, 5 min 26 s, `ok: true`.
+* The API reported `model_version: fc_lgbm_2025` and `model: lgbm` per horizon.
+* The demo snapshot `app/demo/` was regenerated from it.
 
 ## Scheduling (not installed)
 `ops/launchd/com.agdata.refresh.plist` runs `scripts/refresh.sh` daily at 07:30. The install and remove commands are in the file. It was **not** installed during development, because installing it is a persistent change to the user's machine. On Linux, the equivalent cron line is:

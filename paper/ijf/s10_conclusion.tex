@@ -4,14 +4,14 @@ On a national panel of Indian mandi series, evaluated without leakage and agains
   \item learned models improve on persistence by 3--8\% in MAE;
   \item they improve on a per-series smoother only beyond three days;
   \item cross-market features contribute 17--29\% of the 7-day gain over persistence, and most of that survives a one-day lag;
-  \item a global LightGBM is more accurate than the served MLlib model, so these gains are not a ceiling.
+  \item a global LightGBM is more accurate than the MLlib models, so their gains are not a ceiling.
 \end{itemize}
 The training loss must match the scoring rule when many target changes are exactly zero.
 An incomplete public mirror can manufacture an apparent loss of calibration that disappears on identical rows of the official record, while a smaller accuracy shift remains.
 Frozen models keep a significant, if smaller, advantage on later official reports that were absent from the development data. One refit on two further years gave no measurable gain on a final period not used for any retraining choice.
 Future work, in order of expected value:
 \begin{enumerate}
-  \item rolling or scheduled retraining evaluated with rolling origins, and a LightGBM serving path;
+  \item rolling or scheduled retraining evaluated with rolling origins;
   \item adaptive conformal intervals;
   \item arrivals and weather covariates;
   \item a field study of the decision cards.

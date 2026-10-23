@@ -1,0 +1,7 @@
+{
+ "rows": 56848,
+ "gold_vs_scored_parquet_max_abs_diff": 0.0,
+ "unmatched": 0,
+ "gold_vs_offline_repredict_max_abs_diff": 0,
+ "offline_rows": 56848
+}

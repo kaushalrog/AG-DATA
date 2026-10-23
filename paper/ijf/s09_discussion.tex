@@ -20,7 +20,7 @@ The comparisons we can defend are internal:
   \item learned models beat persistence by 3--8\%;
   \item they match a per-series smoother at 1--3 days;
   \item cross-market features account for 17--29\% of the 7-day gain, depending on the learner;
-  \item a global LightGBM beats the served model by a further 0.023--0.031 in relative MAE.
+  \item a global LightGBM beats the MLlib model by a further 0.023--0.031 in relative MAE.
 \end{itemize}
 These effects are far smaller than gains over ARIMA reported elsewhere, which suggests that baselines and protocol may explain much of the spread in reported accuracy.
 
@@ -35,7 +35,7 @@ These effects are far smaller than gains over ARIMA reported elsewhere, which su
 
 \paragraph{Limitations.}
 \begin{itemize}
-  \item The served MLlib search space is small (8 configurations per horizon), and the served model is not the most accurate one measured (Section~\ref{sec:point}).
+  \item The MLlib search space is small (8 configurations per horizon), and the LightGBM model now in service was adopted on a final period that had already been used twice (Section~\ref{sec:prospective}).
   \item Only one retraining was evaluated (Section~\ref{sec:prospective}).
   \item No deep or foundation-model baselines were run.
   \item Arrivals and weather covariates are absent.

@@ -46,12 +46,12 @@ The rupee gains therefore come mainly from series and days with large absolute p
 We report both measures, because they answer different questions: aggregate rupee error, and an equal-weighted error per row.
 
 \paragraph{Stronger and simpler baselines.}
-Two further baselines bracket the served (prototype) model.
+Two further baselines bracket the MLlib model.
 \begin{itemize}
   \item \textbf{Exponential smoothing.} Per-series simple exponential smoothing, evaluated on a random sample of 400 series, matches the global model at the next report (relative MAE 0.975 against 0.976) and at 3 days (0.962 against 0.960). The global model is clearly better only at 7 days (0.946 against 0.967) and 14 days (0.935 against 0.975).
-  \item \textbf{LightGBM.} The global LightGBM baseline, tuned on validation only and ensembled over three seeds, is more accurate than the served MLlib model at every horizon: relative MAE 0.944, 0.926, 0.915 and 0.892. The DM $p$ against the MLlib model is at most $3\times10^{-9}$, and the seed-to-seed spread in MAE is at most 1.2 rupees. A single seed gives 0.946 at the next report.
+  \item \textbf{LightGBM.} The global LightGBM baseline, tuned on validation only and ensembled over three seeds, is more accurate than the MLlib model at every horizon: relative MAE 0.944, 0.926, 0.915 and 0.892. The DM $p$ against the MLlib model is at most $3\times10^{-9}$, and the seed-to-seed spread in MAE is at most 1.2 rupees. A single seed gives 0.946 at the next report.
 \end{itemize}
-The modest gains of the served model are therefore partly a property of the MLlib learners and their small search space, not a ceiling for this feature set.
+The modest gains of the MLlib model are therefore partly a property of the MLlib learners and their small search space, not a ceiling for this feature set.
 
 \paragraph{Ablation and feature timing.}
 Removing feature groups from the 7-day absolute-loss boosting model (not the selected random forest) has these effects:

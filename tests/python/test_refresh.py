@@ -33,6 +33,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(R, "RELEASES", tmp_path / "data" / "gold_releases")
     monkeypatch.setattr(R, "STATE", tmp_path / "results" / "refresh")
     monkeypatch.setattr(R, "LOCK", tmp_path / "data" / "refresh" / ".lock")
+    monkeypatch.setattr(R, "MODEL_EXP", "fc_main_v3")  # independent of the configured default
     monkeypatch.setenv("AGRI_MODELS_ROOT", str(tmp_path / "models"))
     monkeypatch.setenv("AGRI_REFRESH_MIN_PRICES", "1")
     monkeypatch.setenv("AGRI_REFRESH_MIN_FORECASTS", "1")
@@ -158,3 +159,37 @@ def test_back_to_back_runs_never_share_or_delete_the_live_release(env):
     b = R.refresh(today=date(2026, 10, 23), runner_factory=runner_that(fail_step="publish_staged"))
     assert a["release"] != b["release"]
     assert Path(a["release"]).exists() and served(env) == "2026-10-22"
+
+
+def _serving(env, monkeypatch, selected):
+    monkeypatch.setattr(R, "MODEL_EXP", "fc_cand")
+    d = env / "results" / "forecast" / "fc_cand"; d.mkdir(parents=True)
+    (d / "manifest.json").write_text(json.dumps({"selected_on_validation": selected, "models_path": "data/forecast_v3/models/fc_cand"}))
+
+
+def test_lgbm_serving_plan_scores_before_publish_and_passes_predictions(env, monkeypatch):
+    _serving(env, monkeypatch, {"next": "lgbm", "h3": "lgbm", "h7": "lgbm", "h14": "lgbm"})
+    steps = R.plan(env / "data" / "gold_releases" / "run1", date(2026, 10, 23), 3, skip_fetch=True)
+    names = [s.name for s in steps]
+    assert names.index("score_lgbm") == names.index("publish_staged") - 1
+    score, publish = steps[names.index("score_lgbm")], steps[-1]
+    out = score.cmd[score.cmd.index("--out") + 1]
+    assert f"lgbmPredictions={out}" in publish.cmd and "run1" in out
+    assert "models=data/forecast_v3/models/fc_cand" in publish.cmd
+    assert score.cmd[score.cmd.index("--models-root") + 1] == "data/forecast_v3/models"
+
+
+def test_spark_serving_plan_has_no_lgbm_step(env, monkeypatch):
+    _serving(env, monkeypatch, {"next": "gbt", "h3": "gbt", "h7": "rf", "h14": "rf"})
+    steps = R.plan(env / "data" / "gold_releases" / "run1", date(2026, 10, 23), 3, skip_fetch=True)
+    assert "score_lgbm" not in [s.name for s in steps]
+    assert not any(c.startswith("lgbmPredictions=") for c in steps[-1].cmd)
+
+
+def test_failed_lgbm_scoring_never_changes_served_gold(env, monkeypatch):
+    _serving(env, monkeypatch, {"next": "lgbm", "h3": "lgbm", "h7": "lgbm", "h14": "lgbm"})
+    (env / "data" / "forecast_v3" / "models" / "fc_cand").mkdir(parents=True)
+    before = served(env)
+    status = R.refresh(skip_fetch=True, runner_factory=runner_that(fail_step="score_lgbm"))
+    assert not status["ok"] and served(env) == before
+    assert json.loads((env / "results" / "refresh" / "status.json").read_text())["failed_step"] == "score_lgbm"

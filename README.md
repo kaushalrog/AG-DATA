@@ -9,6 +9,10 @@ AG-DATA forecasts the **modal price that an Indian mandi will report** for 36 st
 
 > **Status of the data (2026-10-23).** The models were trained and tested on the archived AGMARKNET dataset (Kaggle mirror, to 2026-04-21). With a data.gov.in API key the official data was then back-filled: **7.7 M records, 2025-10-01 → 2026-10-22**, from the variety-wise history resource. The gold layer the app serves is now current to **2026-10-22**. The live current-day resource was streamed through Kafka once as a check, and runs only when triggered. The back-fill showed that the Kaggle mirror holds only about 30% of official reports after September 2025. No public deployment exists.
 
+> **Served model (2026-10-23): LightGBM `fc_lgbm_2025`.** It was trained on 2016–2024 and validated on 2025. On the 2026 final test, rows identical to the previous Spark model, it scores rel. MAE 0.944 / 0.933 / 0.934 / 0.922, against 0.965 / 0.955 / 0.958 / 0.946. It is better at every horizon (Holm-adjusted DM p ≤ 4e-16), with 80% coverage of 77.5–79.0%.
+>
+> It replaced `fc_main_v3` under a rule committed before training ([docs/PREREG_LGBM_SWITCH.md](docs/PREREG_LGBM_SWITCH.md)). The 2026 test had been used before, so this is not an independent confirmation ([docs/VERIFIED_METRICS.md](docs/VERIFIED_METRICS.md) §4b). The tables below are the original `fc_main_v3` study.
+
 ## Results
 
 ### Main test (2025-01-01 … 2026-04-21, archive data, scored once)
@@ -45,7 +49,7 @@ Values are relative MAE against persistence (lower is better). The prospective p
 
 **Retraining check (`fc_retrain_2025`).** Models were retrained on data to 2024, with 2025 used for selection, and tested on 2026-01-01 → 2026-10-22, a period not used for any retraining choice (it overlaps the main test and the frozen-model hold-out). They score rel. MAE 0.966 / 0.955 / 0.958 / 0.950, against 0.965 / 0.955 / 0.958 / 0.946 for the frozen models on identical rows. No difference is significant (DM p 0.12–0.99), so the frozen models keep serving. They are **not** "current": they encode nothing after 2023.
 
-**A stronger baseline beats the served model.** A global LightGBM (L1 loss, same features, tuned on validation only) reaches 0.944 / 0.926 / 0.915 / 0.892 on the main test (DM p ≤ 1e-8 against the MLlib model). The MLlib model is served because the pipeline is Spark; it is not the most accurate model measured. Details: [docs/VERIFIED_METRICS.md](docs/VERIFIED_METRICS.md), `docs/EXPERIMENTS.md` Part E.
+**A stronger baseline beats the served model.** A global LightGBM (L1 loss, same features, tuned on validation only) reaches 0.944 / 0.926 / 0.915 / 0.892 on the main test (DM p ≤ 1e-8 against the MLlib model). This finding led to the serving switch described at the top of this section. Details: [docs/VERIFIED_METRICS.md](docs/VERIFIED_METRICS.md), `docs/EXPERIMENTS.md` Part E.
 
 > The earlier README claimed "95.66% accuracy / 86.55% precision". No code or log in the repository produces those numbers, so they have been withdrawn. See [docs/AUDIT_PRIOR_RESULTS.md](docs/AUDIT_PRIOR_RESULTS.md). The previous README is kept in [docs/legacy/README_v1.md](docs/legacy/README_v1.md).
 

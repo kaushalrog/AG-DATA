@@ -471,3 +471,13 @@ The Spark benchmark supports the same lag via `crossSection=lag1`.
 | h14 | 0.893 | 0.899 | 0.908 |
 
 Lagging the features costs 0.002–0.006, while removing them costs 0.009–0.015. Most of their contribution does not depend on same-day publication. Source: `results/forecast/fc_main_v3/crosssection_timing.json`.
+
+### E.4 LightGBM candidate and serving switch (`fc_lgbm_2025`)
+* **Pre-registration.** `docs/PREREG_LGBM_SWITCH.md`, committed before training.
+* **Code.** `py/agri/forecast/lgbm.py` (train / test / score). The `lgbm` family in `ForecastPublish` uses `lgbmPredictions=`. Refresh step `score_lgbm`.
+* **Result on the 2026 final test** (identical rows), rel. MAE:
+  * LightGBM: 0.944 / 0.933 / 0.934 / 0.922;
+  * frozen Spark: 0.965 / 0.955 / 0.958 / 0.946;
+  * retrained Spark: 0.966 / 0.955 / 0.958 / 0.950.
+* **Significance and coverage.** LightGBM is better than frozen at every horizon (Holm p ≤ 4e-16); coverage 77.5–79.0%.
+* **Outcome.** All four switch conditions passed, and the serving model was switched on 2026-10-23. Full table: `docs/VERIFIED_METRICS.md` §4b.
