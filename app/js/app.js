@@ -85,7 +85,16 @@ async function start() {
   await loadCommodities();
   api.onStatus(() => renderBanners(banners));
   setupInstall();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    // the shell is served from cache first, so a new version only runs after a reload: do it once,
+    // when an updated worker takes over (not on the very first install)
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !reloading) { reloading = true; location.reload(); }
+    });
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
   window.addEventListener('hashchange', route);
   window.addEventListener('online', () => { api.resetMode(); ctx.announce(t('common.loading')); route(); });
   await loadMeta();
