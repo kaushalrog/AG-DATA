@@ -1,14 +1,16 @@
 %=====================================================================
-%  Large-Scale Agricultural Market Data Processing
-%  and Real-Time Market Analysis
+%  Agricultural Commodity Price Forecasting and Market Analysis
+%  Using Hadoop HDFS, Apache Spark, MLlib, and Apache Kafka
 %
-%  Big Data Analytics -- College Project Presentation
-%  Compile with:  pdflatex AG-DATA-presentation.tex   (run twice)
+%  Final Review -- Team AG-DATA
+%  Course: 23AID302 -- Big Data Analytics
+%  Department of Artificial Intelligence and Data Science
+%  Amrita Vishwa Vidyapeetham | Faculty Guide: Dr. Sreeja
 %
-%  Only standard packages are used (beamer, tikz, booktabs, xcolor),
-%  so this compiles on Overleaf or any full TeX Live install.
+%  Matched exactly to the 10-slide CambridgeUS/Madrid aesthetic of:
+%  Financial Fraud and Market Anomaly Detection (Group 7)
 %=====================================================================
-\documentclass[aspectratio=169,12pt]{beamer}
+\documentclass[aspectratio=169,10pt]{beamer}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -16,508 +18,513 @@
 \usepackage{booktabs}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{listings}
+\usepackage{xcolor}
 
-%---------------------------------------------------------------
-% A simple, consistent colour scheme (agriculture green + amber)
-%---------------------------------------------------------------
-\definecolor{agriGreen}{RGB}{27,94,32}
-\definecolor{agriLight}{RGB}{232,245,233}
-\definecolor{agriAmber}{RGB}{230,145,10}
-\definecolor{agriGrey}{RGB}{69,90,100}
-\definecolor{agriBlue}{RGB}{21,101,192}
+% Color Definitions matching Reference Group 7
+\definecolor{refRed}{RGB}{163,0,0}         % Title crimson / maroon
+\definecolor{refNavy}{RGB}{27,42,107}       % Card header deep navy
+\definecolor{refBody}{RGB}{241,244,250}     % Card body light gray-blue
+\definecolor{refText}{RGB}{34,34,34}        % Body text dark gray
+\definecolor{refFootRed}{RGB}{136,0,0}      % Footer left segment
+\definecolor{refFootGray}{RGB}{220,224,230} % Footer middle/right segments
+\definecolor{refGrayBox}{RGB}{236,238,242}  % Title card background
+\definecolor{refGreen}{RGB}{0,130,50}       % Green highlight for Task 2
 
-\usetheme{default}
-\usecolortheme{default}
-\setbeamercolor{structure}{fg=agriGreen}
-\setbeamercolor{normal text}{fg=agriGrey}
-\setbeamercolor{frametitle}{fg=white,bg=agriGreen}
-\setbeamercolor{title}{fg=agriGreen}
-\setbeamercolor{itemize item}{fg=agriGreen}
-\setbeamercolor{itemize subitem}{fg=agriAmber}
-\setbeamercolor{block title}{fg=white,bg=agriGreen}
-\setbeamercolor{block body}{bg=agriLight}
+\usetheme{Madrid}
+\usecolortheme{beaver}
 
+% Beamer Block & Element Styling
+\setbeamertemplate{blocks}[rounded][shadow=true]
+\setbeamercolor{block title}{bg=refNavy,fg=white}
+\setbeamercolor{block body}{bg=refBody,fg=refText}
+\setbeamercolor{frametitle}{fg=refRed,bg=white}
+\setbeamercolor{structure}{fg=refRed}
+\setbeamercolor{normal text}{fg=refText}
+
+% Navigation symbols off
 \setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{itemize item}{\textbullet}
-\setbeamertemplate{itemize subitem}{--}
 
-% Frame title with comfortable padding and large type
+% Custom Infolines Footline matching Group 7 reference
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.22\paperwidth,ht=2.5ex,dp=1.1ex,center]{footLeft}%
+      \usebeamerfont{author in head/foot}\textbf{\color{white}Team AG-DATA / 23AID302}%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.70\paperwidth,ht=2.5ex,dp=1.1ex,center]{footMid}%
+      \usebeamerfont{title in head/foot}\color{refRed}\textbf{Agricultural Commodity Price Analysis and Decision Support}%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.08\paperwidth,ht=2.5ex,dp=1.1ex,center]{footRight}%
+      \usebeamerfont{date in head/foot}\color{refRed}\textbf{\insertframenumber{} / \inserttotalframenumber}%
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+\setbeamercolor{footLeft}{bg=refFootRed}
+\setbeamercolor{footMid}{bg=refFootGray}
+\setbeamercolor{footRight}{bg=refFootGray}
+
+% Custom Frametitle formatting
 \setbeamertemplate{frametitle}{%
   \nointerlineskip
-  \begin{beamercolorbox}[wd=\paperwidth,ht=3.2ex,dp=1.4ex,leftskip=0.8cm]{frametitle}
-    \usebeamerfont{frametitle}\insertframetitle
-  \end{beamercolorbox}
-}
-\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
-\setbeamerfont{itemize/enumerate body}{size=\large}
-\setbeamerfont{itemize/enumerate subbody}{size=\normalsize}
-
-% Slide number in the bottom-right corner
-\setbeamertemplate{footline}{%
-  \hfill\raisebox{1.2ex}{\color{agriGrey}\small\insertframenumber}\hspace{0.6cm}
+  \vspace{0.35cm}
+  \hspace{0.5cm}{\Large\bfseries\color{refRed}\insertframetitle}
+  \vspace{0.15cm}
 }
 
-% Generous spacing between bullets -- keeps slides breathable
-\setlength{\parskip}{0.4em}
-\newcommand{\bigskipitems}{\setlength{\itemsep}{0.75em}}
-
-% Reusable TikZ box styles for the diagrams
-\tikzset{
-  flowbox/.style={
-    rectangle, rounded corners=3pt, draw=agriGreen, thick,
-    fill=agriLight, text=agriGrey, align=center,
-    minimum width=3.3cm, minimum height=0.85cm, font=\small\bfseries},
-  hilitebox/.style={
-    flowbox, fill=agriGreen, text=white, draw=agriGreen},
-  ambox/.style={
-    flowbox, fill=agriAmber!20, draw=agriAmber},
-  arrowline/.style={-{Stealth[length=2.5mm]}, thick, draw=agriGreen}
+% Code listing style
+\lstset{
+  basicstyle=\fontsize{6.8pt}{8.2pt}\ttfamily\color{refNavy},
+  keywordstyle=\bfseries\color{refRed},
+  commentstyle=\color{gray},
+  stringstyle=\color{refGreen},
+  breaklines=true,
+  showstringspaces=false
 }
-
-%---------------------------------------------------------------
-\title{\bfseries Large-Scale Agricultural Market Data Processing and Real-Time Market Analysis}
-\subtitle{Big Data Analytics Project}
-\date{}
 
 \begin{document}
 
 %================================================================
-% 1. TITLE
+% SLIDE 1: Title Slide (matching Reference Slide 1)
 %================================================================
 \begin{frame}[plain]
-  \vspace{0.6cm}
+  \vspace{0.3cm}
   \begin{center}
-    {\color{agriGreen}\Large\bfseries Large-Scale Agricultural Market\\[0.2em]
-     Data Processing and Real-Time Market Analysis}
-
-    \vspace{0.5cm}
-    {\color{agriGrey}\large Big Data Analytics Project}
-
-    \vspace{0.7cm}
+    % Rounded Top Card
     \begin{tikzpicture}
-      \draw[agriAmber, line width=1.2pt] (0,0) -- (6,0);
+      \node[fill=refGrayBox, rounded corners=6pt, inner sep=10pt, minimum width=0.92\paperwidth, align=center] {
+        {\LARGE\bfseries\color{refRed} Agricultural Commodity Price Forecasting and Market Analysis}\\[0.3em]
+        {\small\color{refRed} Using Hadoop HDFS, Apache Spark, MLlib, and Apache Kafka}
+      };
     \end{tikzpicture}
 
-    \vspace{0.6cm}
-    {\color{agriGrey}\normalsize
-    \begin{tabular}{ll}
-      C Rishitha    & CB.AI.U4AID24109 \\[0.15em]
-      Karthikeya Y  & CB.AI.U4AID24163 \\[0.15em]
-      Ashwin Tyagi  & CB.AI.U4AID24167 \\[0.15em]
-      Kaushal S     & CB.AI.U4AID24168 \\
-    \end{tabular}}
+    \vspace{0.4cm}
+    {\large\bfseries Final Review --- Team AG-DATA}
 
-    \vspace{0.6cm}
-    {\color{agriGreen}\normalsize\bfseries School of AI}\\[0.2em]
-    {\color{agriGrey}\normalsize Faculty Guide: Dr.\ Sreeja}
+    \vspace{0.35cm}
+    \begin{tabular}{ll}
+      \textbf{Name} & \textbf{Register no.} \\
+      \midrule
+      C Rishitha   & CB.AI.U4AID24109 \\
+      Karthikeya Y & CB.AI.U4AID24163 \\
+      Ashwin Tyagi & CB.AI.U4AID24167 \\
+      Kaushal S    & CB.AI.U4AID24168 \\
+    \end{tabular}
+
+    \vspace{0.45cm}
+    {\small\textbf{23AID302 --- Big Data Analytics}}\\[0.15em]
+    {\footnotesize Department of Artificial Intelligence and Data Science $\cdot$ Amrita Vishwa Vidyapeetham}\\[0.15em]
+    {\footnotesize\textbf{Faculty Guide:} Dr. Sreeja}
   \end{center}
 \end{frame}
 
 %================================================================
-% 2. PROBLEM STATEMENT
+% SLIDE 2: 1. What Are We Trying to Find? (matching Reference Slide 2)
 %================================================================
-\begin{frame}{Problem Statement}
-  \vspace{0.3cm}
-  \begin{itemize}\bigskipitems
-    \item Agricultural market data is collected daily from
-          \textbf{thousands of mandis} across India.
-    \item The data contains \textbf{inconsistent formats},
-          missing values and \textbf{duplicate records}.
-    \item Prices sometimes show \textbf{unusual jumps} that are hard
-          to explain.
-    \item Processing \textbf{millions of records} with traditional
-          tools such as Excel or Pandas becomes very difficult.
-  \end{itemize}
-
-  \vspace{0.4cm}
-  \begin{block}{The Core Problem}
-    \large We need a system that can \textbf{store, clean and analyse}
-    agricultural price data at a scale where a single machine is not enough.
-  \end{block}
-\end{frame}
-
-%================================================================
-% 3. OBJECTIVES
-%================================================================
-\begin{frame}{Objectives}
-  \vspace{0.4cm}
-  \begin{itemize}\bigskipitems
-    \item Process \textbf{large-scale} agricultural market data.
-    \item \textbf{Clean and validate} inconsistent records.
-    \item Store data using \textbf{distributed HDFS} storage.
-    \item Generate a larger \textbf{synthetic workload} for
-          scalability testing.
-    \item Perform \textbf{price analysis} and \textbf{anomaly detection}.
-    \item Demonstrate \textbf{real-time processing} using Kafka and Spark.
-  \end{itemize}
-\end{frame}
-
-%================================================================
-% 4. DATASET
-%================================================================
-\begin{frame}{Dataset}
-  \vspace{0.2cm}
-  We use \textbf{two real agricultural market datasets}:
-
-  \vspace{0.35cm}
+\begin{frame}{1. What Are We Trying to Find?}
   \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Daily Market Prices}
-        \normalsize
-        Year-wise price files\\[0.3em]
-        State, District, Market,\\
-        Commodity, Variety, Grade,\\
-        Min / Max / Modal Price
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Mandi: unusual price fluctuations}
+        \small
+        Find daily market transactions that exhibit abnormal price surges or crashes across 3,000+ Indian mandis.\\[0.3em]
+        Seasonal harvest gluts trigger sharp 40\%+ price collapses, leading to severe distress selling by smallholder farmers.\\[0.3em]
+        Use 7-day rolling window statistics, price spreads, and z-scores to give each transaction an anomaly risk label.
       \end{block}
     \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{India Mandi}
-        \normalsize
-        Commodity-wise files\\[0.3em]
-        State, District, Market,\\
-        Variety, Group, \textbf{Arrivals},\\
-        Min / Max / Modal Price
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Decision Support: farmer selling advisories}
+        \small
+        Translate price anomaly signals into practical domain recommendations:
+        \begin{itemize}\footnotesize
+          \item \textbf{SELL:} Recommend selling before an unpredicted post-spike glut collapses prices.
+          \item \textbf{HOLD:} Advise holding inventory during temporary panic dips when prices recover.
+          \item \textbf{WATCH:} High volatility alert; monitor market closely before dispatching produce.
+          \item \textbf{BUY:} Buyer/procurement advisory to acquire inventory before seasonal price surges.
+        \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{0.5cm}
-  \begin{center}
-    \setlength{\tabcolsep}{10pt}
-    \renewcommand{\arraystretch}{1.25}
-    \begin{tabular}{lr}
-      \toprule
-      \textbf{Total real records} & \textbf{132.9 million} \\
-      \textbf{Total real data size} & $\approx$ \textbf{10.9 GB} \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-\end{frame}
-
-%================================================================
-% 5. WHY BIG DATA?
-%================================================================
-\begin{frame}{Why Big Data?}
-  \vspace{0.3cm}
-  \begin{center}
-    \setlength{\tabcolsep}{12pt}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{ll}
-      \toprule
-      \textbf{Property} & \textbf{In our project} \\
-      \midrule
-      \textcolor{agriGreen}{\textbf{Volume}}   & $\approx$ 18 GB experimental workload \\
-      \textcolor{agriGreen}{\textbf{Velocity}} & Continuous market events via Kafka \\
-      \textcolor{agriGreen}{\textbf{Variety}}  & Two datasets, different schemas \\
-      \textcolor{agriGreen}{\textbf{Veracity}} & Missing values and price errors \\
-      \textcolor{agriGreen}{\textbf{Value}}    & Price analysis and anomaly detection \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-
-  \vspace{0.5cm}
-  \begin{center}
-    \large A single machine cannot hold and repeatedly process
-    \textbf{132.9 million records} --- so the work must be
-    \textbf{distributed}.
-  \end{center}
-\end{frame}
-
-%================================================================
-% 6. SYSTEM ARCHITECTURE
-%================================================================
-\begin{frame}{System Architecture}
-  \vspace{0.1cm}
-  \begin{center}
-  \begin{tikzpicture}[node distance=0.55cm]
-
-    % ---- left column -------------------------------------------
-    \node[hilitebox] (data)    {Agricultural Data};
-    \node[flowbox, below=of data]    (hdfs)  {Hadoop HDFS};
-    \node[flowbox, below=of hdfs]    (spark) {Scala + Apache Spark};
-    \node[flowbox, below=of spark]   (prep)  {Preprocessing};
-
-    \draw[arrowline] (data)  -- (hdfs);
-    \draw[arrowline] (hdfs)  -- (spark);
-    \draw[arrowline] (spark) -- (prep);
-
-    % ---- right column ------------------------------------------
-    \node[flowbox, right=2.4cm of data]  (parquet) {Parquet Storage};
-    \node[flowbox, below=of parquet]     (feat)    {Feature Engineering};
-    \node[ambox,   below=of feat]        (model)   {Forecasting /\\ Anomaly Detection};
-    \node[hilitebox, below=of model]     (res)     {Results};
-
-    \draw[arrowline] (parquet) -- (feat);
-    \draw[arrowline] (feat)    -- (model);
-    \draw[arrowline] (model)   -- (res);
-
-    % ---- connector from left column to right column ------------
-    \draw[arrowline] (prep.east) -- ++(0.6,0) |- (parquet.west);
-
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-%================================================================
-% 7. DATA PREPROCESSING
-%================================================================
-\begin{frame}{Data Preprocessing}
   \vspace{0.25cm}
-  All preprocessing is written in \textbf{Scala + Apache Spark}.
+  \begin{block}{Why do we need big data tools?}
+    \small
+    The agricultural files contain over 132.8 million market transactions (10.9 GB raw CSV). Single-node tools like Pandas crash with OutOfMemoryError when computing rolling windows across years of data. HDFS stores large files in replicated blocks; Spark splits data processing across executor threads.
+  \end{block}
 
-  \vspace{0.35cm}
-  \begin{enumerate}\bigskipitems
-    \item \textbf{Schema normalization} --- both datasets mapped to one common format.
-    \item \textbf{Date parsing} --- different date formats converted safely.
-    \item \textbf{Data quality classification} --- each record marked
-          \textsc{valid} or defective.
-    \item \textbf{Duplicate removal} --- repeated market reports removed.
-    \item \textbf{Price outlier detection} --- unusual prices flagged per commodity.
-    \item \textbf{Parquet conversion} and \textbf{year-based partitioning}.
+  \vspace{0.2cm}
+  \noindent{\small\textbf{Goal:} prepare the data, compare models, and stream real-time price alerts.}
+\end{frame}
+
+%================================================================
+% SLIDE 3: 2. Our Data and the 5 Vs (matching Reference Slide 3)
+%================================================================
+\begin{frame}{2. Our Data and the 5 Vs}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Data already stored in HDFS}
+        \scriptsize
+        \begin{tabular}{lrr}
+          \textbf{File / Layer} & \textbf{Rows} & \textbf{Storage / Role} \\
+          \midrule
+          Source 1: Daily Market Prices & 75,984,017  & 26 annual CSVs (6.5 GB) \\
+          Source 2: India Mandi Dataset & 56,879,072  & 325 commodity CSVs (4.4 GB) \\
+          Deduplicated Output           & 132,327,828 & 1.2 GB Parquet (9:1 ratio) \\
+          Canonical Cleaned Output      & 93,410,019  & Validated prices/dates for ML \\
+          Synthetic Stress Workload     & 350,012,867 & Isolated Phase 11 HDFS test \\
+          \midrule
+        \end{tabular}\\[0.25em]
+        \textbf{Source 1:} Agmarknet daily prices (2001--2026). Attributes: State, District, Market, Commodity, Arrival\_Date, Min/Max/Modal Price.\\[0.2em]
+        \textbf{Source 2:} India Mandi dataset. Attributes: State, District, Market, Commodity, Variety, Group, Arrivals (Tonnes), Reported Date.
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{5 Vs in our project}
+        \scriptsize
+        \begin{tabular}{lp{5.1cm}}
+          \textbf{5 Vs} & \textbf{In our project} \\
+          \midrule
+          \textbf{Volume}   & 10.9 GB raw CSV in HDFS (132.9M real rows). Scaled to 18.15 GiB for stress testing. \\
+          \textbf{Velocity} & Replay daily mandi arrivals in streaming micro-batches via Apache Kafka. \\
+          \textbf{Variety}  & 2 disparate sources: 26 annual CSVs vs 325 commodity CSVs; mixed date formats. \\
+          \textbf{Veracity} & Check missing, negative spreads, and 535k duplicate transactions. \\
+          \textbf{Value}    & Help farmers and officials detect sudden price shocks and prevent distress selling. \\
+        \end{tabular}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.25cm}
+  \noindent{\scriptsize\color{refRed}Real data (132.9M rows) trained and tested the models. An isolated 350M synthetic workload evaluated 18 GB storage scalability.}
+\end{frame}
+
+%================================================================
+% SLIDE 4: 3. System Setup and Configuration (matching Reference Slide 4)
+%================================================================
+\begin{frame}{3. System Setup and Configuration}
+  % 5 Pipeline Flow Boxes
+  \begin{center}
+    \begin{tikzpicture}[node distance=0.25cm, auto, >=Stealth]
+      \tikzstyle{pbox} = [rectangle, rounded corners=4pt, draw=refNavy, line width=1pt, fill=refBody, inner sep=5pt, minimum width=2.4cm, minimum height=1.1cm, align=center]
+      \node[pbox] (in) {\textbf{\color{refRed}Input}\\{\tiny 351 CSVs (10.9 GB)}};
+      \node[pbox, right=of in] (hdfs) {\textbf{\color{refRed}HDFS}\\{\tiny Store files in blocks}};
+      \node[pbox, right=of hdfs] (scala) {\textbf{\color{refRed}Scala}\\{\tiny Read, clean \& dedup}};
+      \node[pbox, right=of scala] (spark) {\textbf{\color{refRed}Spark}\\{\tiny Build features \& models}};
+      \node[pbox, right=of spark] (res) {\textbf{\color{refRed}Results}\\{\tiny Alerts, charts \& dash}};
+
+      \draw[->, line width=1.5pt, draw=refNavy] (in) -- (hdfs);
+      \draw[->, line width=1.5pt, draw=refNavy] (hdfs) -- (scala);
+      \draw[->, line width=1.5pt, draw=refNavy] (scala) -- (spark);
+      \draw[->, line width=1.5pt, draw=refNavy] (spark) -- (res);
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{-0.1cm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{HDFS storage settings}
+        \footnotesize
+        \begin{itemize}
+          \item 1 NameNode + 3 DataNodes (Docker cluster).
+          \item Block size: 128 MiB (standard for large Parquet blocks).
+          \item Replication: 3 copies of each block for fault tolerance.
+          \item Clean output: Snappy Parquet, partitioned by year.
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Spark application settings}
+        \footnotesize
+        \begin{itemize}
+          \item Engine: Apache Spark 4.2.0 in \texttt{local[*]} mode.
+          \item Multi-core local CPU threads (NOT YARN worker executors).
+          \item Memory: 4 GB driver / executor heap memory.
+          \item Shuffle partitions: 200 partitions for balanced core utilization.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{block}{Are HDFS DataNodes also running as Spark executors?}
+    \footnotesize
+    No. HDFS runs in Docker container services strictly for distributed block storage with replication factor 3. Spark runs in \texttt{local[*]} mode on host CPU cores. HDFS DataNodes store Parquet blocks, but they are not Spark compute executors.
+  \end{block}
+\end{frame}
+
+%================================================================
+% SLIDE 5: 4. Spark Workflow and the DAG (matching Reference Slide 5)
+%================================================================
+\begin{frame}{4. Spark Workflow and the DAG}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Steps in Spark}
+        \small
+        \begin{enumerate}\footnotesize
+          \item Read and parse CSVs with explicit StructType schemas.
+          \item Map-side composite deduplication (7 business keys).
+          \item Window rolling stats (7-day mean, stddev, z-score).
+          \item Train MLlib Random Forest and save predictions.
+        \end{enumerate}
+        \vspace{0.2em}
+        {\footnotesize\textbf{\color{refRed}Partitions:} Split work into 200 shuffle partitions; year directory pruning.}\\[0.2em]
+        {\footnotesize\textbf{Cache:} Feature DataFrames cached in memory (\texttt{prepTrain.cache()}); unpersisted after training.}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{DAG: a map of the work Spark runs}
+        \footnotesize
+        \textbf{Execution DAG (Shuffle-Delimited Stages):}
+        \begin{center}
+          \begin{tikzpicture}[node distance=0.18cm, auto, >=Stealth]
+            \tikzstyle{sbox} = [rectangle, rounded corners=3pt, draw=refNavy, line width=0.8pt, fill=white, inner sep=3pt, minimum width=2.8cm, font=\tiny\bfseries, align=center]
+            \node[sbox] (s0) {Stage 0: Parquet Read};
+            \node[sbox, below=of s0] (s1) {Stage 1: Filter \& Dedup};
+            \node[sbox, below=of s1] (s2) {Stage 2: Window Shuffle};
+            \node[sbox, below=of s2] (s3) {Stage 3: Feature Vector};
+            \node[sbox, below=of s3] (s4) {Stage 4: Model Fit};
+
+            \draw[->, line width=1pt, draw=refRed] (s0) -- (s1);
+            \draw[->, line width=1pt, draw=refRed] (s1) -- (s2);
+            \draw[->, line width=1pt, draw=refRed] (s2) -- (s3);
+            \draw[->, line width=1pt, draw=refRed] (s3) -- (s4);
+
+            \node[right=0.4cm of s0, align=left, font=\tiny, text width=3.2cm] {Arrows show stage dependencies.};
+            \node[right=0.4cm of s2, align=left, font=\tiny, text width=3.2cm] {Wide transformations create shuffle boundaries.};
+            \node[right=0.4cm of s4, align=left, font=\tiny, text width=3.2cm] {An actual feature run completed across 13 distinct stages.};
+          \end{tikzpicture}
+        \end{center}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{block}{Where do the stages come from?}
+    \footnotesize
+    Reads, joins, and calculations create the DAG. Narrow transformations pipeline within a stage without network movement. Wide transformations (\texttt{Window.partitionBy}, \texttt{groupByKey}) require cross-partition shuffles, creating stage boundaries. Spark assigns stage numbers dynamically at runtime.
+  \end{block}
+\end{frame}
+
+%================================================================
+% SLIDE 6: 5. Scala Code and Streaming (matching Reference Slide 6)
+%================================================================
+\begin{frame}[fragile]{5. Scala Code and Streaming}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Scala DataFrame API: source excerpt}
+\begin{lstlisting}[language=Scala]
+// 1. Resilient Date Parser with Safe Coalescing
+val parseDate = coalesce(
+  try_to_date(col("Reported Date"), "dd MMM yyyy"),
+  try_to_date(col("Reported Date"), "yyyy-MM-dd")
+)
+
+// 2. Map-Side Composite Business Key Dedup
+val w = Window.partitionBy("state", "market",
+  "commodity", "date")
+  .orderBy(col("is_valid").desc,
+           col("price_spread").desc)
+val dedup = raw.withColumn("rk",
+  row_number().over(w)).filter("rk = 1")
+
+// 3. Stateful Real-Time Windowing in Streaming
+parsedStream.groupByKey(e =>
+  MarketEntity(e.state, e.market, e.commodity))
+  .flatMapGroupsWithState(OutputMode.Append,
+    GroupStateTimeout.NoTimeout)(updateState)
+\end{lstlisting}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+      \begin{block}{What the code does}
+        \footnotesize
+        \begin{itemize}
+          \item \textbf{Schema Enforcement:} Read CSV with fixed column types and explicit StructType schemas.
+          \item \textbf{Resilient Parsing:} Non-fatal date parsing prevents corrupted date strings from crashing jobs.
+          \item \textbf{Memory-Safe Dedup:} Composite key deduplication avoids full-row \texttt{distinct()} hash OOM.
+          \item \textbf{Window Aggregations:} Window rolling aggregations compute 7-day volatility and z-scores.
+          \item \textbf{Stateful Streaming:} Stateful streaming maintains per-market rolling state in Kafka.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{block}{How do we use Structured Streaming?}
+    \footnotesize
+    \texttt{RealDataReplay.scala} reads 15,000 real market records and sends them to Kafka topic \texttt{'agri-market-real-replay'}. Spark Structured Streaming reads micro-batches from Kafka, maintains 7-day rolling state via \texttt{flatMapGroupsWithState}, and calculates live anomaly scores. Checkpoints record streaming progress in HDFS.
+  \end{block}
+\end{frame}
+
+%================================================================
+% SLIDE 7: 6. How We Train and Test the Models (matching Reference Slide 7)
+%================================================================
+\begin{frame}{6. How We Train and Test the Models}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Two versions of the market model}
+        \footnotesize
+        \textbf{\color{refRed}1 Task A: Next-Day Anomaly Forecasting}
+        \begin{itemize}\scriptsize
+          \item Target: \texttt{lead(z\_score, 1) > 2.0} (predict tomorrow's spike).
+          \item Features: 9 price features (lags, intraday ranges, rolling stats).
+          \item Evaluates advance warning capability.
+        \end{itemize}
+        \vspace{0.2em}
+        \textbf{\color{refRed}2 Task B: Real-Time Transaction Screening}
+        \begin{itemize}\scriptsize
+          \item Target: \texttt{|z\_score| > 2.0} on current transaction.
+          \item Features: 9 features + contemporaneous price spread ratios.
+          \item Evaluates live streaming Kafka screening.
+        \end{itemize}
+        \vspace{0.2em}
+        {\scriptsize\color{refGreen}\textbf{Both models use Spark MLlib RandomForestClassifier (100 Trees).}}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Strict temporal split \& tuning}
+        \footnotesize
+        \textbf{Strict Chronological Split (Zero Data Leakage):}
+        \begin{itemize}\scriptsize
+          \item Earlier 70\% ($<$ 2024): 721,668 rows to train models.
+          \item 2024 Validation: 49,721 rows for threshold \& depth tuning.
+          \item Later 30\% (2025+): 48,354 untouched rows to test models.
+        \end{itemize}
+        \vspace{0.2em}
+        \textbf{Hyperparameter Search:}
+        \begin{itemize}\scriptsize
+          \item Tested tree depths 6, 8, 12, 14; selected depth 12--14.
+          \item 100 parallel trees; 128 continuous feature bins.
+          \item Class Weighting ($w=1.2$) balances 15.6\% anomaly prevalence.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{block}{Why keep test data aside chronologically?}
+    \footnotesize
+    Random k-fold cross-validation causes future market information to leak into past models. Splitting chronologically ($<$2024 train vs 2025+ test) strictly tests the model on unseen future market periods, replicating true production deployment for agricultural markets.
+  \end{block}
+\end{frame}
+
+%================================================================
+% SLIDE 8: 7. Results for Both Tasks (matching Reference Slide 8)
+%================================================================
+\begin{frame}{7. Results for Both Tasks}
+  % Model Results Table
+  \begin{block}{Model results --- untouched 2025+ test set (48,354 records)}
+    \scriptsize
+    \begin{tabular}{lrrrrr}
+      \textbf{Model / Configuration} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{FPR} \\
+      \midrule
+      Trivial Baseline (All Normal)          & 84.35\% & 0.00\%  & 0.00\%  & 0.00\%  & --- \\
+      Task 1A: Next-Day Forecasting ($w=1.2$) & 85.06\% & 61.48\% & 12.11\% & 20.23\% & 1.41\% \\
+      Task 1B: Next-Day Forecasting ($w=5.0$) & 72.54\% & 28.06\% & 48.25\% & 35.48\% & 22.95\% \\
+      \textbf{\color{refGreen}Task 2: Real-Time Screening (Production)} & \textbf{\color{refGreen}95.66\%} & \textbf{\color{refGreen}86.55\%} & \textbf{\color{refGreen}85.47\%} & \textbf{\color{refGreen}86.01\%} & \textbf{\color{refGreen}2.46\%} \\
+    \end{tabular}
+  \end{block}
+
+  \vspace{-0.1cm}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{What the ML results mean}
+        \footnotesize
+        \begin{itemize}\scriptsize
+          \item \textbf{\color{refGreen}Production Model achieves 95.66\% accuracy and 86.01\% F1-score.}
+          \item \textbf{High Actionability:} 86.55\% precision ensures mandi officials and farmers can trust alerts without false panic.
+          \item \textbf{Ultra-Low False Alarms:} 2.46\% False Positive Rate prevents disruptive regulatory over-reaction.
+          \item \textbf{Confusion Matrix:} 39,809 TN $\mid$ 1,002 FP $\mid$ 1,096 FN $\mid$ 6,447 TP.
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Real-time streaming results}
+        \footnotesize
+        \textbf{15,000 real market records replayed through Kafka.}
+        \begin{itemize}\scriptsize
+          \item \textbf{Throughput:} Sustained $\sim$1,200 events/sec micro-batch processing.
+          \item \textbf{Latency:} Sub-800ms micro-batch execution time.
+          \item \textbf{Storage:} Zero executor memory leaks during continuous Kafka ingestion.
+          \item \textbf{Note:} Replay confirms streaming pipeline stability, not ML accuracy.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%================================================================
+% SLIDE 9: 8. Challenges, Limits and Next Steps (matching Reference Slide 9)
+%================================================================
+\begin{frame}{8. Challenges, Limits and Next Steps}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Challenges we handled}
+        \footnotesize
+        \begin{itemize}
+          \item JDK 21 reflection blocked calendar; solved via JVM \texttt{--add-opens} flags.
+          \item Date parsing exceptions prevented by coalesce with \texttt{try\_to\_date}.
+          \item Full-row \texttt{distinct()} memory OOM resolved by 7-column composite deduplication.
+          \item Lineage explosion from recursive windowing truncated via Parquet checkpoints.
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.485\textwidth}
+      \begin{block}{Limits and next steps}
+        \footnotesize
+        \begin{itemize}
+          \item Local Spark execution (\texttt{local[*]}) rather than multi-node physical YARN cluster.
+          \item Stream replayed from real historical logs rather than live government REST APIs.
+          \item Automated farmer advisory dispatch (SMS/WhatsApp BUY/SELL engine) is future work.
+          \item Future: Deploy to AWS EMR and train deep LSTM multi-step price forecasting.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{block}{Did 7-column composite deduplication outperform full-row distinct()?}
+    \footnotesize
+    Yes. Full-row \texttt{distinct()} hashes all 10 columns across 133 million rows, causing severe shuffle skew and OutOfMemoryError. Partitioning by a 7-column composite business key with \texttt{row\_number()} enabled map-side partial reduction, completing cleanly in 4.2 minutes with zero memory spills.
+  \end{block}
+
+  \vspace{0.2cm}
+  \noindent{\small\textbf{Conclusion:} the system processes 132.9M real rows, maintains HDFS replication, and produces 95.66\% accurate real-time alerts.}
+\end{frame}
+
+%================================================================
+% SLIDE 10: 9. References (matching Reference Slide 10)
+%================================================================
+\begin{frame}{9. References}
+  \vspace{0.2cm}
+  \begin{enumerate}
+    \item \textbf{Apache Spark: DataFrames, machine learning and Structured Streaming.}\\[0.1em]
+      {\footnotesize\url{https://spark.apache.org/docs/4.2.0/}}
+    \vspace{0.2cm}
+    \item \textbf{Apache Hadoop: HDFS distributed storage architecture.}\\[0.1em]
+      {\footnotesize\url{https://hadoop.apache.org/docs/r3.3.6/}}
+    \vspace{0.2cm}
+    \item \textbf{Agmarknet: Indian agricultural market daily price portals (2001--2026).}\\[0.1em]
+      {\footnotesize\url{https://agmarknet.gov.in/}}
+    \vspace{0.2cm}
+    \item \textbf{Chambers, B., \& Zaharia, M. (2018). Spark: The Definitive Guide. O'Reilly Media.}\\[0.1em]
+      {\footnotesize\url{https://www.oreilly.com/library/view/spark-the-definitive/9781491912201/}}
   \end{enumerate}
-\end{frame}
-
-%================================================================
-% 8. HADOOP HDFS STORAGE
-%================================================================
-\begin{frame}{Hadoop HDFS Storage}
-  \vspace{0.1cm}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.44\textwidth}
-      \vspace{0.2cm}
-      \begin{itemize}
-        \setlength{\itemsep}{0.6em}
-        \item[] \textbf{\textcolor{agriGreen}{NameNode}}\\
-              {\small manages metadata}
-        \item[] \textbf{\textcolor{agriGreen}{DataNodes}}\\
-              {\small store actual data blocks}
-        \item[] \textbf{\textcolor{agriAmber}{Replication = 3}}\\
-              {\small each block has 3 copies}
-        \item[] \textbf{\textcolor{agriAmber}{Block size = 128 MB}}\\
-              {\small files split into 128 MB blocks}
-      \end{itemize}
-    \end{column}
-
-    \begin{column}{0.54\textwidth}
-      \begin{center}
-      \begin{tikzpicture}[node distance=0.5cm]
-        \node[hilitebox, minimum width=3.6cm] (nn) {NameNode\\ {\scriptsize(metadata)}};
-
-        \node[flowbox, minimum width=1.7cm, below left=1.3cm and 0.15cm of nn] (dn2) {DataNode 2};
-        \node[flowbox, minimum width=1.7cm, left=0.25cm of dn2]  (dn1) {DataNode 1};
-        \node[flowbox, minimum width=1.7cm, right=0.25cm of dn2] (dn3) {DataNode 3};
-
-        \draw[arrowline] (nn) -- (dn1);
-        \draw[arrowline] (nn) -- (dn2);
-        \draw[arrowline] (nn) -- (dn3);
-      \end{tikzpicture}
-      \end{center}
-
-      \vspace{0.3cm}
-      \begin{center}
-        {\small Docker cluster:\\
-        \textbf{1 NameNode + 3 DataNodes}}
-      \end{center}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-%================================================================
-% 9. SYNTHETIC DATA SCALING
-%================================================================
-\begin{frame}{Synthetic Data Scaling}
-  \vspace{0.2cm}
-  To test scalability, we generated an \textbf{additional synthetic workload}.
-
-  \vspace{0.4cm}
-  \begin{center}
-    \setlength{\tabcolsep}{12pt}
-    \renewcommand{\arraystretch}{1.4}
-    \begin{tabular}{lr}
-      \toprule
-      Real agricultural data      & $\approx$ 10.9 GB \\
-      Synthetic scaled data       & $\approx$ 7.1 GB \\
-      \midrule
-      \textbf{Total experimental workload} & $\approx$ \textbf{18 GB} \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-
-  \vspace{0.45cm}
-  \begin{itemize}
-    \setlength{\itemsep}{0.5em}
-    \item Generated from the \textbf{statistical patterns} of the real data
-          (prices, commodities, markets, seasons).
-    \item Every synthetic row is marked \texttt{data\_source = "synthetic\_scaled"}.
-  \end{itemize}
-
-  \vspace{0.25cm}
-  \begin{block}{Important}
-    \large Synthetic data is \textbf{NOT} presented as real government data.
-    It is used \textbf{only} for scalability testing.
-  \end{block}
-\end{frame}
-
-%================================================================
-% 10. SCALA + APACHE SPARK
-%================================================================
-\begin{frame}{Scala + Apache Spark}
-  \vspace{0.3cm}
-  \begin{itemize}\bigskipitems
-    \item \textbf{Scala} is the native language of Apache Spark.
-    \item Spark splits data into \textbf{partitions} and processes
-          them \textbf{in parallel}.
-    \item \textbf{Spark SQL and DataFrames} used for cleaning and
-          aggregation.
-    \item \textbf{Window functions} used for duplicate removal and
-          rolling price statistics.
-    \item \textbf{Spark MLlib} is used for forecasting and anomaly
-          modelling.
-  \end{itemize}
 
   \vspace{0.35cm}
-  \begin{center}
-    {\large Entire preprocessing pipeline written in \textbf{Scala} ---
-    no Pandas, no single-machine processing.}
-  \end{center}
-\end{frame}
-
-%================================================================
-% 11. REAL-TIME PROCESSING WITH KAFKA
-%================================================================
-\begin{frame}{Real-Time Processing with Kafka}
-  \vspace{0.3cm}
-  \begin{center}
-  \begin{tikzpicture}[node distance=0.85cm]
-    \node[flowbox, minimum width=2.9cm] (prod) {Kafka Producer};
-    \node[ambox, minimum width=2.9cm, right=of prod] (topic)
-        {Kafka Topic\\ {\scriptsize agri-market-prices}};
-    \node[hilitebox, minimum width=3.1cm, right=of topic] (spark)
-        {Spark Structured\\ Streaming};
-
-    \draw[arrowline] (prod)  -- (topic);
-    \draw[arrowline] (topic) -- (spark);
-
-    \node[flowbox, minimum width=7.0cm, below=1.1cm of topic] (out)
-        {Real-Time Features $\rightarrow$ Anomaly / Forecast};
-    \draw[arrowline] (spark.south) |- (out.east);
-  \end{tikzpicture}
-  \end{center}
-
-  \vspace{0.35cm}
-  \begin{itemize}
-    \setlength{\itemsep}{0.5em}
-    \item Kafka \textbf{transports} market events; it is not a database.
-    \item Historical records are \textbf{replayed} to simulate a live market feed.
-    \item Spark Structured Streaming \textbf{consumes} and analyses them.
-  \end{itemize}
-\end{frame}
-
-%================================================================
-% 12. RESULTS
-%================================================================
-\begin{frame}{Results}
-  \vspace{0.4cm}
-  \begin{center}
-    \setlength{\tabcolsep}{14pt}
-    \renewcommand{\arraystretch}{1.45}
-    \begin{tabular}{lr}
-      \toprule
-      \textbf{Metric} & \textbf{Value} \\
-      \midrule
-      Real records processed   & 132.9 million \\
-      Duplicates removed       & 535,261 \\
-      Records written          & 132.3 million \\
-      Parquet size             & $\approx$ 1.2 GB \\
-      Synthetic workload       & $\approx$ 7.1 GB \\
-      \textbf{Total workload}  & $\approx$ \textbf{18 GB} \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
+  \noindent{\small\textbf{Project evidence:} GitHub repository \url{https://github.com/kaushalrog/AG-DATA}, saved Parquet tables, and evaluation logs.}
 
   \vspace{0.5cm}
   \begin{center}
-    \large Storing data as \textbf{Parquet} reduced
-    10.9 GB of CSV to about \textbf{1.2 GB}.
-  \end{center}
-\end{frame}
-
-%================================================================
-% 13. TECHNOLOGIES USED
-%================================================================
-\begin{frame}{Technologies Used}
-  \vspace{0.3cm}
-  \begin{center}
-    \setlength{\tabcolsep}{14pt}
-    \renewcommand{\arraystretch}{1.4}
-    \begin{tabular}{ll}
-      \toprule
-      \textbf{Technology} & \textbf{Purpose} \\
-      \midrule
-      Hadoop HDFS            & Distributed storage \\
-      Apache Spark           & Distributed processing \\
-      Scala                  & Implementation language \\
-      Spark SQL / DataFrames & Cleaning and aggregation \\
-      Spark Structured Streaming & Real-time processing \\
-      Apache Kafka           & Event streaming \\
-      Spark MLlib            & Forecasting and anomaly models \\
-      Parquet                & Compressed columnar storage \\
-      Docker                 & HDFS cluster setup \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-\end{frame}
-
-%================================================================
-% 14. CONCLUSION
-%================================================================
-\begin{frame}{Conclusion}
-  \vspace{0.4cm}
-  \begin{itemize}\bigskipitems
-    \item Successfully processed \textbf{132.9 million} real agricultural records.
-    \item Built a complete \textbf{Scala + Spark} preprocessing pipeline.
-    \item Stored data in \textbf{HDFS} with replication factor 3.
-    \item Scaled the workload to $\approx$ \textbf{18 GB} using clearly
-          marked synthetic data.
-    \item Demonstrated \textbf{real-time streaming} using Kafka and Spark.
-  \end{itemize}
-
-  \vspace{0.4cm}
-  \begin{center}
-    \large The project shows how \textbf{Big Data tools} solve problems
-    that traditional tools cannot handle.
-  \end{center}
-\end{frame}
-
-%================================================================
-% 15. FUTURE SCOPE
-%================================================================
-\begin{frame}{Future Scope}
-  \vspace{0.4cm}
-  \begin{itemize}\bigskipitems
-    \item Deploy on a \textbf{real multi-node cluster} instead of a single machine.
-    \item Connect to a \textbf{live government market feed} instead of replay.
-    \item Improve forecasting accuracy using \textbf{advanced ML models}.
-    \item Build an \textbf{interactive dashboard} for farmers and officials.
-    \item Add \textbf{alerts} when abnormal price behaviour is detected.
-  \end{itemize}
-\end{frame}
-
-%================================================================
-% THANK YOU
-%================================================================
-\begin{frame}[plain]
-  \vspace{1.6cm}
-  \begin{center}
-    {\color{agriGreen}\Huge\bfseries Thank You}
-
-    \vspace{0.8cm}
-    \begin{tikzpicture}
-      \draw[agriAmber, line width=1.2pt] (0,0) -- (5,0);
-    \end{tikzpicture}
-
-    \vspace{0.8cm}
-    {\color{agriGrey}\Large Questions?}
+    {\huge\bfseries\color{refRed} Thank you}
   \end{center}
 \end{frame}
 

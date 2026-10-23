@@ -1,3 +1,32 @@
+import os
+import sys
+
+# Ensure Java 21 is used instead of system default Java 26 (Spark 4.2.0 compatibility)
+java21_path = "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+if os.path.exists(java21_path):
+    os.environ["JAVA_HOME"] = java21_path
+    os.environ["PATH"] = f"{java21_path}/bin:" + os.environ.get("PATH", "")
+
+os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
+
+java_opts = (
+    "--add-opens=java.base/java.lang=ALL-UNNAMED "
+    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED "
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED "
+    "--add-opens=java.base/java.io=ALL-UNNAMED "
+    "--add-opens=java.base/java.net=ALL-UNNAMED "
+    "--add-opens=java.base/java.nio=ALL-UNNAMED "
+    "--add-opens=java.base/java.util=ALL-UNNAMED "
+    "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED "
+    "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED "
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED "
+    "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED "
+    "--add-opens=java.base/sun.security.action=ALL-UNNAMED "
+    "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED "
+    "--add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+)
+os.environ["PYSPARK_SUBMIT_ARGS"] = f'--driver-java-options "{java_opts}" pyspark-shell'
+
 import streamlit as st
 import pandas as pd
 from pyspark.sql import SparkSession
@@ -29,7 +58,10 @@ count = st_autorefresh(interval=5000, limit=None, key="data_refresh")
 @st.cache_resource
 def get_spark():
     spark = SparkSession.builder.appName("StreamlitDashboard") \
+        .master("local[2]") \
+        .config("spark.driver.host", "127.0.0.1") \
         .config("spark.sql.execution.arrow.pyspark.enabled", "false") \
+        .config("spark.driver.extraJavaOptions", java_opts) \
         .getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
     return spark
@@ -149,6 +181,33 @@ with tab2:
         scol4.metric("Latest Real Event", str(latest_ts).split(".")[0])
         scol5.metric("Latest Probability", f"{latest_prob:.2f}" if isinstance(latest_prob, float) else latest_prob)
         
+        # Farmer Decision Support Advisory Classification
+        def classify_advisory(row):
+            pred = row.get('anomaly_prediction', 0.0)
+            prob = row.get('anomaly_probability', 0.0)
+            if pred == 1.0 or prob >= 0.65:
+                return "🟢 SELL (Harvest Peak)"
+            elif prob >= 0.38:
+                return "🟡 HOLD (Panic Reversal)"
+            elif prob >= 0.18:
+                return "🔵 WATCH (Volatility)"
+            else:
+                return "🟣 BUY (Procurement)"
+
+        f_df['Advisory'] = f_df.apply(classify_advisory, axis=1)
+
+        sell_cnt = (f_df['Advisory'].str.startswith("🟢")).sum()
+        hold_cnt = (f_df['Advisory'].str.startswith("🟡")).sum()
+        watch_cnt = (f_df['Advisory'].str.startswith("🔵")).sum()
+        buy_cnt = (f_df['Advisory'].str.startswith("🟣")).sum()
+
+        st.markdown("#### 🌾 Farmer Decision Support Advisories (Live Stream Scoring)")
+        acol1, acol2, acol3, acol4 = st.columns(4)
+        acol1.metric("🟢 SELL Advisories", int(sell_cnt), help="Sell before seasonal post-spike harvest glut collapses prices")
+        acol2.metric("🟡 HOLD Advisories", int(hold_cnt), help="Hold inventory during temporary panic drops awaiting mean reversion")
+        acol3.metric("🔵 WATCH Advisories", int(watch_cnt), help="Spread volatility detected; monitor neighboring district mandis")
+        acol4.metric("🟣 BUY Advisories", int(buy_cnt), help="Stable low price window; optimal for wholesale and food processors")
+
         st.divider()
         lc1, lc2 = st.columns(2)
         with lc1:
@@ -165,7 +224,17 @@ with tab2:
             else:
                 st.info("No anomalies")
                 
-        st.markdown("##### Recent Alerts (Real Data)")
-        def hl(val): return 'background-color: #ffcccc' if val == 1.0 else ''
-        cols = [c for c in [time_col, 'state', 'district', 'market', 'commodity', 'variety', 'modal_price', 'anomaly_probability', 'anomaly_prediction'] if c in f_df.columns]
-        st.dataframe(f_df[cols].sort_values(time_col, ascending=False).head(50).style.applymap(hl, subset=['anomaly_prediction']), use_container_width=True)
+        st.markdown("##### Recent Farmer Advisories & Real-Time Alert Feed")
+        def hl_advisory(val):
+            if isinstance(val, str):
+                if val.startswith("🟢"): return 'background-color: rgba(0, 230, 118, 0.2); font-weight: bold;'
+                if val.startswith("🟡"): return 'background-color: rgba(255, 214, 0, 0.2); font-weight: bold;'
+                if val.startswith("🔵"): return 'background-color: rgba(41, 121, 255, 0.2); font-weight: bold;'
+                if val.startswith("🟣"): return 'background-color: rgba(170, 0, 255, 0.2); font-weight: bold;'
+            return ''
+
+        cols = [c for c in ['Advisory', time_col, 'state', 'district', 'market', 'commodity', 'variety', 'modal_price', 'anomaly_probability', 'anomaly_prediction'] if c in f_df.columns]
+        st.dataframe(
+            f_df[cols].sort_values(time_col, ascending=False).head(50).style.applymap(hl_advisory, subset=['Advisory']),
+            use_container_width=True
+        )
