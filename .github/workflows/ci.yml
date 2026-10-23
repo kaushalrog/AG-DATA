@@ -24,3 +24,16 @@ jobs:
         with: {distribution: temurin, java-version: "21", cache: sbt}
       - uses: sbt/setup-sbt@v1
       - run: sbt -batch compile test
+  browser:
+    # Real headless Chrome against the static app with its bundled demo snapshot (no data needed):
+    # service worker, installability, offline reload, throttled load, accessibility, 6 languages at 320 px.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: (python3 -m http.server -d app 8090 &) && sleep 2
+      - run: node tests/browser/pwa_e2e.mjs http://localhost:8090/ --chrome "$(which google-chrome)"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: pwa-report, path: results/browser/pwa_report.json}

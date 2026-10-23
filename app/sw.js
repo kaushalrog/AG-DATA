@@ -4,7 +4,7 @@
 //  * GET /api/*: network-first with timeout; on failure the last good response is returned
 //    with header X-From-Cache: <ISO time it was saved> so the UI can say "Offline – saved data from …"
 //  * never caches non-GET requests or error responses; old caches removed on activate
-const VERSION = 'v-006a69a3c690';
+const VERSION = 'v-395b5dd9f33f';
 const SHELL = `agri-shell-${VERSION}`;
 const API = `agri-api-${VERSION}`;
 const API_TIMEOUT = 5000;

@@ -1,0 +1,107 @@
+{
+ "base": "http://localhost:8090/",
+ "browser": "Chrome/155.0.8059.85",
+ "ran_at": "2026-10-23T03:57:09.698Z",
+ "profile": "temporary, deleted after run",
+ "results": [
+  {
+   "name": "service worker registered and active",
+   "status": "PASS",
+   "detail": {
+    "scope": "http://localhost:8090/",
+    "active": "activated",
+    "script": "http://localhost:8090/sw.js"
+   }
+  },
+  {
+   "name": "app shell precached",
+   "status": "PASS",
+   "detail": {
+    "caches": [
+     "agri-shell-v-006a69a3c690",
+     "agri-api-v-006a69a3c690"
+    ],
+    "shell_entries": 59
+   }
+  },
+  {
+   "name": "Chrome installability check passes",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "manifest parses without errors",
+   "status": "PASS",
+   "detail": {
+    "url": "http://localhost:8090/manifest.webmanifest",
+    "errors": []
+   }
+  },
+  {
+   "name": "offline reload renders the cached app",
+   "status": "PASS",
+   "detail": "Skip to content Mandi Prices Install app Demo snapshot The price server could not be reached. Showing a small sample stored in the app. Prices are examples only"
+  },
+  {
+   "name": "cold load on slow 3G + 4x CPU renders the home list",
+   "status": "PASS",
+   "detail": {
+    "ms_to_first_list": 4150,
+    "transferred_kb": 69
+   }
+  },
+  {
+   "name": "JS heap after load is small (< 30 MB)",
+   "status": "PASS",
+   "detail": {
+    "js_heap_used_mb": 7.07,
+    "dom_nodes": 19716
+   }
+  },
+  {
+   "name": "every interactive control has an accessible name",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "every image has alt text",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "text contrast meets WCAG AA",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "touch targets >= 44 px (outside running text)",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "html lang attribute set",
+   "status": "PASS",
+   "detail": {
+    "#/home": "en",
+    "#/commodity/5015586753432055424": "en",
+    "#/guide": "en",
+    "#/settings": "en"
+   }
+  },
+  {
+   "name": "no horizontal overflow at 320 px in 6 languages",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "no raw i18n keys or undefined/NaN/null in 6 languages",
+   "status": "PASS",
+   "detail": []
+  },
+  {
+   "name": "document lang matches the chosen language",
+   "status": "PASS",
+   "detail": []
+  }
+ ]
+}

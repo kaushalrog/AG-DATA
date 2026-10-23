@@ -88,7 +88,40 @@ def load_streaming_data():
         return pd.DataFrame()
 
 st.title("Large-Scale Agricultural Market Data & Real-Time Analysis")
-st.markdown("**Data Source: Daily Market Prices + India Mandi**")
+st.markdown("**Data Source: AGMARKNET daily prices (archive) + official data.gov.in back-fill**")
+# Corrected 2026-10-23: every figure shown below comes from docs/VERIFIED_METRICS.md
+# (section given in each comment); the original v1 figures are preserved in Git commit 3926155.
+st.caption("Figures from docs/VERIFIED_METRICS.md (corrected 2026-10-23). "
+           "Earlier v1 anomaly-classifier metrics were withdrawn; see docs/AUDIT_PRIOR_RESULTS.md.")
+
+# docs/VERIFIED_METRICS.md section 2: experiment fc_main_v3, test 2025-01-01 .. 2026-04-20
+FORECAST_TEST = pd.DataFrame(
+    [
+        ("next report", "GBT (absolute loss)", 189.0, 183.5, 0.971, "78.6%", "1.3e-22", "58.5%"),
+        ("3 days", "GBT (absolute loss)", 242.6, 231.1, 0.953, "79.4%", "3.6e-47", "68.8%"),
+        ("7 days", "Random forest", 308.8, 289.7, 0.938, "80.0%", "4.4e-39", "75.0%"),
+        ("14 days", "Random forest", 397.0, 366.4, 0.923, "80.5%", "8.7e-29", "76.4%"),
+    ],
+    columns=["Horizon", "Selected model", "Persistence MAE (Rs/q)", "Model MAE (Rs/q)",
+             "Rel. MAE vs persistence", "80% interval coverage", "Diebold-Mariano p", "Series better"],
+)
+# docs/VERIFIED_METRICS.md section 2: frozen models, no refitting
+FORECAST_FROZEN = pd.DataFrame(
+    [
+        ("Same test period, complete official data", 0.972, 0.954, 0.943, 0.925, "79.2-80.3%"),
+        ("Prospective 2026-04-22 -> 2026-10-22", 0.963, 0.955, 0.958, 0.952, "76.9-80.1%"),
+    ],
+    columns=["Evaluation (rel. MAE)", "next", "3 d", "7 d", "14 d", "80% coverage"],
+)
+# docs/VERIFIED_METRICS.md section 3: injected corruptions, run results/anomaly/20261022T175225Z
+ANOMALY_INJECTED = pd.DataFrame(
+    [
+        ("Production rule (trailing robust z)", 0.704, 0.313, 0.846, 0.019),
+        ("Previous-report change", 0.671, 0.160, 0.960, 0.051),
+        ("Legacy commodity IQR (v1 rule)", 0.352, 0.208, 0.371, 0.014),
+    ],
+    columns=["Detector", "PR-AUC (any corruption)", "Precision", "Recall", "FPR"],
+)
 
 tab1, tab2 = st.tabs(["HISTORICAL MARKET ANALYSIS", "REAL-TIME MARKET ANALYSIS"])
 
@@ -96,30 +129,42 @@ with tab1:
     st.subheader("Data & Architecture Provenance")
     
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("REAL RECORDS PROCESSED", "132.9M")
-    col1.caption("Canonical records: 93,410,019 rows")
+    # section 1
+    col1.metric("ARCHIVE SILVER ROWS", "75.6M")
+    col1.caption("Raw archive: 75,984,017 rows\nSilver v2 (archive + official): 82,114,083 rows")
     
-    col2.metric("REAL DATA VOLUME", "10.9 GB")
-    col2.caption("Synthetic Scale Workload: ≈ 7.1 GB\nTotal Experimental Workload: ≈ 18 GB")
+    col2.metric("OFFICIAL BACK-FILL", "7.72M")
+    col2.caption("data.gov.in, 2025-10-01 to 2026-10-22, 387 days\nForecast panel: 36 commodities, 11,845 series")
     
+    # section 5
     col3.metric("HDFS CLUSTER (Storage)", "1 NN + 3 DN")
-    col3.caption("Replication Factor: 3")
+    col3.caption("Replication 3, 692 MB silver, HEALTHY\nReadable with 1 DataNode down")
     
-    col4.metric("STREAMING (Event Transport)", "Kafka → Spark")
-    col4.caption("Computation: Spark Structured Streaming\nModel: Spark MLlib Random Forest")
+    col4.metric("STREAMING (Kafka -> Spark)", "20,000 / 20,000")
+    col4.caption("Replay: 21,524 messages, 1,317 duplicates removed, 207 quarantined, 0 missing\n"
+                 "Parity 0 mismatches; producer->sink p50 1.69 s")
     
     st.divider()
-    st.subheader("Anomaly Detection (Model Performance)")
-    st.info("Final evaluation uses a deterministic 1% entity-safe representative sample with price deviation features evaluated on an untouched 2025+ temporal test set (48,354 records).")
+    st.subheader("Price Forecasting (Model Performance)")
+    st.info("Relative MAE = model MAE / persistence (last price) MAE on identical rows; lower is better, "
+            "< 1 beats persistence. Train origins 2016-2023, validation 2024, test 2025-01-01 to 2026-04-20 "
+            "(archive data), scored once. Persistence is a hard baseline: 17-34% of target changes are exactly zero.")
     
-    mcol1, mcol2, mcol3, mcol4, mcol5, mcol6, mcol7 = st.columns(7)
-    mcol1.metric("Accuracy", "95.66%")
-    mcol2.metric("Precision", "86.55%")
-    mcol3.metric("Recall", "85.47%")
-    mcol4.metric("F1 Score", "86.01%")
-    mcol5.metric("FPR", "2.46%")
-    mcol6.metric("ROC-AUC", "94.82%")
-    mcol7.metric("PR-AUC", "86.15%")
+    mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+    mcol1.metric("Rel. MAE, next report", "0.971")
+    mcol2.metric("Rel. MAE, 3 days", "0.953")
+    mcol3.metric("Rel. MAE, 7 days", "0.938")
+    mcol4.metric("Rel. MAE, 14 days", "0.923")
+    st.dataframe(FORECAST_TEST, use_container_width=True, hide_index=True)
+    st.markdown("##### Frozen models on new data (no refitting)")
+    st.dataframe(FORECAST_FROZEN, use_container_width=True, hide_index=True)
+    st.caption("Decision cards, test period, 7 days: WATCH on 98.5% of report-days; HOLD on 0.5% "
+               "(hit rate 80.0%); SELL on 1.0% (hit rate 67.8%). Hit rates on published prices, not farm profits.")
+    
+    st.divider()
+    st.subheader("Anomaly Flags (Injected Corruptions Only)")
+    st.dataframe(ANOMALY_INJECTED, use_container_width=True, hide_index=True)
+    st.warning("There are no labels for real anomalies, so no accuracy figure for real anomalies exists.")
     
     st.divider()
     st.subheader("Price Analysis (Real Data Aggregations)")
@@ -151,7 +196,11 @@ with tab1:
 
 
 with tab2:
-    st.subheader("REAL-DATA STREAM REPLAY")
+    st.subheader("REAL-DATA STREAM REPLAY (legacy v1 output)")
+    st.warning("This tab reads the legacy v1 streaming output (`/agri/streaming/real_anomaly_predictions`). "
+               "Its anomaly probabilities come from the withdrawn v1 classifier, so the advisory labels below are "
+               "illustrative only and are not evaluated. The current pipeline (PriceEventStream) writes alerts "
+               "scored by the trailing robust-z rule; see docs/ARCHITECTURE.md.")
     stream_df = load_streaming_data()
     
     if stream_df.empty:
@@ -201,7 +250,7 @@ with tab2:
         watch_cnt = (f_df['Advisory'].str.startswith("🔵")).sum()
         buy_cnt = (f_df['Advisory'].str.startswith("🟣")).sum()
 
-        st.markdown("#### 🌾 Farmer Decision Support Advisories (Live Stream Scoring)")
+        st.markdown("#### 🌾 Farmer Advisories from the legacy v1 stream (illustrative, not evaluated)")
         acol1, acol2, acol3, acol4 = st.columns(4)
         acol1.metric("🟢 SELL Advisories", int(sell_cnt), help="Sell before seasonal post-spike harvest glut collapses prices")
         acol2.metric("🟡 HOLD Advisories", int(hold_cnt), help="Hold inventory during temporary panic drops awaiting mean reversion")

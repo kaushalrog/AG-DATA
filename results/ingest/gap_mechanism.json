@@ -1,0 +1,21 @@
+{
+ "window": [
+  "2025-11-01",
+  "2026-04-20"
+ ],
+ "note": "consecutive-report gaps per series (state,district,market w/o APMC,commodity,variety); VALID rows; raw names (no paren normalisation, so a few official series split)",
+ "mirror": {
+  "n_gaps": 733758,
+  "median_gap_days": 3.0,
+  "p90_gap_days": 11.0,
+  "share_gaps_gt_7d": 0.16180539087819146,
+  "share_gaps_gt_14d": 0.06315569983564064
+ },
+ "official": {
+  "n_gaps": 2869722,
+  "median_gap_days": 1.0,
+  "p90_gap_days": 3.0,
+  "share_gaps_gt_7d": 0.024488086302436263,
+  "share_gaps_gt_14d": 0.01114010346646818
+ }
+}

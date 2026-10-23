@@ -131,12 +131,27 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
     origins = [o.strip() for o in os.environ.get("AGRI_API_CORS_ORIGINS", "http://localhost:8000").split(",") if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET"], allow_headers=["*"])
     limiter = RateLimiter(int(os.environ.get("AGRI_API_RATE_PER_MIN", "120")))
-    state: dict[str, Any] = {"store": None, "error": None}
-    try:
-        state["store"] = Store(gold_p, res_p)
-    except Exception as e:  # readiness reports it; details only in server logs
-        log.exception("gold layer not loadable")
-        state["error"] = type(e).__name__
+    state: dict[str, Any] = {"store": None, "error": None, "target": None}
+
+    def load() -> None:
+        # data/gold may be a symlink that the refresh job switches atomically; remember its target
+        target = os.path.realpath(gold_p)
+        try:
+            state["store"] = Store(gold_p, res_p)
+            state["error"] = None
+        except Exception as e:  # readiness reports it; details only in server logs
+            log.exception("gold layer not loadable")
+            state["error"] = type(e).__name__
+        state["target"] = target
+
+    load()
+
+    def maybe_reload() -> None:
+        if os.path.realpath(gold_p) != state["target"]:
+            log.info("gold release changed; reloading")
+            load()
+
+    status_p = Path(os.environ.get("AGRI_REFRESH_STATUS", "results/refresh/status.json"))
 
     def store() -> Store:
         if state["store"] is None:
@@ -146,6 +161,7 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
     @app.middleware("http")
     async def guard(request: Request, call_next):
         if request.url.path.startswith("/api/v1"):
+            maybe_reload()
             ip = request.client.host if request.client else "unknown"
             if not limiter.allow(ip):
                 return JSONResponse({"error": {"code": "rate_limited", "message": "too many requests"}}, status_code=429)
@@ -204,7 +220,18 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
                 "days_since_data": (date.today() - s.data_as_of).days, "data_origin": m["data_origin"],
                 "source": m["source"], "model_version": m["model_version"], "horizons": m["horizons"],
                 "price_unit": m["price_unit"], "languages": ["en", "ta", "te", "ml", "hi", "kn"],
-                "decision_rules_version": m["decision_rules_version"]}
+                "decision_rules_version": m["decision_rules_version"], "refresh": refresh_info()}
+
+    def refresh_info() -> dict | None:
+        """Last refresh outcome (no paths or error text: those stay in the server's status file)."""
+        if not status_p.exists():
+            return None
+        try:
+            st = json.loads(status_p.read_text())
+        except ValueError:
+            return None
+        return {"last_run_ok": bool(st.get("ok")), "last_success": st.get("last_success"),
+                "last_failure": st.get("last_failure"), "failed_step": None if st.get("ok") else st.get("failed_step")}
 
     @app.get("/api/v1/states")
     def states():

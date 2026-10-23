@@ -48,7 +48,7 @@
   "banner.replay_body": "This is a replay of past market reports for demonstration.",
   "banner.offline": "Offline – showing saved data from {time}.",
   "banner.demo": "Demo snapshot",
-  "banner.demo_body": "The price server could not be reached. Showing a small sample stored in the app. Prices are examples only.",
+  "banner.demo_body": "The price server could not be reached. Showing a small set of real past market reports stored in the app. They are old and are not today's prices.",
   "error.title": "Could not load this",
   "error.network": "No connection to the price server. Check your internet, then try again.",
   "error.not_found": "This item was not found. Try another market or commodity.",

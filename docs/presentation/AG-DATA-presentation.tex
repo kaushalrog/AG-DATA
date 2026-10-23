@@ -1,3 +1,4 @@
+% Corrected 2026-10-23: figures now come from docs/VERIFIED_METRICS.md; original wording preserved in Git commit 3926155.
 %=====================================================================
 %  Agricultural Commodity Price Forecasting and Market Analysis
 %  Using Hadoop HDFS, Apache Spark, MLlib, and Apache Kafka
@@ -94,8 +95,9 @@
     % Rounded Top Card
     \begin{tikzpicture}
       \node[fill=refGrayBox, rounded corners=6pt, inner sep=10pt, minimum width=0.92\paperwidth, align=center] {
-        {\LARGE\bfseries\color{refRed} Agricultural Commodity Price Forecasting and Market Analysis}\\[0.3em]
-        {\small\color{refRed} Using Hadoop HDFS, Apache Spark, MLlib, and Apache Kafka}
+        {\Large\bfseries\color{refRed} Agricultural Commodity Price Forecasting and Market Analysis}\\[0.3em]
+        {\small\color{refRed} Using Hadoop HDFS, Apache Spark, MLlib, and Apache Kafka}\\[0.2em]
+        {\tiny\color{refText} Figures: docs/VERIFIED\_METRICS.md (corrected 2026-10-23)}
       };
     \end{tikzpicture}
 
@@ -125,36 +127,36 @@
 \begin{frame}{1. What Are We Trying to Find?}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.485\textwidth}
-      \begin{block}{Mandi: unusual price fluctuations}
+      \begin{block}{Mandi: what price will be reported?}
         \small
-        Find daily market transactions that exhibit abnormal price surges or crashes across 3,000+ Indian mandis.\\[0.3em]
-        Seasonal harvest gluts trigger sharp 40\%+ price collapses, leading to severe distress selling by smallholder farmers.\\[0.3em]
-        Use 7-day rolling window statistics, price spreads, and z-scores to give each transaction an anomaly risk label.
+        Forecast the modal price a mandi will report 1, 3, 7 and 14 days ahead: 36 commodities, 11,845 series.\\[0.3em]
+        Each forecast has an 80\% conformal interval with measured coverage.\\[0.3em]
+        Baseline: persistence (``last price''); 17--34\% of price changes are exactly zero.
       \end{block}
     \end{column}
 
     \begin{column}{0.485\textwidth}
-      \begin{block}{Decision Support: farmer selling advisories}
+      \begin{block}{Decision Support: outlook cards}
         \small
-        Translate price anomaly signals into practical domain recommendations:
+        Forecasts and intervals become cautious cards:
         \begin{itemize}\footnotesize
-          \item \textbf{SELL:} Recommend selling before an unpredicted post-spike glut collapses prices.
-          \item \textbf{HOLD:} Advise holding inventory during temporary panic dips when prices recover.
-          \item \textbf{WATCH:} High volatility alert; monitor market closely before dispatching produce.
-          \item \textbf{BUY:} Buyer/procurement advisory to acquire inventory before seasonal price surges.
+          \item \textbf{SELL:} even the upper interval estimate is not above the last price.
+          \item \textbf{HOLD:} even the lower estimate exceeds the last price plus storage costs.
+          \item \textbf{WATCH:} no clear signal (the default).
+          \item \textbf{COMPARE:} a nearby mandi recently reported a clearly higher price.
         \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{0.25cm}
+  \vspace{0.1cm}
   \begin{block}{Why do we need big data tools?}
     \small
-    The agricultural files contain over 132.8 million market transactions (10.9 GB raw CSV). Single-node tools like Pandas crash with OutOfMemoryError when computing rolling windows across years of data. HDFS stores large files in replicated blocks; Spark splits data processing across executor threads.
+    75.98 million archived reports and 21.06 million per-series window-feature rows do not fit single-node Pandas on a 16 GB laptop. HDFS stores the layers in replicated blocks; Spark splits the work across executor threads.
   \end{block}
 
-  \vspace{0.2cm}
-  \noindent{\small\textbf{Goal:} prepare the data, compare models, and stream real-time price alerts.}
+  \vspace{0.05cm}
+  \noindent{\small\textbf{Goal:} prepare the data, compare forecasting models honestly, and stream daily reports.}
 \end{frame}
 
 %================================================================
@@ -163,20 +165,20 @@
 \begin{frame}{2. Our Data and the 5 Vs}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.485\textwidth}
-      \begin{block}{Data already stored in HDFS}
+      \begin{block}{Data layers}
         \scriptsize
-        \begin{tabular}{lrr}
-          \textbf{File / Layer} & \textbf{Rows} & \textbf{Storage / Role} \\
+        \begin{tabular}{@{}lrl@{}}
+          \textbf{Layer} & \textbf{Rows} & \textbf{Note} \\
           \midrule
-          Source 1: Daily Market Prices & 75,984,017  & 26 annual CSVs (6.5 GB) \\
-          Source 2: India Mandi Dataset & 56,879,072  & 325 commodity CSVs (4.4 GB) \\
-          Deduplicated Output           & 132,327,828 & 1.2 GB Parquet (9:1 ratio) \\
-          Canonical Cleaned Output      & 93,410,019  & Validated prices/dates for ML \\
-          Synthetic Stress Workload     & 350,012,867 & Isolated Phase 11 HDFS test \\
+          Raw archive          & 75,984,017 & 2001--2026 \\
+          Archive silver       & 75,644,801 & quality + dedup \\
+          Official back-fill   & 7,720,662  & 2025-10 $\to$ 2026-10 \\
+          Silver v2            & 82,114,083 & archive + official \\
+          Forecast panel       & 21.06 M    & 11,845 series \\
           \midrule
         \end{tabular}\\[0.25em]
-        \textbf{Source 1:} Agmarknet daily prices (2001--2026). Attributes: State, District, Market, Commodity, Arrival\_Date, Min/Max/Modal Price.\\[0.2em]
-        \textbf{Source 2:} India Mandi dataset. Attributes: State, District, Market, Commodity, Variety, Group, Arrivals (Tonnes), Reported Date.
+        \textbf{Attributes:} State, District, Market, Commodity, Variety, Grade, Arrival\_Date, Min/Max/Modal Price.\\[0.2em]
+        \textbf{Coverage finding:} the archive mirror holds only 30.0\% of official reports for 2025-10 $\to$ 2026-04; where both exist, 99.33\% of modal prices agree.
       \end{block}
     \end{column}
 
@@ -186,18 +188,18 @@
         \begin{tabular}{lp{5.1cm}}
           \textbf{5 Vs} & \textbf{In our project} \\
           \midrule
-          \textbf{Volume}   & 10.9 GB raw CSV in HDFS (132.9M real rows). Scaled to 18.15 GiB for stress testing. \\
-          \textbf{Velocity} & Replay daily mandi arrivals in streaming micro-batches via Apache Kafka. \\
-          \textbf{Variety}  & 2 disparate sources: 26 annual CSVs vs 325 commodity CSVs; mixed date formats. \\
-          \textbf{Veracity} & Check missing, negative spreads, and 535k duplicate transactions. \\
-          \textbf{Value}    & Help farmers and officials detect sudden price shocks and prevent distress selling. \\
+          \textbf{Volume}   & 75.98M raw archive rows; 82.1M silver v2 rows; 692 MB silver Parquet in HDFS. \\
+          \textbf{Velocity} & Daily reports through Kafka topic \texttt{agri.prices.v1} into Structured Streaming. \\
+          \textbf{Variety}  & Archive CSV files and two official data.gov.in API resources. \\
+          \textbf{Veracity} & Quality rules, de-duplication, quarantine; 30\% archive coverage found. \\
+          \textbf{Value}    & Evaluated price forecasts with intervals and cautious decision cards. \\
         \end{tabular}
       \end{block}
     \end{column}
   \end{columns}
 
   \vspace{0.25cm}
-  \noindent{\scriptsize\color{refRed}Real data (132.9M rows) trained and tested the models. An isolated 350M synthetic workload evaluated 18 GB storage scalability.}
+  \noindent{\scriptsize\color{refRed}All models are trained and tested on real data only. A v1 synthetic workload exists for scalability tests and is never used for any model.}
 \end{frame}
 
 %================================================================
@@ -208,11 +210,11 @@
   \begin{center}
     \begin{tikzpicture}[node distance=0.25cm, auto, >=Stealth]
       \tikzstyle{pbox} = [rectangle, rounded corners=4pt, draw=refNavy, line width=1pt, fill=refBody, inner sep=5pt, minimum width=2.4cm, minimum height=1.1cm, align=center]
-      \node[pbox] (in) {\textbf{\color{refRed}Input}\\{\tiny 351 CSVs (10.9 GB)}};
-      \node[pbox, right=of in] (hdfs) {\textbf{\color{refRed}HDFS}\\{\tiny Store files in blocks}};
+      \node[pbox] (in) {\textbf{\color{refRed}Input}\\{\tiny Archive CSV + API}};
+      \node[pbox, right=of in] (hdfs) {\textbf{\color{refRed}HDFS}\\{\tiny Store layers in blocks}};
       \node[pbox, right=of hdfs] (scala) {\textbf{\color{refRed}Scala}\\{\tiny Read, clean \& dedup}};
-      \node[pbox, right=of scala] (spark) {\textbf{\color{refRed}Spark}\\{\tiny Build features \& models}};
-      \node[pbox, right=of spark] (res) {\textbf{\color{refRed}Results}\\{\tiny Alerts, charts \& dash}};
+      \node[pbox, right=of scala] (spark) {\textbf{\color{refRed}Spark}\\{\tiny Features \& forecasts}};
+      \node[pbox, right=of spark] (res) {\textbf{\color{refRed}Results}\\{\tiny Gold, API \& PWA}};
 
       \draw[->, line width=1.5pt, draw=refNavy] (in) -- (hdfs);
       \draw[->, line width=1.5pt, draw=refNavy] (hdfs) -- (scala);
@@ -227,10 +229,10 @@
       \begin{block}{HDFS storage settings}
         \footnotesize
         \begin{itemize}
-          \item 1 NameNode + 3 DataNodes (Docker cluster).
-          \item Block size: 128 MiB (standard for large Parquet blocks).
-          \item Replication: 3 copies of each block for fault tolerance.
-          \item Clean output: Snappy Parquet, partitioned by year.
+          \item 1 NameNode + 3 DataNodes (Docker, one host).
+          \item Block size: 128 MiB; replication: 3 copies of each block.
+          \item Silver: 692 MB, HEALTHY; readable with 1 DataNode down.
+          \item Snappy Parquet, partitioned by \texttt{year=}.
         \end{itemize}
       \end{block}
     \end{column}
@@ -239,10 +241,10 @@
       \begin{block}{Spark application settings}
         \footnotesize
         \begin{itemize}
-          \item Engine: Apache Spark 4.2.0 in \texttt{local[*]} mode.
+          \item Engine: Apache Spark 4.2 in \texttt{local[*]} mode (10 cores).
           \item Multi-core local CPU threads (NOT YARN worker executors).
-          \item Memory: 4 GB driver / executor heap memory.
-          \item Shuffle partitions: 200 partitions for balanced core utilization.
+          \item Shuffle partitions: 64 in the forecast jobs, coalesced by AQE.
+          \item Also: Docker Spark cluster, 2 workers $\times$ 3 cores.
         \end{itemize}
       \end{block}
     \end{column}
@@ -251,7 +253,7 @@
   \vspace{0.15cm}
   \begin{block}{Are HDFS DataNodes also running as Spark executors?}
     \footnotesize
-    No. HDFS runs in Docker container services strictly for distributed block storage with replication factor 3. Spark runs in \texttt{local[*]} mode on host CPU cores. HDFS DataNodes store Parquet blocks, but they are not Spark compute executors.
+    No. HDFS (Docker) only stores blocks, replication 3; Spark runs in \texttt{local[*]} mode on host cores. The DataNodes share one disk: this shows HDFS behaviour, not hardware durability.
   \end{block}
 \end{frame}
 
@@ -265,13 +267,13 @@
         \small
         \begin{enumerate}\footnotesize
           \item Read and parse CSVs with explicit StructType schemas.
-          \item Map-side composite deduplication (7 business keys).
-          \item Window rolling stats (7-day mean, stddev, z-score).
-          \item Train MLlib Random Forest and save predictions.
+          \item Quality rules and business-key de-duplication $\to$ silver.
+          \item Window features per series ($\le t$) and targets ($> t$).
+          \item Fit MLlib pipelines, choose on 2024, score the test once.
         \end{enumerate}
         \vspace{0.2em}
-        {\footnotesize\textbf{\color{refRed}Partitions:} Split work into 200 shuffle partitions; year directory pruning.}\\[0.2em]
-        {\footnotesize\textbf{Cache:} Feature DataFrames cached in memory (\texttt{prepTrain.cache()}); unpersisted after training.}
+        {\footnotesize\textbf{\color{refRed}Partitions:} 64 shuffle partitions (AQE coalesces); \texttt{year=} directory pruning.}\\[0.2em]
+        {\footnotesize\textbf{Scaling (measured):} full 75.6M rows, 10 cores: W1 42.2 s, W2 65.9 s; speed-up 2.4$\times$ / 3.0$\times$.}
       \end{block}
     \end{column}
 
@@ -282,11 +284,11 @@
         \begin{center}
           \begin{tikzpicture}[node distance=0.18cm, auto, >=Stealth]
             \tikzstyle{sbox} = [rectangle, rounded corners=3pt, draw=refNavy, line width=0.8pt, fill=white, inner sep=3pt, minimum width=2.8cm, font=\tiny\bfseries, align=center]
-            \node[sbox] (s0) {Stage 0: Parquet Read};
-            \node[sbox, below=of s0] (s1) {Stage 1: Filter \& Dedup};
-            \node[sbox, below=of s1] (s2) {Stage 2: Window Shuffle};
-            \node[sbox, below=of s2] (s3) {Stage 3: Feature Vector};
-            \node[sbox, below=of s3] (s4) {Stage 4: Model Fit};
+            \node[sbox] (s0) {Parquet Read (silver)};
+            \node[sbox, below=of s0] (s1) {Harmonise \& Filter};
+            \node[sbox, below=of s1] (s2) {Window Shuffle (entity)};
+            \node[sbox, below=of s2] (s3) {Features \& Targets};
+            \node[sbox, below=of s3] (s4) {Model Fit / Score};
 
             \draw[->, line width=1pt, draw=refRed] (s0) -- (s1);
             \draw[->, line width=1pt, draw=refRed] (s1) -- (s2);
@@ -295,7 +297,7 @@
 
             \node[right=0.4cm of s0, align=left, font=\tiny, text width=3.2cm] {Arrows show stage dependencies.};
             \node[right=0.4cm of s2, align=left, font=\tiny, text width=3.2cm] {Wide transformations create shuffle boundaries.};
-            \node[right=0.4cm of s4, align=left, font=\tiny, text width=3.2cm] {An actual feature run completed across 13 distinct stages.};
+            \node[right=0.4cm of s4, align=left, font=\tiny, text width=3.2cm] {Exact stage counts are read from the Spark UI for each run.};
           \end{tikzpicture}
         \end{center}
       \end{block}
@@ -305,7 +307,7 @@
   \vspace{0.15cm}
   \begin{block}{Where do the stages come from?}
     \footnotesize
-    Reads, joins, and calculations create the DAG. Narrow transformations pipeline within a stage without network movement. Wide transformations (\texttt{Window.partitionBy}, \texttt{groupByKey}) require cross-partition shuffles, creating stage boundaries. Spark assigns stage numbers dynamically at runtime.
+    Narrow transformations pipeline within a stage. Wide transformations (\texttt{Window.partitionBy}, \texttt{groupBy}) need cross-partition shuffles, which create stage boundaries. Spark numbers stages at runtime.
   \end{block}
 \end{frame}
 
@@ -317,25 +319,16 @@
     \begin{column}{0.50\textwidth}
       \begin{block}{Scala DataFrame API: source excerpt}
 \begin{lstlisting}[language=Scala]
-// 1. Resilient Date Parser with Safe Coalescing
-val parseDate = coalesce(
-  try_to_date(col("Reported Date"), "dd MMM yyyy"),
-  try_to_date(col("Reported Date"), "yyyy-MM-dd")
-)
-
-// 2. Map-Side Composite Business Key Dedup
-val w = Window.partitionBy("state", "market",
-  "commodity", "date")
-  .orderBy(col("is_valid").desc,
-           col("price_spread").desc)
-val dedup = raw.withColumn("rk",
-  row_number().over(w)).filter("rk = 1")
-
-// 3. Stateful Real-Time Windowing in Streaming
-parsedStream.groupByKey(e =>
-  MarketEntity(e.state, e.market, e.commodity))
-  .flatMapGroupsWithState(OutputMode.Append,
-    GroupStateTimeout.NoTimeout)(updateState)
+// 1. Non-fatal date parsing
+expr("try_to_date(trim(Arrival_Date), 'yyyy-MM-dd')")
+// 2. Business-key de-duplication
+val w = Window.partitionBy(
+    DataQuality.businessKey.map(col): _*)
+  .orderBy(/* deterministic quality order */)
+df.withColumn("_rn", row_number().over(w))
+// 3. Leakage-safe features (Features.scala)
+def days(lo: Long, hi: Long) = byEntity.rangeBetween(lo, hi)
+.withColumn("mean30", avg(lp).over(days(-29, 0)))
 \end{lstlisting}
       \end{block}
     \end{column}
@@ -344,20 +337,20 @@ parsedStream.groupByKey(e =>
       \begin{block}{What the code does}
         \footnotesize
         \begin{itemize}
-          \item \textbf{Schema Enforcement:} Read CSV with fixed column types and explicit StructType schemas.
-          \item \textbf{Resilient Parsing:} Non-fatal date parsing prevents corrupted date strings from crashing jobs.
-          \item \textbf{Memory-Safe Dedup:} Composite key deduplication avoids full-row \texttt{distinct()} hash OOM.
-          \item \textbf{Window Aggregations:} Window rolling aggregations compute 7-day volatility and z-scores.
-          \item \textbf{Stateful Streaming:} Stateful streaming maintains per-market rolling state in Kafka.
+          \item \textbf{Schema Enforcement:} explicit StructType schemas.
+          \item \textbf{Resilient Parsing:} a malformed date becomes null, not a crash.
+          \item \textbf{Deterministic Dedup:} one reproducible row per business key.
+          \item \textbf{No Lookahead:} feature windows end at the current report; targets start after it; a perturbation test enforces this.
+          \item \textbf{Shared Code:} batch and stream use one canonicalisation.
         \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{0.15cm}
+  \vspace{0.0cm}
   \begin{block}{How do we use Structured Streaming?}
     \footnotesize
-    \texttt{RealDataReplay.scala} reads 15,000 real market records and sends them to Kafka topic \texttt{'agri-market-real-replay'}. Spark Structured Streaming reads micro-batches from Kafka, maintains 7-day rolling state via \texttt{flatMapGroupsWithState}, and calculates live anomaly scores. Checkpoints record streaming progress in HDFS.
+    Kafka topic \texttt{agri.prices.v1} $\to$ \texttt{PriceEventStream}: bronze (raw + offsets), quarantine before a 10-day watermark, de-dup by \texttt{event\_id}, silver and alerts. Effectively-once output per offset range.
   \end{block}
 \end{frame}
 
@@ -367,41 +360,38 @@ parsedStream.groupByKey(e =>
 \begin{frame}{6. How We Train and Test the Models}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.485\textwidth}
-      \begin{block}{Two versions of the market model}
+      \begin{block}{Baselines and models}
         \footnotesize
-        \textbf{\color{refRed}1 Task A: Next-Day Anomaly Forecasting}
+        \textbf{\color{refRed}Baselines}
         \begin{itemize}\scriptsize
-          \item Target: \texttt{lead(z\_score, 1) > 2.0} (predict tomorrow's spike).
-          \item Features: 9 price features (lags, intraday ranges, rolling stats).
-          \item Evaluates advance warning capability.
+          \item Persistence (last report), moving averages, seasonal naive.
+          \item Target: log return to a report strictly after the origin.
         \end{itemize}
         \vspace{0.2em}
-        \textbf{\color{refRed}2 Task B: Real-Time Transaction Screening}
+        \textbf{\color{refRed}Spark MLlib pipelines}
         \begin{itemize}\scriptsize
-          \item Target: \texttt{|z\_score| > 2.0} on current transaction.
-          \item Features: 9 features + contemporaneous price spread ratios.
-          \item Evaluates live streaming Kafka screening.
+          \item Linear regression, random forest, gradient-boosted trees.
+          \item One global model per horizon (next, 3, 7, 14 days).
         \end{itemize}
         \vspace{0.2em}
-        {\scriptsize\color{refGreen}\textbf{Both models use Spark MLlib RandomForestClassifier (100 Trees).}}
+        {\scriptsize\color{refGreen}\textbf{Selected: GBT, absolute loss (next, 3 d); random forest, 60 trees, depth 10 (7, 14 d).}}
       \end{block}
     \end{column}
 
     \begin{column}{0.485\textwidth}
       \begin{block}{Strict temporal split \& tuning}
         \footnotesize
-        \textbf{Strict Chronological Split (Zero Data Leakage):}
+        \textbf{Chronological split (purged on target dates):}
         \begin{itemize}\scriptsize
-          \item Earlier 70\% ($<$ 2024): 721,668 rows to train models.
-          \item 2024 Validation: 49,721 rows for threshold \& depth tuning.
-          \item Later 30\% (2025+): 48,354 untouched rows to test models.
+          \item Train: origins 2016-01-01 .. 2023-12-31.
+          \item Validation: 2024, model choice and conformal calibration.
+          \item Test: 2025-01-01 .. 2026-04-20, scored once.
         \end{itemize}
         \vspace{0.2em}
-        \textbf{Hyperparameter Search:}
+        \textbf{Then, frozen models (no refitting):}
         \begin{itemize}\scriptsize
-          \item Tested tree depths 6, 8, 12, 14; selected depth 12--14.
-          \item 100 parallel trees; 128 continuous feature bins.
-          \item Class Weighting ($w=1.2$) balances 15.6\% anomaly prevalence.
+          \item Same test period on complete official data.
+          \item Prospective 2026-04-22 $\to$ 2026-10-22: data that did not exist in the archive.
         \end{itemize}
       \end{block}
     \end{column}
@@ -410,50 +400,52 @@ parsedStream.groupByKey(e =>
   \vspace{0.15cm}
   \begin{block}{Why keep test data aside chronologically?}
     \footnotesize
-    Random k-fold cross-validation causes future market information to leak into past models. Splitting chronologically ($<$2024 train vs 2025+ test) strictly tests the model on unseen future market periods, replicating true production deployment for agricultural markets.
+    Random k-fold cross-validation lets future market information leak into training. Splitting chronologically and scoring the test once tests the models on genuinely later periods, as in deployment.
   \end{block}
 \end{frame}
 
 %================================================================
-% SLIDE 8: 7. Results for Both Tasks (matching Reference Slide 8)
+% SLIDE 8: 7. Results (matching Reference Slide 8)
 %================================================================
-\begin{frame}{7. Results for Both Tasks}
-  % Model Results Table
-  \begin{block}{Model results --- untouched 2025+ test set (48,354 records)}
+\begin{frame}{7. Results}
+  \begin{block}{Forecasting --- test 2025-01-01 .. 2026-04-20 (rel. MAE vs persistence)}
     \scriptsize
-    \begin{tabular}{lrrrrr}
-      \textbf{Model / Configuration} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{FPR} \\
+    \begin{tabular}{lrrrrrr}
+      \textbf{Horizon} & \textbf{Persistence MAE} & \textbf{Model MAE} & \textbf{Rel. MAE} & \textbf{80\% coverage} & \textbf{DM p} & \textbf{Prospective} \\
       \midrule
-      Trivial Baseline (All Normal)          & 84.35\% & 0.00\%  & 0.00\%  & 0.00\%  & --- \\
-      Task 1A: Next-Day Forecasting ($w=1.2$) & 85.06\% & 61.48\% & 12.11\% & 20.23\% & 1.41\% \\
-      Task 1B: Next-Day Forecasting ($w=5.0$) & 72.54\% & 28.06\% & 48.25\% & 35.48\% & 22.95\% \\
-      \textbf{\color{refGreen}Task 2: Real-Time Screening (Production)} & \textbf{\color{refGreen}95.66\%} & \textbf{\color{refGreen}86.55\%} & \textbf{\color{refGreen}85.47\%} & \textbf{\color{refGreen}86.01\%} & \textbf{\color{refGreen}2.46\%} \\
-    \end{tabular}
+      Next report & 189.0 & 183.5 & \textbf{\color{refGreen}0.971} & 78.6\% & 1.3e-22 & 0.963 \\
+      3 days      & 242.6 & 231.1 & \textbf{\color{refGreen}0.953} & 79.4\% & 3.6e-47 & 0.955 \\
+      7 days      & 308.8 & 289.7 & \textbf{\color{refGreen}0.938} & 80.0\% & 4.4e-39 & 0.958 \\
+      14 days     & 397.0 & 366.4 & \textbf{\color{refGreen}0.923} & 80.5\% & 8.7e-29 & 0.952 \\
+    \end{tabular}\\[0.2em]
+    {\tiny MAE in Rs/quintal. Prospective = frozen models, 2026-04-22 $\to$ 2026-10-22, relative MAE.}
   \end{block}
 
   \vspace{-0.1cm}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.485\textwidth}
-      \begin{block}{What the ML results mean}
+      \begin{block}{What the results mean}
         \footnotesize
         \begin{itemize}\scriptsize
-          \item \textbf{\color{refGreen}Production Model achieves 95.66\% accuracy and 86.01\% F1-score.}
-          \item \textbf{High Actionability:} 86.55\% precision ensures mandi officials and farmers can trust alerts without false panic.
-          \item \textbf{Ultra-Low False Alarms:} 2.46\% False Positive Rate prevents disruptive regulatory over-reaction.
-          \item \textbf{Confusion Matrix:} 39,809 TN $\mid$ 1,002 FP $\mid$ 1,096 FN $\mid$ 6,447 TP.
+          \item \textbf{\color{refGreen}3--8\% lower error than persistence, significant at every horizon.}
+          \item Better than persistence on 58.5--76.4\% of individual series.
+          \item 80\% intervals cover 78.6--80.5\% of outcomes.
+          \item Cards (7 d): WATCH 98.5\% of days; HOLD 0.5\% (hit 80.0\%); SELL 1.0\% (hit 67.8\%).
+          \item Anomaly flags, injected corruptions only: PR-AUC 0.704 vs 0.352 (legacy IQR). No real-anomaly accuracy is claimed.
         \end{itemize}
       \end{block}
     \end{column}
 
     \begin{column}{0.485\textwidth}
-      \begin{block}{Real-time streaming results}
+      \begin{block}{Streaming and storage results}
         \footnotesize
-        \textbf{15,000 real market records replayed through Kafka.}
+        \textbf{Replay: 21,524 Kafka messages.}
         \begin{itemize}\scriptsize
-          \item \textbf{Throughput:} Sustained $\sim$1,200 events/sec micro-batch processing.
-          \item \textbf{Latency:} Sub-800ms micro-batch execution time.
-          \item \textbf{Storage:} Zero executor memory leaks during continuous Kafka ingestion.
-          \item \textbf{Note:} Replay confirms streaming pipeline stability, not ML accuracy.
+          \item 20,000 to silver + 1,317 duplicates removed + 207 quarantined; 0 missing.
+          \item Batch/stream parity: 0 mismatches.
+          \item Producer$\to$sink latency p50: 1.69 s.
+          \item Live pull 2026-10-23: 4/4 records to silver.
+          \item HDFS: 692 MB silver, replication 3, HEALTHY.
         \end{itemize}
       \end{block}
     \end{column}
@@ -469,10 +461,10 @@ parsedStream.groupByKey(e =>
       \begin{block}{Challenges we handled}
         \footnotesize
         \begin{itemize}
-          \item JDK 21 reflection blocked calendar; solved via JVM \texttt{--add-opens} flags.
-          \item Date parsing exceptions prevented by coalesce with \texttt{try\_to\_date}.
-          \item Full-row \texttt{distinct()} memory OOM resolved by 7-column composite deduplication.
-          \item Lineage explosion from recursive windowing truncated via Parquet checkpoints.
+          \item JDK 21 reflection blocked Spark; solved via JVM \texttt{--add-opens} flags.
+          \item Malformed dates handled by \texttt{try\_to\_date} instead of failing jobs.
+          \item Persistence is hard to beat (17--34\% zero changes): absolute-loss GBT was needed.
+          \item The archive mirror missed 70\% of recent reports; we back-filled official data.
         \end{itemize}
       \end{block}
     \end{column}
@@ -481,23 +473,23 @@ parsedStream.groupByKey(e =>
       \begin{block}{Limits and next steps}
         \footnotesize
         \begin{itemize}
-          \item Local Spark execution (\texttt{local[*]}) rather than multi-node physical YARN cluster.
-          \item Stream replayed from real historical logs rather than live government REST APIs.
-          \item Automated farmer advisory dispatch (SMS/WhatsApp BUY/SELL engine) is future work.
-          \item Future: Deploy to AWS EMR and train deep LSTM multi-step price forecasting.
+          \item Local Spark (\texttt{local[*]}) and a one-host Docker cluster, not multi-node YARN.
+          \item HDFS replicas share one disk; single NameNode (no HA).
+          \item Gains over persistence are modest; per-series smoothing matches us at 1--3 days.
+          \item No public deployment yet; decision-card hit rates are not farm profits.
         \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{0.15cm}
-  \begin{block}{Did 7-column composite deduplication outperform full-row distinct()?}
+  \vspace{0.05cm}
+  \begin{block}{What changed since v1, and why?}
     \footnotesize
-    Yes. Full-row \texttt{distinct()} hashes all 10 columns across 133 million rows, causing severe shuffle skew and OutOfMemoryError. Partitioning by a 7-column composite business key with \texttt{row\_number()} enabled map-side partial reduction, completing cleanly in 4.2 minutes with zero memory spills.
+    v1 reported an anomaly classifier with very high accuracy and Kafka speed figures. No code or log produces them, and the v1 labels leaked, so they are withdrawn (\texttt{docs/AUDIT\_PRIOR\_RESULTS.md}). We now lead with an honestly evaluated forecasting benchmark.
   \end{block}
 
-  \vspace{0.2cm}
-  \noindent{\small\textbf{Conclusion:} the system processes 132.9M real rows, maintains HDFS replication, and produces 95.66\% accurate real-time alerts.}
+  \vspace{0.05cm}
+  \noindent{\small\textbf{Conclusion:} 3--8\% lower error than persistence at all horizons, calibrated 80\% intervals, and gains that hold on six unseen months.}
 \end{frame}
 
 %================================================================
@@ -520,7 +512,7 @@ parsedStream.groupByKey(e =>
   \end{enumerate}
 
   \vspace{0.35cm}
-  \noindent{\small\textbf{Project evidence:} GitHub repository \url{https://github.com/kaushalrog/AG-DATA}, saved Parquet tables, and evaluation logs.}
+  \noindent{\small\textbf{Project evidence:} GitHub repository \url{https://github.com/kaushalrog/AG-DATA}; every figure with its source file in \texttt{docs/VERIFIED\_METRICS.md}.}
 
   \vspace{0.5cm}
   \begin{center}
