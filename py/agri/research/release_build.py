@@ -41,6 +41,16 @@ def verify(root):
     if output_hashes(root)!=m['outputs']:raise RuntimeError('Feature outputs changed')
     return m
 
+def compatible_pair(builds):
+    a=builds['cleaned']['before'];b=builds['unfiltered']['before']
+    if a['config']['jump_rule'] is not True or b['config']['jump_rule'] is not False:
+        raise RuntimeError('Cleaning regime labels do not match build configuration')
+    for field in ['inputs','shards','source','jar_sha256']:
+        if a[field]!=b[field]:raise RuntimeError('Incompatible feature builds: '+field)
+    without_rule=lambda cfg:{k:v for k,v in cfg.items() if k!='jump_rule'}
+    if without_rule(a['config'])!=without_rule(b['config']):raise RuntimeError('Incompatible feature configurations')
+
+
 def build(config,root,results):
     root=Path(root);results=Path(results)
     if root.exists():raise RuntimeError('Refusing to overwrite existing build: '+str(root))

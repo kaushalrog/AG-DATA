@@ -148,8 +148,9 @@ def correct_hac(manifest):
 
 def run(a):
     if getattr(a,'verified_builds',False):
-        from agri.research.release_build import verify
+        from agri.research.release_build import verify, compatible_pair
         builds={v:verify(root) for v,root in [('cleaned',a.cleaned),('unfiltered',a.unfiltered)]}
+        compatible_pair(builds)
     else:
         from agri.research.build_manifest import fingerprint
         sealed=json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text())
@@ -237,8 +238,10 @@ def report(m):
         common=frames['cleaned'][['entity_id','arrival_date']].merge(frames['unfiltered'][['entity_id','arrival_date']],on=['entity_id','arrival_date'],validate='one_to_one')
         m['common_origins'][h]={v:metrics(df.merge(common,on=['entity_id','arrival_date'],validate='one_to_one')) for v,df in frames.items()}
     m['report_source_sha256']=sha(__file__)
+    m['report_source_commit']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     (OUT/'manifest.json').write_text(json.dumps(m,indent=2))
-    lines=['# Retrospective robustness results','',f"Source commit: `{m['provenance']['source_commit']}`. Generated from saved predictions.",'',
+    legacy_note=('Legacy HLN heuristic and 500-replicate intervals below are retained comparators, not primary release inference. See the complete dependence sensitivities below.' if m.get('verified_builds') else 'Original retrospective specification.')
+    lines=['# Retrospective robustness results', '',legacy_note,'',f"Source commit: `{m['provenance']['source_commit']}`. Generated from saved predictions.",'',
            '| Regime | Horizon | n | Rel. MAE | MASE candidate / persistence | 80% coverage | Rel. width | 95% block CI (28 d) | Holm p |',
            '|---|---|---:|---:|---:|---:|---:|---|---:|']
     for key,r in m['runs'].items():
@@ -269,7 +272,8 @@ def report(m):
     for key,r in m['runs'].items():
         v,h=key.rsplit('_',1);me=r['metrics'];ci=r['statistics']['calendar_bootstrap'][1]['relative_mae_95']
         tex.append(f"{v} & {h} & {me['candidate']['relative_mae']:.3f} & {me['candidate']['mase']:.2f}/{me['persistence']['mase']:.2f} & {100*me['interval']['coverage80']:.1f}\\% & [{ci[0]:.3f}, {ci[1]:.3f}] \\\\")
-    Path('paper/tables/revision_robustness.tex').write_text(
+    table_path=OUT/'legacy_comparison.tex' if m.get('verified_builds') else Path('paper/tables/revision_robustness.tex')
+    table_path.write_text(
         r'\begin{tabular}{@{}llrrrr@{}}\toprule'+'\n'+
         r'Regime & Horizon & Rel. MAE & MASE & Coverage 80\% & Rel. MAE 95\% interval\\\midrule'+'\n'+
         '\n'.join(tex)+'\n'+r'\bottomrule\end{tabular}'+'\n')

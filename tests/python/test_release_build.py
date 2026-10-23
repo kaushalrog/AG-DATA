@@ -27,3 +27,14 @@ def test_missing_panel_is_not_silently_accepted(fixture):
 def test_partial_build_is_not_verified(tmp_path):
     (tmp_path/'BUILD_MANIFEST.json').write_text(json.dumps({'kind':'observed_pre_post_build','status':'running'}))
     with pytest.raises(RuntimeError,match='Unverified build'):B.verify(tmp_path)
+
+@pytest.mark.parametrize('change',['jump_rule','inputs','history_start'])
+def test_build_pair_requires_only_cleaning_difference(change):
+    import copy
+    base={'before':{'inputs':{'silver':'fixed'},'shards':{'a':'hash'},'source':{'commit':'fixed'},'jar_sha256':'jar','config':{'jump_rule':True,'history_start':'2022-10-01'}}}
+    pair={'cleaned':copy.deepcopy(base),'unfiltered':copy.deepcopy(base)}
+    pair['unfiltered']['before']['config']['jump_rule']=False
+    B.compatible_pair(pair)
+    if change=='inputs':pair['unfiltered']['before']['inputs']['silver']='changed'
+    else:pair['unfiltered']['before']['config'][change]=True if change=='jump_rule' else '2023-01-01'
+    with pytest.raises(RuntimeError):B.compatible_pair(pair)
