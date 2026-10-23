@@ -212,7 +212,10 @@ def report(m):
     for key,r in m['runs'].items():
         v,h=key.rsplit('_',1);me=r['metrics'];ci=r['statistics']['calendar_bootstrap'][1]['relative_mae_95']
         tex.append(f"{v} & {h} & {me['candidate']['relative_mae']:.3f} & {me['candidate']['mase']:.2f}/{me['persistence']['mase']:.2f} & {100*me['interval']['coverage80']:.1f}\\% & [{ci[0]:.3f}, {ci[1]:.3f}] \\\\")
-    Path('paper/tables/revision_robustness.tex').write_text('\n'.join(tex)+'\n')
+    Path('paper/tables/revision_robustness.tex').write_text(
+        r'\begin{tabular}{@{}llrrrr@{}}\toprule'+'\n'+
+        r'Regime & Horizon & Rel. MAE & MASE & Coverage 80\% & Rel. MAE 95\% interval\\\midrule'+'\n'+
+        '\n'.join(tex)+'\n'+r'\bottomrule\end{tabular}'+'\n')
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('command',choices=['run','report']);p.add_argument('--commit');p.add_argument('--cleaned',default='data/forecast_v3');p.add_argument('--unfiltered',default='data/revision_unfiltered');p.add_argument('--max-train',type=int,default=500000)

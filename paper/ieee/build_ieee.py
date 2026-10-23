@@ -13,7 +13,7 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[1] / "ijf"
 OUT = Path(__file__).resolve().parent / "sections"
-WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp"}  # too wide for one column -> table*
+WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp", "tab:revision"}  # too wide for one column -> table*
 REPO = "https://github.com/kaushalrog/AG-DATA"
 DEMO = "https://kaushalrog.github.io/AG-DATA/"
 
@@ -40,7 +40,7 @@ def abstract(tex: str) -> str:
 
 
 def availability(tex: str) -> str:
-    old = "An anonymised copy is provided for review, and the release commit will be tagged at acceptance."
+    old = "An anonymised review package and a tagged release remain to be prepared; neither is claimed to exist."
     assert old in tex, "availability sentence changed in ijf/s10_conclusion.tex"
     new = (f"The repository is public at \\url{{{REPO}}}, and the release commit will be tagged at acceptance. "
            f"A static demonstration of the farmer application, serving a bundled snapshot of real reports, is at \\url{{{DEMO}}}.")
@@ -55,6 +55,7 @@ def main() -> None:
             tex = abstract(tex)
         else:
             tex = floats(tex)
+        tex = tex.replace('\\input{tables/revision_robustness}', '\\input{../tables/revision_robustness}')
         # long identifiers must be breakable in a narrow column
         tex = tex.replace("\\texttt{khandelwalmanas/daily-commodity-prices-india}", "\\url{khandelwalmanas/daily-commodity-prices-india}")
         if f.name == "s10_conclusion.tex":

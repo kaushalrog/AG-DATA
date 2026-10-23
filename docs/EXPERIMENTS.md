@@ -481,3 +481,19 @@ Lagging the features costs 0.002–0.006, while removing them costs 0.009–0.01
   * retrained Spark: 0.966 / 0.955 / 0.958 / 0.950.
 * **Significance and coverage.** LightGBM is better than frozen at every horizon (Holm p ≤ 4e-16); coverage 77.5–79.0%.
 * **Outcome.** All four switch conditions passed, and the serving model was switched on 2026-10-23. Full table: `docs/VERIFIED_METRICS.md` §4b.
+
+
+## Q1-review retrospective robustness revision
+
+See `docs/REVISION_PROTOCOL.md` and the generated `results/revision_q1/TABLES.md`.
+Eight resource-limited LightGBM fits compare filtered and unfiltered pipelines,
+with 2024 training, Jan–Jun 2025 selection, Jul–Dec calibration and 2026 evaluation.
+All targets are purged at split boundaries; fitting source is `e7abad9`. Full
+baselines, absolute and scaled metrics, monthly performance, Holm-eight tests,
+paired calendar block and entity-cluster uncertainty are recorded. Fitting took
+222.6 seconds excluding feature construction, input hashing and report regeneration.
+Original historical source attribution remains unproven; the new feature seal is
+post-build. This is not independent confirmation and did not change serving.
+
+Reproduce: `scripts/revision_q1.sh`; regenerate checksum-verified tables:
+`PYTHONPATH=py .venv/bin/python -m agri.research.revision report`.

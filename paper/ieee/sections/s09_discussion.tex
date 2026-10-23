@@ -27,8 +27,8 @@ These effects are far smaller than gains over ARIMA reported elsewhere, which su
 \paragraph{Threats to validity.}
 \begin{itemize}
   \item Model choice, conformal calibration and the panel definition use pre-test data, but the conformal quantiles are calibrated on the same validation year used for selection.
-  \item For backtest folds within 2021--2023, the panel was selected on reporting density in those years. No prices are involved.
-  \item Diebold--Mariano tests treat daily cross-sectional mean losses as one series. We report one test per model and horizon against persistence without a multiplicity correction; the conclusions are unchanged with a Newey--West lag of 20 ($p\le8\times10^{-13}$ at every horizon).
+  \item For backtest folds within 2021--2023, the panel was selected on reporting density in those years. No prices enter this density rule, but later reporting availability still influences early-fold membership.
+  \item Original Diebold--Mariano tests treat daily cross-sectional mean losses as one series. We report one test per model and horizon against persistence without a multiplicity correction; these p values are descriptive historical results, not the corrected primary family of the separate robustness experiment; the conclusions are unchanged with a Newey--West lag of 20 ($p\le8\times10^{-13}$ at every horizon).
   \item Results describe well-reported mandis of 36 commodities.
   \item Modal price is the published summary, not an individual farmer's price.
 \end{itemize}

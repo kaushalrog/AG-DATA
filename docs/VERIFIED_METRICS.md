@@ -153,3 +153,18 @@ The gain (0.021–0.024 rel. MAE against frozen) is real on this test, but it is
 | "1,200 events/sec", "< 800 ms latency", "15,000-record replay" | No result file in the repository records these numbers. Use section 5 instead |
 | "93.41 M records" | That is the v1 canonical table that combined both sources; it is not the silver layer. Use 75.6 M (archive silver) or 82.1 M (silver v2) |
 | "End-to-end exactly-once" | Not claimed; see `docs/ARCHITECTURE.md` (effectively-once per offset range) |
+
+
+## Retrospective robustness revision (2026-10-23)
+
+Completed fitting source `e7abad9`; reporting correction `9c93bb7`.
+`results/revision_q1/manifest.json` and `TABLES.md` trace all eight model/cleaning
+comparisons to checksum-verified saved predictions. Training: 2024 (500k sample);
+selection: Jan–Jun 2025; calibration: Jul–Dec 2025; evaluation: Jan–Oct 22 2026.
+Relative MAE cleaned next/h3/h7/h14: .951/.943/.952/.957; unfiltered:
+.951/.941/.950/.955. All five simple baselines included. MASE remains above one;
+80% coverage 77.7–79.5%. Temporal block and entity-cluster intervals, monthly
+results, common origins and Holm-eight tests are in the generated tables.
+This is retrospective sensitivity, not independent confirmation or a serving switch.
+Post-build feature fingerprints cannot reconstruct exact historical execution state.
+The superseded d624416 manifest is invalid and must never supply reported metrics.

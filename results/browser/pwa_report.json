@@ -1,16 +1,16 @@
 {
- "base": "http://localhost:8000/",
+ "base": "http://localhost:8093/",
  "browser": "Chrome/155.0.8059.85",
- "ran_at": "2026-10-23T03:55:33.298Z",
+ "ran_at": "2026-10-23T12:05:47.940Z",
  "profile": "temporary, deleted after run",
  "results": [
   {
    "name": "service worker registered and active",
    "status": "PASS",
    "detail": {
-    "scope": "http://localhost:8000/",
+    "scope": "http://localhost:8093/",
     "active": "activated",
-    "script": "http://localhost:8000/sw.js"
+    "script": "http://localhost:8093/sw.js"
    }
   },
   {
@@ -18,10 +18,10 @@
    "status": "PASS",
    "detail": {
     "caches": [
-     "agri-shell-v-006a69a3c690",
-     "agri-api-v-006a69a3c690"
+     "agri-shell-v-8436b142d208",
+     "agri-api-v-8436b142d208"
     ],
-    "shell_entries": 52
+    "shell_entries": 59
    }
   },
   {
@@ -33,29 +33,29 @@
    "name": "manifest parses without errors",
    "status": "PASS",
    "detail": {
-    "url": "http://localhost:8000/manifest.webmanifest",
+    "url": "http://localhost:8093/manifest.webmanifest",
     "errors": []
    }
   },
   {
    "name": "offline reload renders the cached app",
    "status": "PASS",
-   "detail": "Skip to content Mandi Prices Install app Prices near you Your location State Choose state Andaman and Nicobar Andhra Pradesh Arunachal Pradesh Assam Bihar Chand"
+   "detail": "Skip to content Mandi Prices Install app Demo snapshot The price server could not be reached. Showing a small set of real past market reports stored in the app."
   },
   {
    "name": "cold load on slow 3G + 4x CPU renders the home list",
    "status": "PASS",
    "detail": {
-    "ms_to_first_list": 4095,
-    "transferred_kb": 71
+    "ms_to_first_list": 4061,
+    "transferred_kb": 70
    }
   },
   {
    "name": "JS heap after load is small (< 30 MB)",
    "status": "PASS",
    "detail": {
-    "js_heap_used_mb": 2.46,
-    "dom_nodes": 20258
+    "js_heap_used_mb": 4.69,
+    "dom_nodes": 6043
    }
   },
   {
@@ -83,7 +83,7 @@
    "status": "PASS",
    "detail": {
     "#/home": "en",
-    "#/commodity/5015586753432055424": "en",
+    "#/commodity/-3608647854599505920": "en",
     "#/guide": "en",
     "#/settings": "en"
    }

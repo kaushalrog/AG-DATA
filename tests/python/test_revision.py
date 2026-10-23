@@ -30,3 +30,22 @@ def test_seasonal_naive_is_a_return_not_a_log_price():
     # Last-year/today ratio=1.2 must produce INR 1200 from INR 1000.
     p0=np.array([1000.,2000.]);returns=pd.Series([np.log(1.2),np.nan])
     assert np.allclose(p0*np.exp(returns.fillna(0.)),[1200.,2000.])
+
+
+def test_direct_run_rejects_changed_feature_fingerprint(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    from agri.research import revision, build_manifest
+    (tmp_path/'BUILD_MANIFEST.json').write_text(json.dumps({'fingerprint':{'outputs':'original'}}))
+    monkeypatch.setattr(build_manifest,'fingerprint',lambda root:{'outputs':'changed'})
+    import pytest
+    with pytest.raises(RuntimeError,match='fingerprint verification failed'):
+        revision.run(SimpleNamespace(unfiltered=str(tmp_path)))
+
+
+def test_report_rejects_modified_saved_predictions(tmp_path):
+    from agri.research import revision
+    import pytest
+    p=tmp_path/'prediction.parquet';p.write_bytes(b'changed')
+    with pytest.raises(RuntimeError,match='Prediction artifact changed'):
+        revision.report({'runs':{'cleaned_next':{'prediction_path':str(p),'prediction_sha256':'invalid'}}})

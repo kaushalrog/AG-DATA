@@ -18,9 +18,9 @@ Future work, in order of expected value:
 \end{enumerate}
 
 \paragraph{Data and code availability.}
-All code, configuration, tests, experiment manifests and result files are in the project repository. An anonymised copy is provided for review, and the release commit will be tagged at acceptance. The experiment manifests of the main run record an uncommitted working tree (\texttt{git\_dirty}) and a parent commit that predates the forecasting code; the forecasting code was committed afterwards, so the exact code state of that run cannot be proven from the manifest alone. The data sources are:
+All code, configuration, tests, experiment manifests and result files are in the project repository. An anonymised review package and a tagged release remain to be prepared; neither is claimed to exist. The experiment manifests of the main run record an uncommitted working tree (\texttt{git\_dirty}) and a parent commit that predates the forecasting code; the forecasting code was committed afterwards, so the exact code state of that run cannot be proven from the manifest alone. The data sources are:
 \begin{itemize}
   \item the public archive (Kaggle dataset above);
-  \item the official data.gov.in resource \texttt{35985678-0d79-46b4-9ed6-6f13308a1d24}, which requires a free key.
+  \item the official data.gov.in resource \url{35985678-0d79-46b4-9ed6-6f13308a1d24}, which requires a free key.
 \end{itemize}
 Every number in the tables is read from result files under \texttt{results/}. These files are written by the Spark jobs and by the scripts in \texttt{py/agri/analysis}. The mapping from each number to its file is in \texttt{docs/VERIFIED\_METRICS.md}.

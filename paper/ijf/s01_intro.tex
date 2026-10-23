@@ -2,7 +2,7 @@
 
 A large share of Indian agricultural produce is traded through regulated wholesale markets (\emph{mandis}), although much is also sold outside them.
 Each mandi publishes a daily minimum, maximum and modal price per commodity and variety through AGMARKNET, mirrored on the Open Government Data platform.
-These reports are the most detailed public price signal available to a farmer deciding whether to sell today, wait, or travel to another market.
+These reports provide public price information for farmers comparing sale timing and markets.
 
 Forecasting them has a large literature (Section~\ref{sec:related}), dominated by studies of one market, a few markets, or monthly indices.
 These studies typically use a single proportional hold-out, report deep or hybrid models against ARIMA, and rarely report naive baselines or prediction intervals \cite{paul2022brinjal,manogna2025deep,kumar2021onion}.
@@ -14,7 +14,7 @@ Forecast-evaluation research shows why this matters:
   \item leakage and data vintage can dominate conclusions \cite{hewamalage2022pitfalls,bokun2023fredsd}.
 \end{itemize}
 
-We ask how much of the apparent skill in mandi price forecasting survives an evaluation that is leakage-resistant, baseline-honest, provenance-audited and prospective.
+We ask how much of the apparent skill in mandi price forecasting survives an evaluation that is leakage-resistant, baseline-honest, provenance-audited and assessed on later reports.
 Our contributions are empirical, and we state them with their limits.
 
 \begin{enumerate}
@@ -28,7 +28,7 @@ Our contributions are empirical, and we state them with their limits.
   \item \textbf{A data-provenance effect.} A public mirror of AGMARKNET holds only 30\% of the official reports from October 2025 onwards.
     On the mirror, forecasts appear to degrade and conformal intervals appear to lose calibration after a change of the publishing portal.
     Scored on the same (series, origin) rows, the complete official record gives near-nominal coverage, although the 7-day gain over persistence still shrinks after the change. The gap statistics are consistent with a mechanism: the mirror's median gap between reports is three times longer.
-  \item \textbf{Prospective evaluation.} Models trained on data up to 2023 are saved, and only then are six months of later official reports (April--October 2026) first downloaded and scored. This is a post-development hold-out, not a real-time evaluation, because the forecasts were not issued as the data arrived. We also run a retraining experiment whose final test period was not used for any retraining choice.
+  \item \textbf{Later-period retrospective evaluation.} Models trained on data up to 2023 are saved, and only then are six months of later official reports (April--October 2026) first downloaded and scored. This is a post-development hold-out, not a real-time evaluation, because the forecasts were not issued as the data arrived. We also run a retraining experiment whose final test period was not used for any retraining choice.
 \end{enumerate}
 
 Gains over persistence are modest: 3--8\% in MAE. We do not claim superiority over published models, whose data, horizons and protocols differ (Section~\ref{sec:discussion}).

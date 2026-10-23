@@ -1,39 +1,14 @@
 \section{Related work}\label{sec:related}
 
-\paragraph{Mandi and Indian agricultural price forecasting.}
-\begin{itemize}
-  \item Paul et al.\ compared ARIMA, GRNN, SVR, random forests and gradient boosting on daily AGMARKNET brinjal prices from 17 Odisha markets, with Diebold--Mariano tests \cite{paul2022brinjal}.
-  \item A study of monthly prices for 19 commodities in 143 markets found deep recurrent models ahead of others, and included a random-walk-with-drift baseline \cite{paul2025deep}.
-  \item Hybrid, wavelet and neural approaches exist for oilseeds, pulses, onion and potato \cite{paul2021wavelet,jha2012tdnn,jha2013ann,anjoy2017pulses,kumar2021onion,praveenkumar2024potato,jaiswal2021lstm}.
-  \item The closest study in coverage uses daily AGMARKNET data for 23 commodities in 165 markets with an 80/20 split, and explicitly decides against MASE \cite{manogna2025deep}.
-  \item AGMARKNET data quality, including missing and erroneous entries, has been addressed in price-forecasting frameworks \cite{jain2020agmarknet,guo2020agmarknet}.
-  \item Combination methods for agricultural commodity prices have appeared in this journal \cite{wang2022bee}.
-\end{itemize}
+\paragraph{Forecasting across markets and horizons.}
+Daily mandi forecasting studies establish the relevance of nonlinear learners but differ substantially in coverage and evaluation. Paul et al. compare ARIMA, GRNN, SVR, random forests and boosting for brinjal in 17 Odisha markets, including predictive-accuracy tests \cite{paul2022brinjal}. At broader coverage, monthly prices for 19 commodities in 143 markets favour recurrent models over alternatives including a random walk with drift \cite{paul2025deep}; daily data for 23 commodities in 165 markets are evaluated with an 80/20 split without MASE \cite{manogna2025deep}. Monthly aggregation, commodity selection and split design prevent direct numerical comparison with daily, target-purged multi-horizon evaluations. Hybrid, wavelet and neural models address individual commodity settings \cite{paul2021wavelet,jha2012tdnn,jha2013ann,anjoy2017pulses,kumar2021onion,praveenkumar2024potato,jaiswal2021lstm}, while combination methods also appear in agricultural forecasting \cite{wang2022bee}. Model complexity alone is therefore not a research contribution.
 
-\paragraph{Evaluation.}
-Our protocol follows established recommendations:
-\begin{itemize}
-  \item scaled errors \cite{hyndman2006another};
-  \item tests of equal predictive accuracy \cite{diebold1995comparing};
-  \item strong simple benchmarks \cite{makridakis2018statistical,makridakis2020m4,makridakis2022m5};
-  \item time-series performance estimation \cite{bergmeir2018note,cerqueira2020evaluating};
-  \item the catalogue of pitfalls in machine-learning forecasting \cite{hewamalage2022pitfalls}.
-\end{itemize}
-The consistency of point forecasts with the scoring function \cite{gneiting2011making} is particularly relevant to intermittent and zero-inflated targets \cite{kolassa2016evaluating}.
-Real-time data vintages are known to change forecast evaluations in macroeconomics \cite{bokun2023fredsd}. Our provenance finding is an agricultural analogue, associated with an incomplete mirror rather than with revisions.
+\paragraph{Evaluation and data provenance.}
+Forecasting competitions motivate strong simple benchmarks \cite{makridakis2018statistical,makridakis2020m4,makridakis2022m5}. Scaled errors \cite{hyndman2006another}, predictive-accuracy tests \cite{diebold1995comparing} and time-series evaluation studies \cite{bergmeir2018note,cerqueira2020evaluating,hewamalage2022pitfalls} address complementary aspects of evaluation; a small p value cannot replace an effect size or evidence from an independent period. Consistency between training loss and the scored functional matters when many changes are zero \cite{gneiting2011making,kolassa2016evaluating}.
+AGMARKNET missingness and erroneous entries have already motivated forecasting frameworks \cite{jain2020agmarknet,guo2020agmarknet}; we do not claim to discover agricultural data-quality problems. Real-time data vintages can also change macroeconomic forecast evaluations \cite{bokun2023fredsd}. Here the narrower question is whether incomplete mirror coverage changes agricultural evaluation on matched origins when compared with official reports.
 
-\paragraph{Uncertainty.}
-Conformal methods for time series include EnbPI \cite{xu2023conformal}, ensemble conformalised quantile regression \cite{jensen2024encqr} and adaptive conformal inference \cite{gibbs2021adaptive}.
-A drift-aware conformal method has recently been applied to potato prices in China \cite{ouyang2026potato}. We use plain split conformal with Mondrian volatility bins and \emph{measure} its coverage.
+\paragraph{Uncertainty and decision support.}
+EnbPI, ensemble conformalised quantile regression and adaptive conformal inference address dependent observations \cite{xu2023conformal,jensen2024encqr,gibbs2021adaptive}. Drift-aware conformal prediction has already been applied to Chinese potato prices \cite{ouyang2026potato}; our volatility-stratified split-conformal implementation is an evaluated baseline, not a new uncertainty method. Selection and calibration sharing a period in the original experiment motivates the separate-period robustness study below. Information interventions have heterogeneous effects on farmers \cite{jensen2007digital,goyal2010information,fafchamps2012sms,mitra2018asymmetric}, so price-prediction gains cannot establish welfare or trading profits.
 
-\paragraph{Information and farmers.}
-Some information interventions have raised producer prices \cite{jensen2007digital,goyal2010information}; others had small or no average effects \cite{fafchamps2012sms,mitra2018asymmetric}. These results motivate cautious decision support.
-
-\paragraph{Gap.}
-To our knowledge, no study of Indian mandi prices combines all four of the following:
-\begin{enumerate}
-  \item national-scale daily series;
-  \item purged chronological evaluation against naive, seasonal and per-series statistical baselines at several horizons;
-  \item measured interval coverage;
-  \item an audit of the data source against the official record together with prospective scoring.
-\end{enumerate}
+\paragraph{Contribution and scope.}
+The proposed contribution is an empirical source-completeness audit linked to matched-origin multi-horizon forecast and interval evaluation, supported by transparent strong baselines. It is a testable application-level contribution rather than new forecasting theory. The reviewed studies provide individual elements; this review does not establish that their combination is unprecedented. Historical model comparisons and subsequent model adoption remain exploratory. Independent confirmation requires forecasts issued before outcomes become available, and is not supplied by retrospective rescoring.
