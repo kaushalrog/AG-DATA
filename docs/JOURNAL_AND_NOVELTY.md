@@ -546,3 +546,24 @@ because the reports existed when the models were saved.
 
    Fix: frame the paper around evaluation validity (vintages, provenance, prospective scoring), in line with
    IJF's real-time-data tradition, and show the mechanism quantitatively.
+
+## Follow-up to the second review (2026-10-23)
+
+**Primary target for this draft: International Journal of Forecasting**, as an empirical
+forecast-evaluation/source-quality study. This is a scope choice, not an acceptance or
+current quartile guarantee. IEEE formatting is an alternate rendering, not a selected
+IEEE journal or evidence of submission.
+
+Fresh official IIF page accessible: https://forecasters.org/ijf/ (2026-10-23).
+It explicitly includes evaluation, applications and implementation, uses double-blind
+review, and describes mandatory data/code sharing (unless acceptable reasons apply)
+and an acceptance-stage reproducibility check. Therefore a clean smaller-model release
+alone does **not** establish that the full paper meets its reproducibility requirement.
+Historical principal results still need full-size reruns or must be removed from
+acceptance-critical claims. The ScienceDirect aims/scope endpoint still returned 403.
+
+The empirical case is actionable: check source completeness before interpreting drift,
+match origins while documenting target changes, report strong naive baselines and
+separate historical results from source-attributable reproduction and future-issued
+confirmation. No new forecasting or conformal algorithm is claimed. Human statistical
+review remains an explicit blocker to submission recommendation.

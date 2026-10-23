@@ -1,16 +1,7 @@
 \begin{abstract}
-We evaluate daily wholesale price forecasts for 11,845 Indian mandi series (36 commodities) at four horizons.
-The evaluation uses target-purged chronological splits, strong baselines, a provenance audit and post-development scoring.
-Persistence is hard to beat, because a fifth to a third of price changes are exactly zero.
-Among global learners only absolute-loss models beat it at the next report, and gains reach 3--8\%.
-A public mirror holds only 30\% of official reports from October 2025, around a change of publishing portal.
-On the mirror's own rows, interval coverage drops to 68--72\%; on the complete record the same rows give 79--80\%.
-Frozen models still beat persistence on six later months of official reports.
-Retraining the Spark models on two further years gave no measurable gain.
-A global LightGBM beat the Spark models and, under a precommitted operational rule, replaced them in service.
-Provenance audits should precede claims of drift.
+We examine how source completeness and evaluation design affect daily Indian mandi price forecasts. A historical audit finds different interval coverage on matched origins from a public mirror and official records, motivating provenance checks before interpreting drift. Its original execution state remains incompletely attributable. We separate that evidence from a new clean-source, smaller forecasting study with disjoint training, selection and calibration periods. Both cleaning variants are rebuilt with pre- and post-execution input and executable checksums. Across four horizons, observed pooled errors are 4.4--5.9\% below persistence. Longer circular and non-circular block sensitivities retain the observed advantage, but serial dependence and limited seasons prevent claims of validated inferential coverage. Some state and commodity groups perform worse. Prototype LightGBM adoption remains exploratory. The contribution is empirical evaluation practice, not a new algorithm; independent future-issued confirmation and human statistical review remain outstanding.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Agricultural prices, Forecast evaluation, Data provenance, Retrospective evaluation, Conformal prediction, Benchmarks
+Agricultural prices, Forecast evaluation, Data provenance, Retrospective evaluation, Dependence sensitivity, Reproducibility
 \end{IEEEkeywords}

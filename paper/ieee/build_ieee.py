@@ -13,7 +13,7 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parents[1] / "ijf"
 OUT = Path(__file__).resolve().parent / "sections"
-WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp", "tab:revision"}  # too wide for one column -> table*
+WIDE = {"tab:main", "tab:retrain", "tab:features", "tab:prosp", "tab:revision", "tab:release_point", "tab:release_circular", "tab:release_noncircular"}  # too wide for one column -> table*
 REPO = "https://github.com/kaushalrog/AG-DATA"
 DEMO = "https://kaushalrog.github.io/AG-DATA/"
 
@@ -40,22 +40,20 @@ def abstract(tex: str) -> str:
 
 
 def availability(tex: str) -> str:
-    old = "An anonymised review package and a tagged release remain to be prepared; neither is claimed to exist."
-    assert old in tex, "availability sentence changed in ijf/s10_conclusion.tex"
-    new = (f"The repository is public at \\url{{{REPO}}}, and the release commit will be tagged at acceptance. "
-           f"A static demonstration of the farmer application, serving a bundled snapshot of real reports, is at \\url{{{DEMO}}}.")
-    return tex.replace(old, new)
+    # Public IEEE rendering only; never imply an anonymised package exists.
+    return tex.replace("The repository contains source,", f"The public repository at \\url{{{REPO}}} contains source,")
+
 
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     for f in sorted(SRC.glob("s*.tex")):
-        tex = f.read_text()
+        tex = f.read_text().replace('\\input{ijf/release_results}', (SRC / 'release_results.tex').read_text() if (SRC / 'release_results.tex').exists() else '')
         if f.name == "s00_abstract.tex":
             tex = abstract(tex)
         else:
             tex = floats(tex)
-        tex = tex.replace('\\input{tables/revision_robustness}', '\\input{../tables/revision_robustness}')
+        tex = tex.replace('\\input{tables/', '\\input{../tables/')
         # long identifiers must be breakable in a narrow column
         tex = tex.replace("\\texttt{khandelwalmanas/daily-commodity-prices-india}", "\\url{khandelwalmanas/daily-commodity-prices-india}")
         if f.name == "s10_conclusion.tex":

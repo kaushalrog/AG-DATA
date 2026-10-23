@@ -168,3 +168,30 @@ results, common origins and Holm-eight tests are in the generated tables.
 This is retrospective sensitivity, not independent confirmation or a serving switch.
 Post-build feature fingerprints cannot reconstruct exact historical execution state.
 The superseded d624416 manifest is invalid and must never supply reported metrics.
+
+## Clean-source release-study reproduction (second review)
+
+Fitting source `e233b40`, immutable tag `agdata-research-source-v1`; reporting source
+`cd1f786`. `results/release_v1/manifest.json` contains both complete pre/post build
+records, model/prediction checksums, fitted split bounds and all statistical outputs.
+Both cleaning variants were freshly rebuilt from retained silver v2 and the same
+fixed historical panel, history from October 2022. No historical feature bytes reused.
+This repeats the smaller 2024-training study, **not** the full-size historical MLlib
+experiments or panel selection. Model fitting took 230.8 s (build/hash/report excluded).
+
+| Horizon | Cleaned relative MAE | Unfiltered relative MAE |
+|---|---:|---:|
+| next | .951 | .951 |
+| h3 | .943 | .941 |
+| h7 | .950 | .950 |
+| h14 | .956 | .955 |
+
+Observed pooled MAE reductions: 4.4–5.9%, INR 9.92–18.83/quintal; each fit contains
+281–294 calendar days and 4,602–5,182 entities. The records are not independent
+replicates. MASE excludes 4.4–4.5% of evaluation rows without usable training scales.
+Six dependence specifications per fit (circular/non-circular × 28/42/56-day blocks,
+2,000 replicates) are retained, alongside HAC bandwidth sensitivities without HLN.
+Their interval endpoints span .936–.962, not a combined confidence interval. Daily
+ACF remains material at long lags; coverage and stationarity are not established.
+46 overlapping state/commodity group-by-fit comparisons favour persistence. No
+subgroup multiplicity-adjusted discovery, future confirmation or serving switch.

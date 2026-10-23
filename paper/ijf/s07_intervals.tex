@@ -1,13 +1,13 @@
 \section{Interval calibration and the data-provenance effect}\label{sec:intervals}
 
-\paragraph{Main test.}
+\paragraph{Historical main test.}
 On the main test, empirical coverage of the nominal 80\% intervals is 78.6\%, 79.4\%, 80.0\% and 80.5\% for the four horizons; for the 90\% intervals it is 88.9--90.5\%.
 Across volatility quintiles, coverage stays within 77.2--82.0\%.
 Interval widths adapt strongly, from 2--8\% of the price in the calmest quintile to 45--88\% in the most volatile (Figure~\ref{fig:cov}).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.72\linewidth]{interval_coverage.png}
-\caption{Test coverage of 80\% split-conformal intervals by volatility quintile (bin edges from validation).}\label{fig:cov}
+\caption{Historical test coverage of 80\% split-conformal intervals by volatility quintile (bin edges from validation).}\label{fig:cov}
 \end{figure}
 
 \paragraph{Provenance effect.}
@@ -25,8 +25,8 @@ Re-scoring the \emph{same frozen models} on the complete official record for the
 The two record sets differ in which rows exist: after the change the mirror has only 62,845--97,079 test rows per horizon, against 332,275--391,425 officially.
 We therefore also score both on the identical (series, origin) keys present in both (50,923--78,773 rows per horizon; last block of Table~\ref{tab:prov}).
 On these identical rows, mirror coverage is 68.0--72.3\% and official coverage 78.8--79.7\%. The calibration loss is therefore not an artefact of sample composition.
-Most of the apparent loss of calibration was produced by the mirror's missing reports.
-Accuracy is a different matter. On official data the 7-day relative MAE still rises from 0.938 before the change to 0.962 after, so the gain over persistence shrinks from 6.2\% to 3.8\%. Part of the accuracy shift is real.
+The contrast is consistent with source incompleteness affecting the evaluation; the matched-origin comparison does not isolate which changed features or target reports contribute how much.
+Accuracy is a different matter. On official data the 7-day relative MAE still rises from 0.938 before the change to 0.962 after, so the gain over persistence shrinks from 6.2\% to 3.8\%. A smaller accuracy shift remains on the official source.
 The mechanism is consistent with Section~\ref{sec:data}: three-times-longer gaps make ``next'' targets more distant and trailing windows sparser, so realised changes exceed what validation residuals calibrated on denser series anticipate.
 A provenance audit is therefore a precondition for any claim about drift in this data.
 

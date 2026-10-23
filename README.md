@@ -1,5 +1,11 @@
 # AG-DATA 2.0: mandi price forecasting and farmer decision support
 
+> Research evidence update: [second-review response](docs/SECOND_REVIEW_RESPONSE.md)
+> separates the clean-source smaller-study reproduction from historical full-size
+> results. Statistical intervals remain approximate; LightGBM adoption is exploratory.
+> The working paper is not yet recommended for submission.
+
+
 Scala · Apache Spark 4.2 (SQL, MLlib, Structured Streaming) · Kafka 4.3 · Hadoop HDFS 3.4 · FastAPI + DuckDB · a six-language PWA
 
 **Course:** 23AID302 Big Data Analytics, Amrita Vishwa Vidyapeetham. **Guide:** Dr. Sreeja.

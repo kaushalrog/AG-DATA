@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -76,6 +77,9 @@ The daily diagnostics in Figure~\ref{fig:release_dependence} display loss differ
     dates=np.array([np.datetime64(x['date']) for x in daily]);axes[0].plot(dates,[x['loss'] for x in daily],lw=.8);axes[0].axhline(0,color='grey',lw=.6);axes[0].set_ylabel('Loss difference\nINR / mean reports')
     axes[1].plot(dates,[x['n'] for x in daily],lw=.8);axes[1].set_ylabel('Reports per day')
     acf=st['acf'];axes[2].stem([int(k) for k in acf],[v for v in acf.values()]);axes[2].set_xlabel('Calendar-day lag');axes[2].set_ylabel('Autocorrelation')
+    for ax in axes[:2]:
+        ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2));ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'));ax.tick_params(labelsize=8)
+    axes[1].set_xlabel('Observation date (2026)')
     fig.savefig(ROOT/'paper/figures/release_dependence.png',dpi=160);fig.savefig(ROOT/'paper/figures/release_dependence.pdf');plt.close(fig)
 
 if __name__=='__main__':main()

@@ -1,0 +1,26 @@
+{
+  "fitting_commit": "e233b4038feb78e9d92b8f4fdb6286e3b3e6509a",
+  "fitting_source_tag": "agdata-research-source-v1",
+  "reporting_commit": "cd1f786100e812ef03bbad3fa3909fcd63e61d79",
+  "classification": "Retrospective smaller-study reproduction; not full-size historical replication or future confirmation",
+  "commands": [
+    "scripts/reproduce_release.sh",
+    "PYTHONPATH=py .venv/bin/python -m agri.research.revision report --output results/release_v1",
+    ".venv/bin/python paper/build_release.py",
+    "python3 paper/ieee/build_ieee.py"
+  ],
+  "outputs": {
+    "results/release_v1/manifest.json": "8e545ea576cc418995a4e909d042cc83b387162f348f72270849c8929e7266a1",
+    "results/release_v1/TABLES.md": "15243430496a71f6c027ad3b0df8461185afb577775e4942c6051c1e8bd3ed1f",
+    "paper/main.pdf": "c1283011c0bec4f8e4e1f19b1a13588c207607c973a9f7e41cbf4412f2e77637",
+    "paper/ieee/main.pdf": "80099c32551ea6c22fcfb71f6104c61c33c0e11aa07e00d3077085dc77de1bff",
+    "paper/figures/release_dependence.pdf": "7ee82c0513c510893e34555115db35ce444248c669cb717f0837e62b43e8d713"
+  },
+  "limitations": [
+    "Historical full-size principal tables not reproduced",
+    "Historical panel supplied as fixed input",
+    "Human expert statistical review pending",
+    "Immutable public archive of large input bytes and independent execution pending",
+    "Inference approximate; future-issued confirmation pending"
+  ]
+}

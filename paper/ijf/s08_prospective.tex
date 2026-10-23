@@ -39,10 +39,10 @@ next & \num{553801} & 0.965 & 0.966 & 0.12 & 77.0\% / 77.5\%\\
 14 d & \num{496306} & 0.946 & 0.950 & 0.35 & 79.7\% / 78.1\%\\\bottomrule
 \end{tabular}\end{table}
 
-\paragraph{Adopting LightGBM.}
-Before training, we committed a rule for replacing the served model. The candidate had to beat the frozen model at 7 days after a Holm correction, be significantly worse at no horizon, and keep 80\% coverage within 75--85\%, losing no more than two points relative to the frozen model. Its published forecasts also had to reproduce its offline predictions exactly.
-A LightGBM candidate trained under the retraining protocol (validation used only for the number of leaves, early stopping and calibration) reached relative MAE 0.944, 0.933, 0.934 and 0.922 on the rows of Table~\ref{tab:retrain}. It was better than both Spark models at every horizon (Holm-adjusted $p\le4\times10^{-16}$), with 80\% coverage of 77.5--79.0\%. It was adopted.
-Because this final period had already been used twice, and an earlier LightGBM result on overlapping data had motivated the test, the adoption is not an independent confirmation.
+\paragraph{Exploratory operational adoption of LightGBM.}
+Before that candidate training run, we committed an operational rule for replacing the served model; the evaluation period had already been examined, so this was not confirmatory pre-registration. The candidate had to beat the frozen model at 7 days after a Holm correction, be significantly worse at no horizon, and keep 80\% coverage within 75--85\%, losing no more than two points relative to the frozen model. Its published forecasts also had to reproduce its offline predictions exactly.
+A LightGBM candidate trained under the retraining protocol (validation used only for the number of leaves, early stopping and calibration) reached relative MAE 0.944, 0.933, 0.934 and 0.922 on the rows of Table~\ref{tab:retrain}. It was better than both Spark models at every horizon (Holm-adjusted $p\le4\times10^{-16}$), with 80\% coverage of 77.5--79.0\%. It was adopted for the prototype on this exploratory evidence.
+Because this final period had already been used twice, and an earlier LightGBM result on overlapping data had motivated the test, neither the adoption nor subsequent cleaning sensitivity independently confirms LightGBM superiority. The later smaller-model experiments compare LightGBM with simple baselines, not with newly refitted Spark alternatives.
 
 \paragraph{Interpretation and disclosure.}
 Two more years of data did not measurably improve this model class on 2026.

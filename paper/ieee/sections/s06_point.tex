@@ -1,4 +1,31 @@
-\section{Point-forecast results}\label{sec:point}
+\section{Point-forecast results and evidence status}\label{sec:point}
+
+\paragraph{Clean-source release-study results.}
+This is a new end-to-end execution of the smaller study, with identical historical periods and model search budget; it is not an exact replication of the full-size historical experiment. The pre-build source tag is \texttt{agdata-research-source-v1}. Both feature tables were rebuilt, with source/input/executable snapshots checked before and after execution. The fixed historical panel is an explicitly hashed external input, not a reproduced panel-selection process. Source attribution is stronger than in the earlier runs, but an observed execution log is not an independent build witness. All results remain retrospective and conditional on the fitted models and observed panel.
+Across the eight fits, observed pooled MAE reductions are 4.4--5.9\%, or INR 9.92--18.83 per quintal. Table~\ref{tab:release_point} gives absolute errors and exposure. These gains are descriptive historical differences, not evidence of profitable farmer decisions or independent LightGBM superiority over Spark models. MASE excludes 4.4--4.5\% of rows lacking positive finite training scales, and therefore describes a different population from full-row MAE.
+
+\begin{table*}[!t]\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Clean-source release study: candidate/persistence MAE in INR per quintal, forecast rows, calendar days and MASE-excluded rows. Forecast rows are not independent replicates.}\label{tab:release_point}
+\input{../tables/release_points}
+\end{table*}
+
+\begin{table*}[!t]\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Circular-block relative-MAE percentile sensitivity intervals (2,000 replicates, nominal 95\%). Actual coverage is unvalidated; all block specifications are shown.}\label{tab:release_circular}
+\input{../tables/release_circular}
+\end{table*}
+
+\begin{table*}[!t]\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Non-circular-block sensitivity intervals under the same settings. Long blocks leave few temporal spans and do not establish stationarity or future transportability.}\label{tab:release_noncircular}
+\input{../tables/release_noncircular}
+\end{table*}
+The sensitivity interval endpoints across all six specifications and eight fits span 0.936--0.962; this range is not a combined confidence interval. State and commodity summaries contain 46 group-by-fit comparisons with relative MAE above one; all subgroup counts and errors are retained, without selecting favourable subgroups. Groups and fits overlap, so this count is descriptive, not a multiplicity-adjusted finding.
+
+The daily diagnostics in Figure~\ref{fig:release_dependence} display loss differences, exposure and autocorrelation for the cleaned 7-day fit; diagnostics for all fits are recorded with the release. Substantial long-range correlation, seasonal changes or exposure variation can invalidate short-memory approximations. HAC bandwidth sensitivity is secondary: no horizon correction is claimed and tiny p values are not evidence of validated inference. Independent entity-resampling intervals are exploratory and cannot establish generalisation to independent new markets. Human expert statistical review and genuinely future-issued evaluation remain outstanding.
+\begin{figure}[!t]\centering
+\includegraphics[width=0.88\linewidth]{release_dependence.pdf}
+\caption{Release cleaned 7-day daily candidate-minus-persistence total loss divided by mean daily exposure (top), report counts (middle), and descriptive autocorrelation (bottom). No independence threshold is asserted.}\label{fig:release_dependence}
+\end{figure}
+
 
 \paragraph{Validation: the scoring function decides.}
 On the 2024 validation tuning sample (\num{600000} rows) at the next-report horizon, persistence has an MAE of 210.7 rupees per quintal. The squared-loss learners do not beat it:
@@ -12,9 +39,9 @@ Absolute-loss boosting reaches 205.3.
 At 7 and 14 days, every learner beats persistence on validation, and the random forest is selected.
 This is the pattern that elicitation theory predicts when a large share of the targets is exactly zero \cite{gneiting2011making}. The conditional median of the change is then often zero, while the conditional mean is not.
 
-\paragraph{Main test.}
+\paragraph{Historical main test (execution state incompletely attributable).}
 Table~\ref{tab:main} reports the selected models on 1.55--1.67 million test forecasts per horizon.
-Their MAE is 2.9--7.7\% below persistence, and the Diebold--Mariano tests reject equal accuracy at every horizon.
+Their MAE is 2.9--7.7\% below persistence, under the historical specification. Its small test p values are conditional on an incompletely verified execution state and on the dependence assumptions discussed in Section~\ref{sec:discussion}.
 On test data the random forest does not beat persistence at the next report either (DM $p=0.28$).
 All other baselines are worse than persistence at every horizon:
 \begin{itemize}
@@ -25,7 +52,7 @@ All other baselines are worse than persistence at every horizon:
 The improvement is broad. The selected model beats persistence on 58.5\%, 68.8\%, 75.0\% and 76.4\% of series with at least 30 test rows.
 
 \begin{table*}[!t]\centering\small
-\caption{Main test, 2025-01-01 to 2026-04-20 (mirror data). The relative MAE is the model's MAE divided by that of persistence on identical rows. DM: Diebold--Mariano test against persistence.}\label{tab:main}
+\caption{Historical main test, 2025-01-01 to 2026-04-20 (mirror data). The relative MAE is the model's MAE divided by that of persistence on identical rows. DM: Diebold--Mariano test against persistence.}\label{tab:main}
 \begin{tabular}{@{}lrrrrrr@{}}\toprule
 Horizon & Persistence MAE & Selected & MAE & Rel.\ MAE & DM $p$ & Series better\\\midrule
 next & 189.0 & GBT, abs.\ loss & 183.5 & 0.971 & $1\times10^{-22}$ & 58.5\%\\
@@ -79,7 +106,7 @@ next & 0.946 & 0.948 & 0.955\\
 
 \paragraph{Stability across years.}
 In rolling-origin folds for 2021--2024 the relative MAE stays in narrow ranges: 0.970--0.976 (next), 0.952--0.960 (3 days), 0.936--0.946 (7 days) and 0.920--0.936 (14 days). Each fold retrains on all earlier years and holds out one year.
-The main-test result is therefore not specific to one year.
+These retrospectively configured folds show similar observed error ratios across years; they are not independent forward-origin confirmation.
 Two caveats apply to these folds:
 \begin{itemize}
   \item the 2024 fold is the validation year on which the configurations were chosen, so the 2021--2023 folds also use hyper-parameters chosen on later data;
