@@ -45,7 +45,7 @@ def condition(h,start,end):
 
 def read(con,root,h,split,limit=None):
     start,end=SPLITS[split]
-    cols=list(dict.fromkeys(L.features(h)+['commodity','entity_id','arrival_date','modal_price',f'y_{h}',f'tday_{h}','mean7','mean30',f'snaive_{h}','ly_dev','has_ly']))
+    cols=list(dict.fromkeys(L.features(h)+['commodity','entity_id','arrival_date','modal_price','state','market',f'y_{h}',f'tday_{h}','mean7','mean30',f'snaive_{h}','ly_dev','has_ly']))
     sql=f"SELECT {','.join(cols)} FROM read_parquet('{root}/features/*/*.parquet',hive_partitioning=true) WHERE {condition(h,start,end)}"
     if limit: sql+=f" ORDER BY hash(entity_id, arrival_date, {SEED}),entity_id,arrival_date LIMIT {int(limit)}"
     else: sql+=' ORDER BY arrival_date,entity_id'
@@ -59,16 +59,16 @@ def holm(ps):
         running=max(running,min(1.,(len(a)-i)*a[j])); out[j]=running
     return out.tolist()
 
-def block_ci(sums, block=14, reps=500):
+def block_ci(sums, block=14, reps=500, circular=True):
     """Resample paired calendar days; columns candidate absolute error, baseline error, count."""
     sums=np.asarray(sums,float); n=len(sums); rng=np.random.default_rng(SEED+block)
     ratios=[]; differences=[]
     for _ in range(reps):
-        starts=rng.integers(0,n,size=int(np.ceil(n/block)))
+        starts=rng.integers(0,n if circular else n-block+1,size=int(np.ceil(n/block)))
         ix=((starts[:,None]+np.arange(block))%n).ravel()[:n]
         a,b,k=sums[ix].sum(axis=0)
         if b>0 and k>0: ratios.append(a/b); differences.append((a-b)/k)
-    return {'block_days':block,'reps':reps,'relative_mae_95':np.quantile(ratios,[.025,.975]).tolist(),
+    return {'block_days':block,'reps':reps,'circular':circular,'relative_mae_95':np.quantile(ratios,[.025,.975]).tolist(),
             'mae_difference_95':np.quantile(differences,[.025,.975]).tolist()}
 
 def metrics(pred):
@@ -104,17 +104,65 @@ def statistics(pred,h):
             'n_entities':len(entities),'share_entities_better':float((entities.candidate<entities.persistence).mean()),
             'monthly':{m:{'n':int(r.n),'relative_mae':float(r.candidate/r.persistence)} for m,r in month.iterrows()}}
 
+def hac_diagnostic(loss, bandwidth):
+    """Secondary asymptotic normal HAC diagnostic; no fixed-horizon HLN claim."""
+    from scipy.stats import norm
+    x=np.asarray(loss,float);u=x-x.mean();n=len(x)
+    variance=(u@u+2*sum((1-k/(bandwidth+1))*(u[k:]@u[:-k]) for k in range(1,bandwidth+1)))/n
+    if variance<=0:return {'bandwidth':bandwidth,'stat':None,'p_raw':None}
+    stat=x.mean()/np.sqrt(variance/n)
+    return {'bandwidth':bandwidth,'stat':float(stat),'p_raw':float(2*norm.sf(abs(stat)))}
+
+def release_statistics(pred,h):
+    st=statistics(pred,h)
+    z=pd.DataFrame({'date':pred.arrival_date,'candidate':abs(pred.candidate-pred.actual),
+                    'persistence':abs(pred.persistence-pred.actual),'n':1})
+    daily=z.groupby('date').sum().reindex(pd.date_range(z.date.min(),z.date.max()),fill_value=0.)
+    loss=(daily.candidate-daily.persistence)/daily.n.mean()
+    st['inference_label']='Approximate conditional retrospective sensitivities; not validated coverage or human expert sign-off'
+    st['calendar_days']=len(daily);st['zero_exposure_days']=int((daily.n==0).sum())
+    st['legacy_dm_label']='Historical HLN heuristic couples bandwidth and horizon; retained, not primary release inference'
+    st['hac_sensitivity']=[hac_diagnostic(loss,b) for b in [28,42,56]]
+    st['block_sensitivity']=[block_ci(daily[['candidate','persistence','n']],b,2000,circular=c) for c in [True,False] for b in [28,42,56]]
+    st['daily_diagnostics']=[{'date':str(d.date()),'candidate_abs_error':float(r.candidate),'persistence_abs_error':float(r.persistence),'n':int(r.n),'loss':float(loss.loc[d])} for d,r in daily.iterrows()]
+    st['acf']={str(k):float(loss.autocorr(k)) for k in [1,7,14,28,42,56]}
+    ent=pd.DataFrame({'entity_id':pred.entity_id,'a':abs(pred.candidate-pred.actual),'b':abs(pred.persistence-pred.actual),'n':1}).groupby('entity_id').sum()
+    ratios=ent.a[ent.b>0]/ent.b[ent.b>0]
+    st['entity_ratio_quantiles']={str(q):float(ratios.quantile(q)) for q in [.1,.25,.5,.75,.9]}
+    st['entity_zero_baseline_error']=int((ent.b==0).sum())
+    st['entity_rows_quantiles']={str(q):float(ent.n.quantile(q)) for q in [.1,.5,.9]}
+    st['entity_interval_label']='Exploratory entity-resampling sensitivity; correlated entities are not independent markets'
+    st['subgroups']={}
+    for col in ['commodity','state']:
+        if col not in pred:continue
+        grouped=pd.DataFrame({col:pred[col],'a':abs(pred.candidate-pred.actual),'b':abs(pred.persistence-pred.actual),'n':1}).groupby(col).sum()
+        st['subgroups'][col]={str(k):{'n':int(r.n),'mae':float(r.a/r.n),'persistence_mae':float(r.b/r.n),'relative_mae':float(r.a/r.b) if r.b>0 else None} for k,r in grouped.iterrows()}
+    return st
+
+def correct_hac(manifest):
+    for i in range(3):
+        runs=list(manifest['runs']);ps=[manifest['runs'][k]['statistics']['hac_sensitivity'][i]['p_raw'] for k in runs]
+        if any(p is None for p in ps):continue
+        for k,p in zip(runs,holm(ps)):manifest['runs'][k]['statistics']['hac_sensitivity'][i]['p_holm8']=p
+
+
 def run(a):
-    from agri.research.build_manifest import fingerprint
-    sealed=json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text())
-    if sealed['fingerprint'] != fingerprint(a.unfiltered):
-        raise RuntimeError('Feature build fingerprint verification failed')
+    if getattr(a,'verified_builds',False):
+        from agri.research.release_build import verify
+        builds={v:verify(root) for v,root in [('cleaned',a.cleaned),('unfiltered',a.unfiltered)]}
+    else:
+        from agri.research.build_manifest import fingerprint
+        sealed=json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text())
+        if sealed['fingerprint'] != fingerprint(a.unfiltered):
+            raise RuntimeError('Feature build fingerprint verification failed')
+        builds=None
     OUT.mkdir(parents=True,exist_ok=True)
     roots={'cleaned':a.cleaned,'unfiltered':a.unfiltered}
     manifest={'status':'running','splits':SPLITS,'protocol':'docs/REVISION_PROTOCOL.md','seed':SEED,
               'max_train':a.max_train,'classification':'retrospective robustness; no independent confirmation',
               'provenance':provenance(a.commit,list(roots.values())),
-              'cleaned_feature_provenance':'Historical fc_main_v3/v3 features: input bytes hashed; original build exact code unproven',
+              'cleaned_feature_provenance':('Observed pre/post build attestation; fixed historical panel is an external hashed input' if builds else 'Historical fc_main_v3/v3 features: input bytes hashed; original build exact code unproven'),
+              'verified_builds':builds,
               'unfiltered_build':json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text()), 'runs':{}}
     (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2))
     con=duckdb.connect();con.execute('SET threads=4'); started=time.time()
@@ -131,7 +179,7 @@ def run(a):
                 mae=L.rupee_mae(va.modal_price.to_numpy(),va[f'y_{h}'].to_numpy(),m.predict(xv,num_threads=6))
                 candidates.append({'leaves':leaves,'iteration':m.best_iteration,'selection_mae':mae})
                 if best is None or mae<best[0]:best=(mae,m)
-            model=best[1]; modeldir=Path('data/revision_q1/models')/key;modeldir.mkdir(parents=True,exist_ok=True)
+            model=best[1]; modeldir=Path(getattr(a,'artifacts','data/revision_q1'))/'models'/key;modeldir.mkdir(parents=True,exist_ok=True)
             model.save_model(str(modeldir/'model.txt'))
             ca=read(con,root,h,'calibration'); cp=model.predict(L.matrix(ca,h,cats),num_threads=6)
             edges,q=L.fit_conformal(ca.std30.to_numpy(),ca[f'y_{h}'].to_numpy()-cp)
@@ -142,29 +190,30 @@ def run(a):
             scales=con.execute(f"SELECT entity_id,avg(abs(modal_price*(exp(y_{h})-1))) scale FROM read_parquet('{root}/features/*/*.parquet',hive_partitioning=true) WHERE {condition(h,start,end)} GROUP BY entity_id").df()
             te=read(con,root,h,'evaluation').merge(scales,on='entity_id',how='left',validate='many_to_one')
             pp=model.predict(L.matrix(te,h,cats),num_threads=6); iv=L.intervals(pp,te.std30.to_numpy(),edges,q)
-            p0=te.modal_price.to_numpy(); pred=te[['entity_id','arrival_date','commodity',f'tday_{h}','scale']].copy()
+            p0=te.modal_price.to_numpy(); pred=te[['entity_id','arrival_date','commodity','state','market',f'tday_{h}','scale']].copy()
             pred['p0']=p0; pred['actual']=p0*np.exp(te[f'y_{h}']);pred['candidate']=p0*np.exp(pp);pred['persistence']=p0
             pred['ma7']=np.exp(te.mean7);pred['ma30']=np.exp(te.mean30)
             pred['snaive']=p0*np.exp(te[f'snaive_{h}'].fillna(0.))
             # Seasonal-adjusted naive is the last-year change, not the year-on-year level deviation.
             pred['sadj']=p0*np.exp(te[f'ly_chg_{h}'])
             for name,v in iv.items():pred[name]=p0*np.exp(v)
-            pred.to_parquet(f'data/revision_q1/predictions_{key}.parquet',index=False)
+            pred.to_parquet(f'{a.artifacts}/predictions_{key}.parquet',index=False)
             bounds=lambda df:{'rows':len(df),'origin_min':str(df.arrival_date.min().date()),'origin_max':str(df.arrival_date.max().date()),'max_target_day':int(df[f'tday_{h}'].max())}
             r={'candidates':candidates,'selected_leaves':int(model.params['num_leaves']),
                'bounds':{name:bounds(df) for name,df in [('training_sample',tr),('selection',va),('calibration',ca),('evaluation',te)]},
-               'metrics':metrics(pred),'statistics':statistics(pred,h),'model_sha256':sha(modeldir/'model.txt'),
+               'metrics':metrics(pred),'statistics':(release_statistics(pred,h) if builds else statistics(pred,h)),'model_sha256':sha(modeldir/'model.txt'),
                'calibration_sha256':sha(modeldir/'calibration.json'),
-               'prediction_path':f'data/revision_q1/predictions_{key}.parquet',
-               'prediction_sha256':sha(f'data/revision_q1/predictions_{key}.parquet'),
+               'prediction_path':f'{a.artifacts}/predictions_{key}.parquet',
+               'prediction_sha256':sha(f'{a.artifacts}/predictions_{key}.parquet'),
                'seasonal_fallback_rows':int(te[f'snaive_{h}'].isna().sum()),'seconds':time.time()-t}
             manifest['runs'][key]=r;(OUT/'manifest.json').write_text(json.dumps(manifest,indent=2))
             print(key,'relative',r['metrics']['candidate']['relative_mae'],'coverage',r['metrics']['interval']['coverage80'],flush=True)
     keys=list(manifest['runs']); adjusted=holm([manifest['runs'][k]['statistics']['dm_p_raw'] for k in keys])
     for k,p in zip(keys,adjusted):manifest['runs'][k]['statistics']['dm_p_holm8']=p
+    if builds: correct_hac(manifest)
     common={}
     for h in L.HORIZONS:
-        c=pd.read_parquet(f'data/revision_q1/predictions_cleaned_{h}.parquet');u=pd.read_parquet(f'data/revision_q1/predictions_unfiltered_{h}.parquet')
+        c=pd.read_parquet(f'{a.artifacts}/predictions_cleaned_{h}.parquet');u=pd.read_parquet(f'{a.artifacts}/predictions_unfiltered_{h}.parquet')
         keys=c[['entity_id','arrival_date']].merge(u[['entity_id','arrival_date']],on=['entity_id','arrival_date'],validate='one_to_one')
         common[h]={v:metrics(df.merge(keys,on=['entity_id','arrival_date'],validate='one_to_one')) for v,df in [('cleaned',c),('unfiltered',u)]}
     manifest['common_origins']=common;manifest['status']='completed';manifest['seconds']=time.time()-started
@@ -178,10 +227,11 @@ def report(m):
         if abs(recomputed['candidate']['mae']-r['metrics']['candidate']['mae'])>1e-9:
             raise RuntimeError('Saved aggregate does not reproduce: '+key)
         r['metrics']=recomputed
-        r['statistics']=statistics(pred,key.rsplit('_',1)[1])
+        r['statistics']=(release_statistics(pred,key.rsplit('_',1)[1]) if m.get('verified_builds') else statistics(pred,key.rsplit('_',1)[1]))
     runs=list(m['runs'])
     for key,p in zip(runs,holm([m['runs'][k]['statistics']['dm_p_raw'] for k in runs])):
         m['runs'][key]['statistics']['dm_p_holm8']=p
+    if m.get('verified_builds'):correct_hac(m)
     for h in L.HORIZONS:
         frames={v:pd.read_parquet(m['runs'][f'{v}_{h}']['prediction_path']) for v in ['cleaned','unfiltered']}
         common=frames['cleaned'][['entity_id','arrival_date']].merge(frames['unfiltered'][['entity_id','arrival_date']],on=['entity_id','arrival_date'],validate='one_to_one')
@@ -207,6 +257,13 @@ def report(m):
     lines += ['', '## Common origins (targets and features may differ)', '', '| Horizon | Regime | n | Rel. MAE | Coverage80 |', '|---|---|---:|---:|---:|']
     for h,regimes in m['common_origins'].items():
         for regime,r in regimes.items():lines.append(f"| {h} | {regime} | {r['candidate']['n']:,} | {r['candidate']['relative_mae']:.3f} | {r['interval']['coverage80']:.3f} |")
+    if m.get('verified_builds'):
+        lines += ['', '## Dependence sensitivity (approximate; retrospective)', '', '| Fit | Days | Block | Circular | Relative MAE 95% sensitivity interval |', '|---|---:|---:|---|---|']
+        for key,r in m['runs'].items():
+            st=r['statistics']
+            for b in st['block_sensitivity']:lines.append(f"| {key} | {st['calendar_days']} | {b['block_days']} | {b['circular']} | {b['relative_mae_95']} |")
+            lines += ['',f"{key}: HAC sensitivity = {st['hac_sensitivity']}; ACF = {st['acf']}; MASE exclusions = {r['metrics']['candidate']['n']-r['metrics']['candidate']['mase_n']}; entity ratio quantiles = {st['entity_ratio_quantiles']}",'']
+        lines += ['State/commodity summaries and daily diagnostics are retained in manifest.json. Entity-resampling intervals do not establish independent-market inference.']
     (OUT/'TABLES.md').write_text('\n'.join(lines)+'\n')
     tex=[]
     for key,r in m['runs'].items():
@@ -219,4 +276,5 @@ def report(m):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('command',choices=['run','report']);p.add_argument('--commit');p.add_argument('--cleaned',default='data/forecast_v3');p.add_argument('--unfiltered',default='data/revision_unfiltered');p.add_argument('--max-train',type=int,default=500000)
-    a=p.parse_args();run(a) if a.command=='run' else report(json.loads((OUT/'manifest.json').read_text()))
+    p.add_argument('--output',default='results/revision_q1');p.add_argument('--artifacts',default='data/revision_q1');p.add_argument('--verified-builds',action='store_true')
+    a=p.parse_args();OUT=Path(a.output);run(a) if a.command=='run' else report(json.loads((OUT/'manifest.json').read_text()))

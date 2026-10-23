@@ -49,3 +49,16 @@ def test_report_rejects_modified_saved_predictions(tmp_path):
     p=tmp_path/'prediction.parquet';p.write_bytes(b'changed')
     with pytest.raises(RuntimeError,match='Prediction artifact changed'):
         revision.report({'runs':{'cleaned_next':{'prediction_path':str(p),'prediction_sha256':'invalid'}}})
+
+
+def test_non_circular_blocks_preserve_known_constant_effect():
+    ci=block_ci(np.tile([8.,10.,2.],(100,1)),28,50,circular=False)
+    assert np.allclose(ci['relative_mae_95'],[.8,.8])
+    assert ci['circular'] is False
+
+
+def test_hac_bandwidth_is_not_used_as_horizon_correction():
+    from agri.research.revision import hac_diagnostic
+    rng=np.random.default_rng(3);x=rng.normal(-.5,1,300)
+    r=hac_diagnostic(x,28)
+    assert r['bandwidth']==28 and r['stat']<0 and r['p_raw']<.05
