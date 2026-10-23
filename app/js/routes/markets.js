@@ -11,6 +11,7 @@ export async function render(view, args, ctx) {
   const q = h('input', { id: 'mq', class: 'input', type: 'search', autocomplete: 'off', placeholder: t('markets.search') });
   const box = h('div', { 'aria-live': 'polite' });
   const detail = h('div', {});
+  const detailCard = h('section', { class: 'card', hidden: true }, detail);  // shown once a market is chosen
   let timer;
   const load = () => fill(box, () => api.markets({ state: locn.state, q: q.value.trim() || undefined, limit: 100 }), (r) => {
     const items = Array.isArray(r) ? r : r.items || [];
@@ -30,6 +31,7 @@ export async function render(view, args, ctx) {
   });
   const showMarket = (m) => {
     locn.district = m.district; locn.market = m.market;
+    detailCard.hidden = false;
     put(detail, h('h2', { class: 'h2', tabindex: '-1' }, t('markets.commodities', { market: m.market })), h('div', {}));
     fill(detail.lastChild, () => api.latest({ state: locn.state, market: m.market, limit: 50 }),
       (r) => (r.items && r.items.length ? h('ul', { class: 'list' }, r.items.map((it) => priceRow(it, ctx.meta))) : empty('empty.prices')));
@@ -39,7 +41,7 @@ export async function render(view, args, ctx) {
   q.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(load, 350); });
 
   view.append(h('section', { class: 'card' }, h('label', { class: 'label', for: 'mq' }, t('markets.search')), q),
-    h('section', { class: 'card' }, detail), h('section', { class: 'card' }, box));
+    detailCard, h('section', { class: 'card' }, box));
   // a saved market that is no longer listed (e.g. a different demo snapshot) is forgotten, not shown empty
   let saved = null;
   if (locn.market) {
