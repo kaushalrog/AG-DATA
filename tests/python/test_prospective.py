@@ -58,3 +58,31 @@ def test_changed_booster_is_rejected(setup):
 def test_future_dated_input_is_rejected(setup):
     root,features,_=setup;p=features/'features/year=2026/part.parquet';df=pd.read_parquet(p);df.arrival_date=date(2026,10,24);df.to_parquet(p,index=False)
     with pytest.raises(RuntimeError,match='Future-dated'):P.issue(root,features)
+
+
+def test_missing_final_manifest_is_rejected(setup):
+    root,features,_=setup;P.issue(root,features)
+    next((root/'batches').glob('*/manifest.json')).unlink()
+    with pytest.raises(RuntimeError,match='Incomplete visible'):P.status(root)
+
+
+def test_final_batch_deletion_is_rejected_by_retained_head(setup):
+    import shutil
+    root,features,_=setup;P.issue(root,features)
+    shutil.rmtree(next((root/'batches').iterdir()))
+    with pytest.raises(RuntimeError,match='head mismatch or truncation'):P.status(root)
+
+
+def test_manifest_timestamp_edit_is_rejected(setup):
+    root,features,_=setup;P.issue(root,features)
+    p=next((root/'batches').glob('*/manifest.json'));m=json.loads(p.read_text());m['issued_at']='2026-10-22T10:00:00+00:00';p.write_text(json.dumps(m))
+    with pytest.raises(RuntimeError,match='timestamp inconsistency'):P.status(root)
+
+
+def test_midnight_crossing_quarantines_uncommitted_batch(setup,monkeypatch):
+    root,features,clock=setup
+    # Simulate a target starting during fsync/rename, not a real issuance.
+    times=iter([clock[0],clock[0],clock[0],datetime(2026,10,25,10,tzinfo=timezone.utc)])
+    monkeypatch.setattr(P,'now',lambda:next(times))
+    with pytest.raises(RuntimeError,match='quarantined'):P.issue(root,features)
+    assert P.status(root)['issued_rows']==0

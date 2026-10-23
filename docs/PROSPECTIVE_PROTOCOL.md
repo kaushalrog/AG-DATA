@@ -1,4 +1,4 @@
-# Frozen-model future-window issuance v1
+# Frozen-model future-window issuance v2
 
 This is a local prospective collection protocol, not completed confirmation.
 The existing prototype model fc_lgbm_2025 is an exploratory chosen model. A successful
@@ -23,7 +23,7 @@ this is a declared future-window population, not all retrospective-origin rows.
 
 The recorder fingerprints the feature files before/after computation, rejects future
 observation dates, validates price/interval outputs, and atomically publishes a batch.
-A local file lock serialises calls. Existing (entity,origin,horizon) keys are skipped;
+A local file lock serialises calls. A separately retained atomic HEAD record detects missing/truncated tail batches; manifest timestamps/counts are checked against retained rows and directory dates. Missing visible batch files fail closed. A crash between batch publication and HEAD update requires manual inspection rather than automatic reissuance. Existing (entity,origin,horizon) keys are skipped;
 checksums and a previous-manifest chain detect modifications to retained batches.
 Incomplete hidden staging directories do not become issued batches. The ledger is
 not a distributed exactly-once or independently witnessed immutable storage system.
@@ -50,3 +50,12 @@ cloud upload, data subscription or human outreach is installed by this change.
 Production serving and refresh configuration are unchanged. Real collection requires
 operators to refresh official data and invoke issuance; this session can only record
 currently eligible future windows, not observe their outcomes or complete 90 days.
+
+## Development-cohort boundary
+
+The first v1 batch was captured before code review found insufficient tail-deletion
+and timestamp-mutation checks. It is retained under data/prospective_v1 and marked
+superseded before any target outcomes, not silently edited. The hardened v2 uses a
+new root and lock; no model tuning or outcomes informed this change. Only v2 is the
+active collection population. Verify v1 with its matching source commit 52d914d if
+needed for forensic review. Do not pool the duplicate development batch into results.

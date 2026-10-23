@@ -13,6 +13,15 @@ import pandas as pd
 from agri.forecast import lgbm as L
 from agri.research.revision import sha
 
+def atomic_json(path,data):
+    path=Path(path);fd,tmp=tempfile.mkstemp(prefix='.head-',dir=path.parent)
+    with os.fdopen(fd,'w') as stream:
+        json.dump(data,stream,indent=2);stream.flush();os.fsync(stream.fileno())
+    os.replace(tmp,path)
+    fd=os.open(path.parent,os.O_RDONLY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+
 IST=ZoneInfo('Asia/Kolkata')
 SOURCES=['py/agri/research/prospective.py','py/agri/forecast/lgbm.py',
  'src/main/scala/com/agribigdata/forecast/Features.scala','src/main/scala/com/agribigdata/forecast/ForecastConfig.scala']
@@ -51,7 +60,7 @@ def lock(root,models,results,experiment):
             shutil.copyfile(src,dst/name)
             if sha(src)!=hashes[str(src)] or sha(dst/name)!=hashes[str(src)]:raise RuntimeError('Model changed during locking')
             record['artifacts'][str((dst/name).relative_to(root))]=sha(dst/name)
-    (root/'lock.json').write_text(json.dumps(record,indent=2));return record
+    (root/'lock.json').write_text(json.dumps(record,indent=2));atomic_json(root/'HEAD.json',{'batches':0,'last_manifest_sha256':None});return record
 
 def verify(root):
     root=Path(root);record=json.loads((root/'lock.json').read_text())
@@ -66,15 +75,27 @@ def eligible(frame,today,max_age=2):
 
 def ledger(root):
     root=Path(root);previous=None;seen=set();batches=[]
-    for p in sorted((root/'batches').glob('*/manifest.json')):
-        if p.parent.name.startswith('.'):continue
-        m=json.loads(p.read_text())
-        if m['previous_manifest_sha256']!=previous or sha(p.parent/'forecasts.parquet')!=m['predictions_sha256'] or m['lock_sha256']!=sha(root/'lock.json'):
+    head=json.loads((root/'HEAD.json').read_text())
+    lock=json.loads((root/'lock.json').read_text());locked=datetime.fromisoformat(lock['created_utc'])
+    directories=sorted(p for p in (root/'batches').glob('*') if p.is_dir() and not p.name.startswith('.'))
+    for directory in directories:
+        p=directory/'manifest.json'
+        if not p.exists() or not (directory/'forecasts.parquet').exists():raise RuntimeError('Incomplete visible issuance batch')
+        m=json.loads(p.read_text());instant=datetime.fromisoformat(m['issued_at'])
+        if instant<locked or (batches and instant<=datetime.fromisoformat(batches[-1]['issued_at'])) or directory.name!=instant.strftime('%Y%m%dT%H%M%S%fZ'):
+            raise RuntimeError('Issuance timestamp inconsistency')
+        if m['previous_manifest_sha256']!=previous or sha(directory/'forecasts.parquet')!=m['predictions_sha256'] or m['lock_sha256']!=sha(root/'lock.json'):
             raise RuntimeError('Issuance ledger integrity failure')
-        rows=pd.read_parquet(p.parent/'forecasts.parquet')
+        rows=pd.read_parquet(directory/'forecasts.parquet')
+        if rows.empty or not rows.issued_at.eq(m['issued_at']).all() or len(rows)!=m['rows'] or rows.horizon.value_counts().to_dict()!=m['counts_by_horizon']:
+            raise RuntimeError('Issuance summary/timestamp inconsistent with retained rows')
+        localday=instant.astimezone(IST).date()
+        if len(eligible(rows,localday))!=len(rows) or str(rows.target_from.min())!=m['earliest_target'] or not rows.model_version.eq(lock['model_version']).all():
+            raise RuntimeError('Issued target/model summary inconsistent')
         keys=list(zip(rows.entity_id.astype(str),rows.origin_date.astype(str),rows.horizon))
         if len(keys)!=len(set(keys)) or seen.intersection(keys):raise RuntimeError('Duplicate issuance keys')
         seen.update(keys);previous=sha(p);batches.append(m)
+    if head!={'batches':len(batches),'last_manifest_sha256':previous}:raise RuntimeError('Issuance ledger head mismatch or truncation')
     return previous,seen,batches
 
 def issue(root,features):
@@ -135,6 +156,9 @@ def issue(root,features):
         for path in [stage/'manifest.json',stage/'forecasts.parquet']:
             with path.open('rb') as stream:os.fsync(stream.fileno())
         dest=parent/instant.strftime('%Y%m%dT%H%M%S%fZ');os.replace(stage,dest)
+        if now().astimezone(IST).date()>=rows.target_from.min():
+            os.replace(dest,parent/('.expired-'+dest.name));raise RuntimeError('Target started during publication; batch quarantined')
+        atomic_json(root/'HEAD.json',{'batches':len(batches)+1,'last_manifest_sha256':sha(dest/'manifest.json')})
         return m
 
 def status(root):
@@ -144,6 +168,6 @@ def status(root):
             'limitations':'No external timestamp witness; no outcomes scored; no installed schedule; human review pending'}
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('command',choices=['lock','issue','status']);p.add_argument('--root',default='data/prospective_v1');p.add_argument('--features',default='data/forecast_v2');p.add_argument('--models',default='data/forecast_v3/models');p.add_argument('--results',default='results/forecast');p.add_argument('--experiment',default='fc_lgbm_2025');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('command',choices=['lock','issue','status']);p.add_argument('--root',default='data/prospective_v2');p.add_argument('--features',default='data/forecast_v2');p.add_argument('--models',default='data/forecast_v3/models');p.add_argument('--results',default='results/forecast');p.add_argument('--experiment',default='fc_lgbm_2025');a=p.parse_args()
     r=lock(a.root,a.models,a.results,a.experiment) if a.command=='lock' else issue(a.root,a.features) if a.command=='issue' else status(a.root)
     print(json.dumps(r,indent=2))
