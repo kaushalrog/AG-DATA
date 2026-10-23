@@ -23,7 +23,7 @@ graph TD
     K --> M[Streamlit Dashboard]
 ```
 
-## Scale and Data Volume
+### Scale and Data Volume
 
 The project strictly processes real agricultural data:
 - **Real source records:** 132.9M
