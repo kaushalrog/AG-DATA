@@ -34,6 +34,7 @@ jobs:
         with: {node-version: "22"}
       - run: (python3 -m http.server -d app 8090 &) && sleep 2
       - run: node tests/browser/pwa_e2e.mjs http://localhost:8090/ --chrome "$(which google-chrome)"
+      - run: node tests/browser/demo_flows.mjs http://localhost:8090/ --chrome "$(which google-chrome)"
       - if: always()
         uses: actions/upload-artifact@v4
         with: {name: pwa-report, path: results/browser/pwa_report.json}

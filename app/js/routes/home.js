@@ -26,12 +26,16 @@ export async function render(view, args, ctx) {
     } catch { marketsInState = []; }
     const dists = [...new Set(marketsInState.map((m) => m.district).filter(Boolean))].sort();
     for (const d of dists) sDist.append(h('option', { value: d, selected: d === locn.district }, d));
+    // a saved district/market that is no longer listed (e.g. a different demo snapshot) would filter
+    // the price list to nothing while the selects look blank: forget it
+    if (locn.district && !dists.includes(locn.district)) { locn.district = locn.market = undefined; store.save('loc', locn); }
     fillMarkets();
   }
   function fillMarkets() {
     sMkt.length = 1;
     const ms = marketsInState.filter((m) => !sDist.value || m.district === sDist.value).map((m) => m.market);
     for (const m of [...new Set(ms)].sort()) sMkt.append(h('option', { value: m, selected: m === locn.market }, m));
+    if (locn.market && !ms.includes(locn.market)) { locn.market = undefined; store.save('loc', locn); }
   }
   const persist = () => {
     locn.state = sState.value || undefined; locn.district = sDist.value || undefined; locn.market = sMkt.value || undefined;

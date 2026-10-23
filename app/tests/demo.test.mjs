@@ -25,12 +25,14 @@ function freshness(f, where) {
 test('index lists existing files only and the loader needs nothing else', () => {
   for (const f of Object.values(idx.files)) assert.ok(existsSync(path.join(DEMO, f)), f);
   for (const [kind, ids] of Object.entries(idx.entities)) for (const id of ids) assert.ok(existsSync(path.join(DEMO, `${kind}_${id}.json`)), `${kind}_${id}`);
-  const listed = new Set(['index.json', ...Object.values(idx.files), ...Object.entries(idx.entities).flatMap(([k, ids]) => ids.map((i) => `${k}_${i}.json`))]);
+  for (const f of Object.values(idx.trends_by_state || {})) assert.ok(existsSync(path.join(DEMO, f)), f);
+  const listed = new Set(['index.json', ...Object.values(idx.files), ...Object.values(idx.trends_by_state || {}),
+    ...Object.entries(idx.entities).flatMap(([k, ids]) => ids.map((i) => `${k}_${i}.json`))]);
   for (const f of readdirSync(DEMO).filter((x) => x.endsWith('.json'))) assert.ok(listed.has(f), `${f} is not referenced by index.json`);
 });
 
 test('demo provenance is explicit: synthetic placeholders are flagged, real exports are labelled archive (never live)', () => {
-  const real = typeof idx._doc === 'string' && idx._doc.startsWith('REAL archived');
+  const real = typeof idx._doc === 'string' && idx._doc.startsWith('REAL ');
   const meta = rd(idx.files.meta);
   if (real) {
     assert.notEqual(meta.data_origin, 'live');
@@ -157,4 +159,26 @@ test('/alerts and /trends', () => {
   const t = rd(idx.files.trends);
   assert.equal(typeof t.state, 'string'); assert.match(t.as_of, ISO);
   for (const r of [...t.rising, ...t.falling]) { assert.equal(typeof r.commodity, 'string'); assert.ok(isNum(r.median_change_7d_pct)); assert.ok(Number.isInteger(r.markets)); }
+});
+
+// What a user can reach must open (comparison rows only display prices, so they may name other markets) (a faculty demo on a phone found most markets empty and most rows
+// failing with "Could not load this" when the snapshot sampled rows instead of whole markets).
+test('every listed market has prices, and every listed price, alert and comparison opens', () => {
+  const ids = new Set(idx.entities.series);
+  for (const kind of ['forecast', 'compare']) assert.deepEqual(new Set(idx.entities[kind]), ids, `${kind} ids = series ids`);
+  const prices = rd(idx.files.prices_latest).items;
+  const key = (e) => `${e.state}|${e.district}|${e.market}`;
+  const withPrices = new Set(prices.map((it) => key(it.entity)));
+  for (const m of rd(idx.files.markets).items) assert.ok(withPrices.has(key(m)), `market without prices: ${key(m)}`);
+  for (const it of prices) assert.ok(ids.has(it.entity.entity_id), `price row without detail files: ${it.entity.entity_id}`);
+  for (const it of rd(idx.files.alerts).items) assert.ok(ids.has(it.entity.entity_id), `alert without detail files: ${it.entity.entity_id}`);
+  for (const s of rd(idx.files.states)) assert.ok(prices.some((it) => it.entity.state === s.state), `state without prices: ${s.state}`);
+});
+
+test('every listed state has its own trends file', () => {
+  for (const s of rd(idx.files.states)) {
+    const f = (idx.trends_by_state || {})[s.state];
+    assert.ok(f, `no trends for ${s.state}`);
+    assert.equal(rd(f).state, s.state);
+  }
 });

@@ -103,7 +103,10 @@ async function demoGet(path, p) {
     const items = (data.items || []).filter((it) => eq(it.state, p.state) && eq(it.district, p.district) && has(it.market, p.q));
     return { total: items.length, limit: lim, offset: off, items: items.slice(off, off + lim) };
   }
-  if (key === 'trends' && p.state && data.state !== p.state) return { state: p.state, as_of: data.as_of, rising: [], falling: [] };
+  if (key === 'trends' && p.state && data.state !== p.state) {
+    const f = idx.trends_by_state && idx.trends_by_state[p.state];
+    return f ? demoFile(f) : { state: p.state, as_of: data.as_of, rising: [], falling: [] };
+  }
   if (key === 'alerts') {
     return { items: (data.items || []).filter((it) => eq(it.entity.state, p.state) && eq(it.entity.commodity, p.commodity)) };
   }
