@@ -107,6 +107,11 @@ await evaljs(seedLoc({ state: 'Andhra Pradesh', district: 'No Such District', ma
 await waitFor(`document.querySelectorAll('ul.list li').length > 0 || document.body.innerText.includes('No prices')`, 15000);
 const homeRows = await evaljs(`document.querySelectorAll('ul.list li').length`);
 const savedLoc = await evaljs(`localStorage.getItem('agri.loc')`);
+await evaljs(seedLoc({ state: 'Andhra Pradesh', district: 'No Such District', market: 'No Such Market' })); await go(BASE + '#/markets'); await reload();
+await waitFor(`document.body.innerText.includes('markets found')`, 15000); await sleep(800);
+const mktTxt = await evaljs('document.body.innerText');
+check('a saved market missing from the snapshot does not show an empty market on the Markets screen',
+  !mktTxt.includes('No prices found') && !mktTxt.includes('No Such'), {});
 check('a saved market missing from the snapshot is forgotten and home still lists prices', homeRows > 0 && !savedLoc.includes('No Such'), { homeRows, savedLoc });
 const sample = await evaljs(`fetch('demo/index.json').then(r => r.json()).then(i => i.entities.forecast.filter((_, k) => k % 97 === 0))`);
 const badC = [];

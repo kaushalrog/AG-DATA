@@ -40,5 +40,13 @@ export async function render(view, args, ctx) {
 
   view.append(h('section', { class: 'card' }, h('label', { class: 'label', for: 'mq' }, t('markets.search')), q),
     h('section', { class: 'card' }, detail), h('section', { class: 'card' }, box));
-  if (locn.market) showMarket({ market: locn.market, district: locn.district }); else load();
+  // a saved market that is no longer listed (e.g. a different demo snapshot) is forgotten, not shown empty
+  let saved = null;
+  if (locn.market) {
+    const r = await api.markets({ state: locn.state, q: locn.market, limit: 100 }).catch(() => null);
+    const items = r ? (Array.isArray(r) ? r : r.items || []) : [];
+    saved = items.find((m) => m.market === locn.market && (!locn.district || m.district === locn.district)) || null;
+    if (r && !saved) { locn.district = locn.market = undefined; store.save('loc', { state: locn.state }); }
+  }
+  if (saved) showMarket(saved); else load();
 }
