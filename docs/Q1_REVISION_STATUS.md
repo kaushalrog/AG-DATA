@@ -64,3 +64,9 @@ Python: 87 passed; app: 58 passed; Scala: 22 passed. Real headless Chrome
 155: 15/15 PWA checks, including installability, service worker, offline reload,
 six-language 320 px rendering and CPU/network throttling. Throttled first list
 4.061 s / 70 KB; JS heap 4.69 MB (not a real 4 GB Android test).
+
+Independent final review found no critical/high issues: all eight prediction hashes
+and fitting-source hashes were checked, numeric manuscript claims matched the
+manifest, and exactly ten numbered sections were confirmed. The reviewer did not
+independently recompute every statistic. Statistical report code is committed in
+`059e8e2`; its exact source checksum is recorded in the experiment manifest.
