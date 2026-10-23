@@ -105,6 +105,10 @@ def statistics(pred,h):
             'monthly':{m:{'n':int(r.n),'relative_mae':float(r.candidate/r.persistence)} for m,r in month.iterrows()}}
 
 def run(a):
+    from agri.research.build_manifest import fingerprint
+    sealed=json.loads(Path(a.unfiltered,'BUILD_MANIFEST.json').read_text())
+    if sealed['fingerprint'] != fingerprint(a.unfiltered):
+        raise RuntimeError('Feature build fingerprint verification failed')
     OUT.mkdir(parents=True,exist_ok=True)
     roots={'cleaned':a.cleaned,'unfiltered':a.unfiltered}
     manifest={'status':'running','splits':SPLITS,'protocol':'docs/REVISION_PROTOCOL.md','seed':SEED,
@@ -174,6 +178,16 @@ def report(m):
         if abs(recomputed['candidate']['mae']-r['metrics']['candidate']['mae'])>1e-9:
             raise RuntimeError('Saved aggregate does not reproduce: '+key)
         r['metrics']=recomputed
+        r['statistics']=statistics(pred,key.rsplit('_',1)[1])
+    runs=list(m['runs'])
+    for key,p in zip(runs,holm([m['runs'][k]['statistics']['dm_p_raw'] for k in runs])):
+        m['runs'][key]['statistics']['dm_p_holm8']=p
+    for h in L.HORIZONS:
+        frames={v:pd.read_parquet(m['runs'][f'{v}_{h}']['prediction_path']) for v in ['cleaned','unfiltered']}
+        common=frames['cleaned'][['entity_id','arrival_date']].merge(frames['unfiltered'][['entity_id','arrival_date']],on=['entity_id','arrival_date'],validate='one_to_one')
+        m['common_origins'][h]={v:metrics(df.merge(common,on=['entity_id','arrival_date'],validate='one_to_one')) for v,df in frames.items()}
+    m['report_source_sha256']=sha(__file__)
+    (OUT/'manifest.json').write_text(json.dumps(m,indent=2))
     lines=['# Retrospective robustness results','',f"Source commit: `{m['provenance']['source_commit']}`. Generated from saved predictions.",'',
            '| Regime | Horizon | n | Rel. MAE | MASE candidate / persistence | 80% coverage | Rel. width | 95% block CI (28 d) | Holm p |',
            '|---|---|---:|---:|---:|---:|---:|---|---:|']
