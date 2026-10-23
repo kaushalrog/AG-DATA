@@ -125,13 +125,14 @@ object Features {
   def withJumpFlag(df: DataFrame,
                    factor: Double = ForecastConfig.JumpFactor,
                    lookback: Int = ForecastConfig.JumpLookback,
-                   minHistory: Int = ForecastConfig.JumpMinHistory): DataFrame = {
+                   minHistory: Int = ForecastConfig.JumpMinHistory,
+                   keepAudit: Boolean = false): DataFrame = {
     val prev = byEntity.rowsBetween(-lookback, -1)
-    df.withColumn("_prev_mean", avg(col(LogPrice)).over(prev))
+    val flagged = df.withColumn("_prev_mean", avg(col(LogPrice)).over(prev))
       .withColumn("_prev_n", count(col(LogPrice)).over(prev))
       .withColumn("sanity_jump",
         col("_prev_n") >= minHistory && abs(col(LogPrice) - col("_prev_mean")) > math.log(factor))
-      .drop("_prev_mean", "_prev_n")
+    if (keepAudit) flagged else flagged.drop("_prev_mean", "_prev_n")
   }
 
   /** Per-entity features computed only from the current and earlier observations. */

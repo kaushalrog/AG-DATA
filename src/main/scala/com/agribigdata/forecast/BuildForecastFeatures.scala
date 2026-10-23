@@ -49,7 +49,8 @@ object BuildForecastFeatures {
     val entFeatPath = s"$Root/_stage_entity_features"
     val (_, tClean) = SparkSetup.timed("F1 harmonise + sanity rule -> stage") {
       Features.withJumpFlag(Features.withKeys(Features.harmonize(silver)
-          .withColumn("harmonize_collision", col("harmonize_collision")).drop("_rk")))
+          .withColumn("harmonize_collision", col("harmonize_collision")).drop("_rk")),
+          keepAudit = sys.env.contains("AGRI_EXCLUDED_SAMPLE"))
         .write.mode(SaveMode.Overwrite).parquet(cleanPath)
     }
     val staged = spark.read.parquet(cleanPath)
@@ -65,7 +66,13 @@ object BuildForecastFeatures {
     // the same entity-day), so collisions are removed first.
     val flagged = staged.filter(!col("harmonize_collision")).drop("harmonize_collision")
 
-    val clean = flagged.filter(!col("sanity_jump")).drop("sanity_jump")
+    // Research sensitivity only: default production behaviour is preserved.
+    val applyJumpRule = sys.env.getOrElse("AGRI_APPLY_JUMP_RULE", "true").toBoolean
+    val clean = (if (applyJumpRule) flagged.filter(!col("sanity_jump")) else flagged).drop("sanity_jump")
+    sys.env.get("AGRI_EXCLUDED_SAMPLE").foreach { p =>
+      flagged.filter(col("sanity_jump")).orderBy(col(Features.EntityId), col(Canonical.arrivalDate))
+        .limit(30).coalesce(1).write.mode(SaveMode.Overwrite).json(p)
+    }
 
     // Eligibility uses only 2021-2023 observations.
     val entities = clean
@@ -140,7 +147,9 @@ object BuildForecastFeatures {
          |  "entities_in_scope": $entitiesIn,
          |  "entity_key": "state|district|market(APMC suffix removed)|commodity|variety (grade is an attribute)",
          |  "harmonize_collisions_removed": $collisions,
-         |  "sanity_jump_rows_removed": $jumpRows,
+         |  "jump_rule_applied": $applyJumpRule,
+         |  "sanity_jump_rows_flagged": $jumpRows,
+         |  "sanity_jump_rows_removed": ${if (applyJumpRule) jumpRows else 0L},
          |  "sanity_jump_share": ${jumpRows.toDouble / rowsIn},
          |  "eligibility_window": ["$EligibilityStart", "$EligibilityEnd"],
          |  "min_reporting_days": $MinReportingDays,
