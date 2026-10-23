@@ -82,8 +82,9 @@ The global model is clearly better at 7 and 14 days (0.946 vs.\ 0.967, and 0.935
 \emph{At the shortest horizons, the advantage of machine learning over a well-tuned smoother is therefore nil.} It appears only once cross-market and seasonal information has time to matter.
 
 \paragraph{Sub-periods.}
-Before the AGMARKNET~2.0 migration (2025-01 to 2025-10), relative MAE is 0.970, 0.951, 0.937 and 0.922.
-After it (2025-11 to 2026-04, about 4--6\% of test rows), the gains shrink to 0.993, 0.977, 0.968 and 0.944.
+On the archive, relative MAE before the AGMARKNET~2.0 migration (2025-01 to 2025-10) is 0.970, 0.951, 0.937 and 0.922.
+After it (2025-11 to 2026-04, only 4--6\% of test rows because the mirror is incomplete), the gains shrink to 0.993, 0.977, 0.968 and 0.944.
+On complete official data the post-migration values are 0.976, 0.962, 0.962 and 0.937 (Section~\ref{sec:prospective}).
 
 \paragraph{Ablation.}
 For the 7-day GBT, removing any one of the calendar, level or seasonal feature groups changes the test relative MAE by at most 0.004 (from 0.944).
@@ -95,8 +96,10 @@ Information from other markets, not calendar or seasonality, is therefore what t
 Empirical test coverage of the nominal 80\% intervals is 78.6\%, 79.4\%, 80.0\% and 80.5\%; for the 90\% intervals it is 88.9--90.5\%.
 Across volatility quintiles, coverage stays between 77.2\% and 82.0\% (Figure~\ref{fig:cov}).
 Widths adapt strongly: the mean 80\% width runs from 2--8\% of the price in the calmest quintile to 45--88\% in the most volatile.
-After the migration, however, 80\% coverage falls to 67.6--72.9\%.
-This is the failure mode under distribution shift that adaptive conformal methods address \cite{gibbs2021adaptive}; we did not implement them.
+On the archive, 80\% coverage after the migration appeared to fall to 67.6--72.9\%.
+Re-scoring the same frozen models on the complete official data, however, gives 78.0--78.7\% (Section~\ref{sec:prospective}).
+The apparent loss of calibration was therefore largely an artefact of the mirror's missing reports, not a property of the intervals.
+Adaptive conformal methods \cite{gibbs2021adaptive} remain the natural safeguard against genuine shift, but we did not implement them.
 
 \begin{figure}[t]
 \centering
@@ -123,6 +126,29 @@ At its operating point, precision is 0.31, recall 0.85 and the false-positive ra
 For pure unit or keying errors the simple change score ranks best (PR-AUC 0.996).
 Abrupt $\pm35$--60\% shocks are hard for every detector (best PR-AUC 0.25).
 The rule flags 1.9\% of uncorrupted real rows; without labels we cannot say how many of these are genuine market events.
+
+\subsection{Frozen models on complete and on new data}\label{sec:prospective}
+After the main experiment, an API key for data.gov.in became available.
+We back-filled \num{7.7}M official records for 2025-10-01 to 2026-10-22 and built a second silver layer (archive before October 2025, official data after).
+We then scored the \emph{frozen} \texttt{fc\_main\_v3} models, conformal quantiles and MASE scales on it, with nothing refitted.
+
+\paragraph{Test period, complete data.}
+On the original test period re-scored with complete data (1.8--2.0M forecasts per horizon):
+\begin{itemize}
+  \item relative MAE is 0.972, 0.954, 0.943 and 0.925;
+  \item 80\% coverage is 79.2--80.3\%;
+  \item Diebold--Mariano $p\le3\times10^{-41}$.
+\end{itemize}
+
+\paragraph{Prospective period.}
+On 2026-04-22 to 2026-10-22, six months that no model, tuning step or calibration had seen:
+\begin{itemize}
+  \item relative MAE is 0.963, 0.955, 0.958 and 0.952;
+  \item 80\% coverage is 76.9--80.1\%;
+  \item $p\le10^{-15}$;
+  \item the models beat persistence on 59--67\% of series.
+\end{itemize}
+The 7- and 14-day gains are smaller than in the main test, which is consistent with models trained on data to 2023 ageing; retraining was not evaluated.
 
 \input{sections/07_systems_results}
 

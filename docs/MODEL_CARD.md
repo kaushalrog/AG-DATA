@@ -40,7 +40,9 @@
 | h14 | 366.4 / 397.0 | 0.923 | 11.1% | 80.5% | 76.4% |
 
 * Diebold–Mariano tests against persistence give p < 1e-9 at every horizon.
-* After the AGMARKNET 2.0 migration (Nov 2025 on), the gains shrink (relative MAE 0.94–0.99) and 80% intervals cover only 68–73%.
+* On the archive, the gains appeared to shrink after the AGMARKNET 2.0 migration (Nov 2025 on), with 80% coverage of only 68–73%. Re-scored on **complete official data**, the post-migration figures are relative MAE 0.962–0.976 and coverage 78.0–78.7%. The archive was missing about 70% of reports in that period.
+* **Prospective check** (frozen models, 2026-04-22 → 2026-10-22, official data never seen in development): relative MAE 0.963 / 0.955 / 0.958 / 0.952, 80% coverage 76.9–80.1%, and Diebold–Mariano p ≤ 1e-15 at every horizon.
+* **Serving data.** The gold layer now serves official data to 2026-10-22 (`data_origin: official`).
 * Per-commodity and per-state breakdowns are in `results/forecast/fc_main_v3/test_by_*`.
 
 ## Decision support

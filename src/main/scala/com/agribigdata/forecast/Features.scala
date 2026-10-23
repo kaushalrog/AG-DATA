@@ -40,7 +40,35 @@ object Features {
    * " APMC" suffix ("Lasalgaon" -> "Lasalgaon APMC"). The suffix is removed
    * so a market keeps one identity across the migration.
    */
-  def normalizeMarket(c: Column): Column = regexp_replace(trim(c), "(?i)\\s+APMC$", "")
+  def normalizeMarket(c: Column): Column = normalizeName(regexp_replace(trim(c), "(?i)\\s+APMC$", ""))
+
+  /**
+   * Name spelling rule shared by every identifier. The data.gov.in API writes
+   * "Bhindi(Ladies Finger)" and "Karur(Uzhavar Sandhai )" where the archive
+   * writes "Bhindi (Ladies Finger)": collapse whitespace and put one space
+   * before "(" unless it follows ")" (so "(Gram)(Whole)" is unchanged).
+   * Verified on 2026-04-20: with this rule all 5,152 archive keys of that day
+   * are found among the API's 22,716 records.
+   */
+  def normalizeName(c: Column): Column =
+    regexp_replace(trim(regexp_replace(c, "\\s+", " ")), "([^\\s)])\\(", "$1 (")
+
+  /** State spellings that changed or vary in the source, mapped to the archive spelling. */
+  val StateAliases: Map[String, String] = Map("Keralam" -> "Kerala", "Uttrakhand" -> "Uttarakhand")
+
+  def normalizeState(c: Column): Column = {
+    val t = trim(regexp_replace(c, "\\s+", " "))
+    StateAliases.foldLeft(t) { case (acc, (from, to)) => when(t === from, lit(to)).otherwise(acc) }
+  }
+
+  /** Applies every identifier rule; keeps the published market spelling in market_raw. */
+  def normalizeIdentifiers(df: DataFrame): DataFrame =
+    df.withColumn("market_raw", col(Canonical.market))
+      .withColumn(Canonical.state, normalizeState(col(Canonical.state)))
+      .withColumn(Canonical.district, normalizeName(col(Canonical.district)))
+      .withColumn(Canonical.market, normalizeMarket(col(Canonical.market)))
+      .withColumn(Canonical.commodity, normalizeName(col(Canonical.commodity)))
+      .withColumn(Canonical.variety, normalizeName(col(Canonical.variety)))
 
   /**
    * Applies identifier harmonisation and keeps one report per entity-day
@@ -51,8 +79,7 @@ object Features {
   def harmonize(df: DataFrame): DataFrame = {
     val w = Window.partitionBy((EntityCols :+ Canonical.arrivalDate).map(col): _*)
       .orderBy(length(col("market_raw")), col(Canonical.grade))
-    df.withColumn("market_raw", col(Canonical.market))
-      .withColumn(Canonical.market, normalizeMarket(col(Canonical.market)))
+    normalizeIdentifiers(df)
       .withColumn("_rk", row_number().over(w))
       .withColumn("harmonize_collision", col("_rk") > 1)
   }

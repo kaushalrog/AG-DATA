@@ -41,12 +41,20 @@ log = logging.getLogger("agri.ingest.datagovin")
 DEFAULT_RESOURCE_ID = os.environ.get("AGRI_DATA_GOV_IN_RESOURCE_ID", "9ef84268-d588-465a-a308-a864a43d0070")
 BASE_URL = os.environ.get("AGRI_DATA_GOV_IN_BASE_URL", "https://api.data.gov.in/resource")
 
-# Field names as documented for the resource; mapping is explicit so a schema
-# change surfaces as a validation failure instead of silently empty columns.
+# Field names as published by each resource (verified live on 2026-10-23); mapping is
+# explicit so a schema change surfaces as a validation failure instead of empty columns.
 FIELD_MAP = {
     "state": "state", "district": "district", "market": "market", "commodity": "commodity",
     "variety": "variety", "grade": "grade", "arrival_date": "arrival_date",
     "min_price": "min_price", "max_price": "max_price", "modal_price": "modal_price",
+}
+CURRENT_DAILY = "9ef84268-d588-465a-a308-a864a43d0070"     # current day only
+VARIETY_HISTORY = "35985678-0d79-46b4-9ed6-6f13308a1d24"   # variety-wise history, 82.7M rows (2026-10-23)
+PROFILES = {
+    CURRENT_DAILY: {"fields": FIELD_MAP, "filters": {"state": "state.keyword"}},
+    VARIETY_HISTORY: {"fields": {k: k.title() if k != "arrival_date" else "Arrival_Date" for k in FIELD_MAP} | {
+        "min_price": "Min_Price", "max_price": "Max_Price", "modal_price": "Modal_Price"},
+        "filters": {"state": "State", "arrival_date": "Arrival_Date", "commodity": "Commodity"}},
 }
 # The resource metadata (api.data.gov.in/lists, checked 2026-10-22) lists
 # `state.keyword` as the filterable state field; the other fields filter by name.
@@ -82,7 +90,7 @@ class FetchStats:
 class DataGovInClient:
     def __init__(self, api_key: str | None = None, resource_id: str = DEFAULT_RESOURCE_ID,
                  page_size: int = 500, min_interval_s: float = 1.0, max_retries: int = 5,
-                 timeout_s: float = 30.0, session: requests.Session | None = None,
+                 timeout_s: float = 90.0, session: requests.Session | None = None,
                  checkpoint_dir: str | Path = "data/ingest/checkpoints",
                  sleep: Callable[[float], None] = time.sleep):
         self.api_key = api_key if api_key is not None else os.environ.get("AGRI_DATA_GOV_IN_API_KEY")
@@ -92,10 +100,17 @@ class DataGovInClient:
         self.max_retries = max_retries
         self.timeout_s = timeout_s
         self.session = session or requests.Session()
+        # The API stalls requests with the default python-requests User-Agent (measured
+        # 2026-10-23: 60 s timeout vs ~3 s with an identifying agent), so identify honestly.
+        if hasattr(self.session, "headers"):
+            self.session.headers.update({"User-Agent": os.environ.get(
+                "AGRI_HTTP_USER_AGENT", "AG-DATA-ingest/2.0 (research; mandi price forecasting)")})
         self.checkpoint_dir = Path(checkpoint_dir)
         self._sleep = sleep
         self._last_request = 0.0
         self.stats = FetchStats()
+        prof = PROFILES.get(resource_id, PROFILES[CURRENT_DAILY])
+        self.field_map, self.filter_fields = prof["fields"], prof["filters"]
 
     # -- helpers -------------------------------------------------------------
     def _redact(self, s: str) -> str:
@@ -164,13 +179,14 @@ class DataGovInClient:
 
     # -- public API ------------------------------------------------------------
     def validate_record(self, rec: dict[str, Any]) -> dict[str, Any]:
-        missing = [f for f in REQUIRED_FIELDS if FIELD_MAP[f] not in rec]
+        missing = [f for f in REQUIRED_FIELDS if self.field_map[f] not in rec]
         if missing:
             raise SchemaChanged(f"record is missing documented fields {missing}; got keys {sorted(rec)}")
-        return {k: rec.get(src) for k, src in FIELD_MAP.items()}
+        return {k: rec.get(src) for k, src in self.field_map.items()}
 
     def fetch_all(self, filters: dict[str, str] | None = None, resume: bool = True,
-                  max_pages: int | None = None, defer_checkpoint: bool = False) -> Iterator[PriceEvent | PageEnd]:
+                  max_pages: int | None = None, defer_checkpoint: bool = False,
+                  data_origin: str = "live") -> Iterator[PriceEvent | PageEnd]:
         if not self.api_key:
             raise MissingCredentials("AGRI_DATA_GOV_IN_API_KEY is not set; use the archive replay adapter instead")
         filters = filters or {}
@@ -182,7 +198,7 @@ class DataGovInClient:
         while True:
             params: dict[str, Any] = {"api-key": self.api_key, "format": "json",
                                       "limit": self.page_size, "offset": offset}
-            params.update({f"filters[{FILTER_FIELDS.get(k, k)}]": v for k, v in filters.items()})
+            params.update({f"filters[{self.filter_fields.get(k, k)}]": v for k, v in filters.items()})
             body = self._get(params)
             records = body.get("records")
             if records is None:
@@ -195,13 +211,14 @@ class DataGovInClient:
                 except SchemaChanged:
                     self.stats.rejected += 1
                     raise
-                ev = make_event(mapped, source=src, data_origin="live", source_record_ts=body.get("updated_date"))
+                ev = make_event(mapped, source=src, data_origin=data_origin, source_record_ts=body.get("updated_date"))
                 self.stats.records += 1
                 yield ev
             self.stats.pages += 1
             pages += 1
             offset += len(records)
-            done = len(records) < self.page_size
+            total = int(body.get("total") or 0)
+            done = len(records) < self.page_size or (total > 0 and offset >= total)
             ck = {"offset": 0 if done else offset, "completed": done, "last_page_at": fetched_at,
                   "last_url": self.public_url(params), "total_reported": body.get("total")}
             if defer_checkpoint:

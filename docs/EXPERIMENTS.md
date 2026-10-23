@@ -346,3 +346,64 @@ Scaling flattens after 4 cores, which matches the number of performance cores. P
 **Shuffle partitions × AQE (W2, 36.07 M rows, 10 cores):** 25.6–31.5 s across {8, 32, 128, 512} × {AQE on, off}. AQE off was 1–3 s faster at every setting. Locally, AQE's re-planning overhead exceeds its coalescing benefit; on a cluster with real skew this may differ, which was not tested. The first run at 8 partitions (31.5 s) includes cache warm-up.
 
 **Synthetic workload.** The 350 M-row `synthetic_scaled` workload from v1 was **not** re-run in this session.
+
+## Part D: official-data refresh and evaluation of frozen models (2026-10-23)
+
+### D.1 Back-fill
+* **Command.** `python -m agri.ingest.backfill --from 2025-10-01 --to 2026-10-22`, from the data.gov.in variety-wise resource `35985678-…`.
+* **Volume.** 387 days, **7,720,662 records**, 1,736 requests, 2 retries, 0 failed days; about 12 s per day at 1 request/s with 5,000-record pages.
+* **Run manifests.** `results/ingest/backfill_*.json`.
+* **Landing format.** Gzip NDJSON per date with `_SUCCESS` markers. Re-runs skip completed days.
+
+### D.2 Silver v2 and the revision report (`ingestion/IngestLanding.scala`, `results/ingest/revision_report.json`)
+* **Contents.** Silver v2 = Kaggle archive before 2025-10-01 (74,488,699 rows) + official records from 2025-10-01 (7,625,384 after de-duplication) = **82.1 M rows**.
+* **Overlap 2025-10-01 → 2026-04-21.**
+  * The archive holds 1,156,102 of 3,858,695 official reports (**30.0%**).
+  * Every archive record was found in the official data.
+  * 99.33% have identical modal prices; the 8,438 that differ are source revisions or mirror errors, and silver v2 keeps the official value.
+
+### D.3 Features v2
+* **Build.** `AGRI_HISTORY_START=2023-10-01 AGRI_PANEL_FROM=data/forecast/panel_entities`, into `data/forecast_v2/features`. History from 2023-10 reproduces the features of origins from 2025 on. Panel eligibility is reused from the main experiment (2021–23).
+* **Run time.** 84 s.
+* **Collisions.** 187,264 same-day collisions were resolved (`results/forecast_v2/panel_report.json`):
+  * mostly the same market published with and without " APMC";
+  * plus 85,315 entity-days with several grades.
+
+### D.4 Frozen models re-scored (`forecast/ForecastProspective.scala`)
+* **What is fixed.** Models, conformal quantiles and MASE scales from `fc_main_v3`. Nothing was refitted.
+* **Panel.** The main experiment's 11,845 series.
+* **Outputs.** `results/forecast/fc_main_v3/{test_complete,prospective}/` and `stats.json`.
+
+| Horizon | Test, complete data: rel. MAE | 80% cov. | DM p | series better | Prospective 2026-04-22 → 10-22: rel. MAE | 80% cov. | DM p | series better |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| next | 0.972 | 79.2% | 3e-49 | 58.7% | **0.963** | 76.9% | 1e-36 | 59.3% |
+| h3 | 0.954 | 79.6% | 9e-116 | 69.0% | **0.955** | 78.8% | 3e-42 | 64.1% |
+| h7 | 0.943 | 80.0% | 6e-53 | 74.9% | **0.958** | 79.6% | 4e-21 | 66.6% |
+| h14 | 0.925 | 80.3% | 3e-41 | 77.2% | **0.952** | 80.1% | 1e-15 | 66.0% |
+
+Test rows per horizon are 1.82–1.97 M on complete data and 0.27–0.31 M prospectively. The prospective set is smaller because it spans 6 months, not 16, and only panel series are scored.
+
+**Sub-periods on complete data:**
+
+| Horizon | Rel. MAE before Nov 2025 | after | 80% coverage before | after |
+|---|---:|---:|---:|---:|
+| next | 0.970 | 0.976 | 79.5% | 78.0% |
+| h3 | 0.952 | 0.962 | 79.9% | 78.7% |
+| h7 | 0.938 | 0.962 | 80.3% | 78.7% |
+| h14 | 0.923 | 0.937 | 80.7% | 78.5% |
+
+**Correction to B.4.** On the archive, post-migration coverage was 67.6–72.9% and gains appeared to shrink sharply. On complete data the shift is small: coverage falls by 1.5–2.2 points and relative MAE rises by 0.006–0.024. Most of B.4's degradation came from the mirror's missing reports. Those made series artificially sparse and the reported "next" prices further apart.
+
+**Prospective verdict.** Six months after the archive ends, with no refitting, the models beat persistence by 4–5% at every horizon, significantly, and the intervals stay within 3.1 points of nominal coverage. The improvement at 7–14 days is smaller than in the main test (0.958 vs 0.938 at h7), consistent with models trained only to 2023 ageing. Retraining was not evaluated.
+
+### D.5 Current serving data
+`ForecastPublish exp=fc_main_v3 origin=official` on silver v2 / features v2:
+* `data_as_of` 2026-10-22;
+* 58,637 latest prices;
+* 14,212 forecast entities (10,422 supported);
+* 12,056 alerts.
+
+The app's decision cards are therefore current, not expired, until the data is more than 3 days old.
+
+### D.6 Live current-day path
+On 2026-10-23 the current-day resource `9ef84268-…` (4 records at 05:36 IST) was pulled by `agri.ingest.cli live` into Kafka. From there it went through `PriceEventStream` into silver: 4/4 records, producer→sink about 2–3 s, `data_origin: live`, "Keralam" normalised to "Kerala" (`results/streaming_live/`).

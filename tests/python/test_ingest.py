@@ -154,3 +154,45 @@ def test_retry_after_header_is_honoured(tmp_path):
                         checkpoint_dir=tmp_path, min_interval_s=0, sleep=slept.append)
     list(c.fetch_all())
     assert 7.0 in slept
+
+
+VARIETY_PAGE = {  # SYNTHETIC values; field names/types as returned by resource 35985678 on 2026-10-23
+    "status": "ok", "total": 2, "count": 2, "records": [
+        {"Arrival_Date": "20/04/2026", "Commodity": "Bhindi(Ladies Finger)", "Commodity_Code": "85", "District": "Karur",
+         "Grade": "FAQ", "Market": "Karur(Uzhavar Sandhai )", "Max_Price": "3000", "Min_Price": "2000", "Modal_Price": "2500",
+         "State": "Tamil Nadu", "Variety": "Bhindi"},
+        {"Arrival_Date": "20/04/2026", "Commodity": "Banana", "Commodity_Code": "19", "District": "Malappuram",
+         "Grade": "FAQ", "Market": "Moothedam  VFPCK Market", "Max_Price": "6100", "Min_Price": "5900", "Modal_Price": "6000",
+         "State": "Keralam", "Variety": "Nendra Bale"}]}
+
+
+def test_variety_history_profile_maps_capitalised_fields_and_date_filter(tmp_path):
+    from agri.ingest.datagovin import VARIETY_HISTORY
+    c = DataGovInClient(api_key="K", resource_id=VARIETY_HISTORY, session=FakeSession([FakeResp(200, VARIETY_PAGE)]),
+                        checkpoint_dir=tmp_path, min_interval_s=0, sleep=lambda s: None, page_size=5000)
+    evs = list(c.fetch_all({"arrival_date": "20/04/2026"}, resume=False, data_origin="backfill"))
+    assert c.session.calls[0]["filters[Arrival_Date]"] == "20/04/2026"
+    assert [(e.commodity, e.arrival_date, e.modal_price, e.data_origin) for e in evs] == [
+        ("Bhindi(Ladies Finger)", "2026-04-20", 2500.0, "backfill"), ("Banana", "2026-04-20", 6000.0, "backfill")]
+    assert evs[1].state == "Keralam"  # published spelling kept; harmonised downstream
+
+
+def test_client_sends_identifying_user_agent():
+    import requests
+    c = DataGovInClient(api_key="K", session=requests.Session())
+    assert c.session.headers["User-Agent"].startswith("AG-DATA-ingest/")
+
+
+def test_backfill_writes_atomically_and_skips_completed_days(tmp_path, monkeypatch):
+    import gzip
+    from datetime import date
+    from agri.ingest import backfill
+    from agri.ingest.datagovin import VARIETY_HISTORY
+    monkeypatch.setattr(backfill, "LANDING", tmp_path)
+    c = DataGovInClient(api_key="K", resource_id=VARIETY_HISTORY, session=FakeSession([FakeResp(200, VARIETY_PAGE)]),
+                        checkpoint_dir=tmp_path, min_interval_s=0, sleep=lambda s: None)
+    m = backfill.fetch_day(c, date(2026, 4, 20))
+    d = tmp_path / "arrival_date=2026-04-20"
+    assert m["records"] == 2 and (d / "_SUCCESS").exists() and not (d / "part-0.ndjson.gz.tmp").exists()
+    lines = gzip.open(d / "part-0.ndjson.gz", "rt").read().splitlines()
+    assert len(lines) == 2 and json.loads(lines[0])["source"].endswith(VARIETY_HISTORY)

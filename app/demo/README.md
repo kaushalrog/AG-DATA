@@ -2,9 +2,9 @@
 
 The app loads these files **only** when the API is unreachable **and** nothing was served from the service-worker cache in this session. The UI then shows a "Demo snapshot" badge on every screen.
 
-* **What it is.** These files are **real AGMARKNET reports**, exported from the gold layer of experiment `fc_main_v3` by `py/agri/analysis/export_demo.py`. Every file is exactly the response the real API returned.
-* **Coverage.** Data as of 2026-04-20; 74 forecast series across 10 states, plus latest prices, markets, alerts and Tamil Nadu trends.
-* **Labelling.** `meta.json` says `data_origin: "archive"`, so the app shows the historical-snapshot banner. Every decision card is `WATCH / forecast_expired`, with the outlook on the data date shown as history only.
+* **What it is.** These files are **real AGMARKNET reports** (official data.gov.in records up to 2026-10-22), exported from the gold layer of experiment `fc_main_v3` by `py/agri/analysis/export_demo.py`. Every file is exactly the response the real API returned.
+* **Coverage.** Data as of 2026-10-22; forecast series across 10 states, plus latest prices, markets, alerts and Tamil Nadu trends.
+* **Labelling.** `meta.json` says `data_origin: "official"` with the data date. Once the snapshot is more than 3 days old, the app shows the stale-data banner, and decision cards switch to `WATCH / forecast_expired`, with the outlook on the data date shown as history only.
 * **Licence.** GODL-India, with AGMARKNET attribution in `meta.json`.
 
 Regenerate after a new publish:

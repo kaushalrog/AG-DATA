@@ -34,7 +34,12 @@ object ForecastConfig {
 
   // ---- Periods ------------------------------------------------------------
   /** History before TrainStart is read only to warm up lags/rolling windows. */
-  val HistoryStart = "2014-10-01"
+  /**
+   * Overridable for scoring-only rebuilds: origins from 2025 need about 400 days
+   * of history (seasonal windows reach t-372), so AGRI_HISTORY_START=2023-10-01
+   * reproduces their features exactly with far less shuffle.
+   */
+  val HistoryStart: String = env("AGRI_HISTORY_START", "2014-10-01")
   val TrainStart   = "2016-01-01"
   val TrainEnd     = "2023-12-31"
   val ValStart     = "2024-01-01"

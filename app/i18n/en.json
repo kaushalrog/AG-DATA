@@ -265,5 +265,6 @@
   "lang.kn": "ಕನ್ನಡ",
   "reason.forecast_expired": "The dates this outlook was made for have already passed.",
   "decision.at_snapshot": "On {date}, the last data date, the outlook was: {signal}. This is history, not advice for today.",
-  "warning.forecast_origin_differs": "This forecast was made from an earlier report than the latest price shown."
+  "warning.forecast_origin_differs": "This forecast was made from an earlier report than the latest price shown.",
+  "origin.official": "Official daily reports (data.gov.in)"
 }

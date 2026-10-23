@@ -47,8 +47,7 @@ object CanonicalEvent {
   def standardize(df: DataFrame): DataFrame = {
     val d = Seq(Canonical.state, Canonical.district, Canonical.market, Canonical.commodity, Canonical.variety, Canonical.grade)
       .foldLeft(df)((acc, c) => acc.withColumn(c, coalesce(clean(col(c)), lit(""))))
-    d.withColumn("market_raw", col(Canonical.market))
-      .withColumn(Canonical.market, Features.normalizeMarket(col(Canonical.market)))
+    Features.normalizeIdentifiers(d)
       .withColumn(Canonical.arrivalDate, coalesce(
         try_to_date(col(Canonical.arrivalDate).cast("string"), "yyyy-MM-dd"),
         try_to_date(col(Canonical.arrivalDate).cast("string"), "dd/MM/yyyy"),

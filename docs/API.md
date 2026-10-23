@@ -22,7 +22,7 @@ Errors: `{"error": {"code": "not_found" | "bad_request" | "rate_limited" | "unav
 | Method & path | Purpose |
 |---|---|
 | `GET /health` | liveness `{"status":"ok","version":"2.0.0"}` |
-| `GET /ready` | readiness: gold data loaded `{"ready":true,"data_as_of":"2026-04-21","model_version":"..."}`; 503 if not |
+| `GET /ready` | readiness: gold data loaded `{"ready":true,"data_as_of":"2026-10-22","model_version":"..."}`; 503 if not |
 | `GET /meta` | dataset/model metadata (below) |
 | `GET /states` | `[{"state":"Tamil Nadu","markets":312,"last_date":"2026-04-21"}]` |
 | `GET /markets?state=&district=&q=&limit=&offset=` | paged markets |
@@ -36,13 +36,13 @@ Errors: `{"error": {"code": "not_found" | "bad_request" | "rate_limited" | "unav
 
 ### `GET /meta`
 ```json
-{"data_as_of": "2026-04-21", "generated_at": "2026-10-22T18:00:00Z", "days_since_data": 184,
+{"data_as_of": "2026-10-22", "generated_at": "2026-10-23T01:57:57Z", "days_since_data": 1,
  "data_origin": "archive", "source": {"name": "AGMARKNET via data.gov.in (archived)", "licence": "GODL-India", "url": "https://www.data.gov.in/"},
  "model_version": "fc_2026-10-22_abc123", "horizons": ["next","h3","h7","h14"],
  "price_unit": "INR/quintal", "languages": ["en","ta","te","ml","hi","kn"],
  "decision_rules_version": "2026-10-22.1"}
 ```
-`data_origin` is `archive` (historical snapshot), `replay`, or `live`. The app must show a banner whenever `days_since_data > 3`.
+`data_origin` is `archive` (historical snapshot), `official` (official data.gov.in daily reports, refreshed by the batch backfill), `replay`, or `live`. The app must show a banner whenever `days_since_data > 3`.
 
 ### `GET /prices/latest`
 ```json

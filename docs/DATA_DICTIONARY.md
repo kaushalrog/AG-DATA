@@ -9,6 +9,8 @@ All prices are **INR per quintal (100 kg)**. That is the unit stated by the sour
 | raw | `data/raw/` (`/agri/raw/`) | CSV as downloaded | manual download | untouched source files; never modified |
 | bronze (stream) | `data/stream/bronze/prices_raw` (`/agri/bronze/prices_raw`) | Parquet, `ingest_date=` | `PriceEventStream` | every Kafka record as received (raw JSON, topic, partition, offset, broker timestamp) |
 | silver (batch) | `data/processed/daily_market_prices` (`/agri/silver/daily_market_prices`) | Parquet, `year=` | `PreprocessDatasets` | canonical columns, quality flag, deduplicated on the business key |
+| landing (API back-fill) | `data/ingest/landing/datagovin_variety/arrival_date=YYYY-MM-DD/part-0.ndjson.gz` | gzip NDJSON per date + `_SUCCESS` | `agri.ingest.backfill` | official data.gov.in records as published (canonical event JSON) |
+| silver v2 (batch) | `data/processed/daily_market_prices_v2` | Parquet, `year=` | `IngestLanding` | archive before 2025-10-01 + official records from 2025-10-01; `source_dataset` says which |
 | silver (stream) | `data/stream/silver/prices_stream` (`/agri/silver/prices_stream`) | Parquet, `batch_id=` | `PriceEventStream` | canonicalised, de-duplicated events (same `standardize` as batch) |
 | quarantine | `data/stream/quarantine/prices` | Parquet, `batch_id=` | `PriceEventStream` | unparsable / unknown-schema messages with offsets |
 | features | `data/forecast/features` (`/agri/features/forecasting`) | Parquet, `year=` | `BuildForecastFeatures` | one row per (entity, report date) with features and targets |
@@ -43,7 +45,9 @@ Two changes to how the source publishes identifiers would otherwise break series
 1. **Grade relabel.** From 2025-01-27 many series switch from grade `FAQ` to `Local` with no overlap. Across every (state, district, market, commodity, variety, date) from 2023 on, the number of keys with more than one grade on the same day is **0**. Grade is therefore not part of the entity key.
 2. **AGMARKNET 2.0 market rename.** From Nov–Dec 2025, 95–97% of reports carry an ` APMC` suffix (`Lasalgaon` → `Lasalgaon APMC`). The suffix is removed (`Features.normalizeMarket`). The original spelling is kept in `market_raw`.
 
-If both spellings report on the same day, the collision is resolved deterministically (shortest original name wins). The number of collisions is written to `results/forecast/panel_report.json`.
+3. **API spelling (2026-10-23).** The official API writes no space before "(" (`Bhindi(Ladies Finger)`, `Karur(Uzhavar Sandhai )`) and "Keralam" for Kerala. `normalizeName` collapses whitespace and inserts one space before "(" unless it follows ")". `normalizeState` maps aliases (Keralam→Kerala, Uttrakhand→Uttarakhand). With these rules, all 5,152 archive keys of 2026-04-20 are found in the official data. The rules are applied identically in batch, streaming and publish (`Features.normalizeIdentifiers`).
+
+Collisions are resolved deterministically: shortest original market name first, then grade alphabetically. They arise when both spellings report on the same day or, in the official data, when one series reports **several grades on the same day** (1.2% of entity-days, mostly FAQ + Non-FAQ, median price ratio 1.06). The rule keeps FAQ in the common FAQ/Non-FAQ and FAQ/Local cases. Collision counts are written to `results/forecast*/panel_report.json`.
 
 **Entity** = `state | district | market (normalised) | commodity | variety`. `entity_id = xxhash64` of that string. It is identical in batch and streaming (`Features.entityIdCol`, tested in `StreamingSpec`).
 

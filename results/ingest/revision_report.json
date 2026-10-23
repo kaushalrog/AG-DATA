@@ -1,0 +1,30 @@
+{
+ "overlap_different_modal": 8438,
+ "silver_v2_rows_by_source": {
+  "daily_market_prices": 74488699,
+  "datagovin_variety": 7625384
+ },
+ "write_seconds": 42.846621458,
+ "api_date_range": [
+  "2025-10-01",
+  "2026-10-22"
+ ],
+ "api_records_after_dedup_on_api_days": 7625384,
+ "overlap_identical_modal": 1249140,
+ "api_days": 387,
+ "cutoff": "2025-10-01",
+ "note": "Different modal prices on matched keys are source revisions or mirror errors; silver v2 uses the API value.",
+ "overlap_archive_records": 1257578,
+ "landing": "data/ingest/landing/datagovin_variety",
+ "silver_v2": "data/processed/daily_market_prices_v2",
+ "archive_records_on_same_days": 1156102,
+ "overlap_archive_records_found_in_api": 1257578,
+ "archive_coverage_of_api_on_overlap_days": 0.15161229913142735,
+ "overlap_window_2025-10-01_2026-04-21": {
+  "api_records": 3858695,
+  "archive_records": 1156102,
+  "archive_share": 0.2996095830326056
+ },
+ "identical_modal_share_of_matched": 0.9932902770245663,
+ "archive_share_by_month_note": "see docs/DATA_SOURCES.md Addendum 2"
+}

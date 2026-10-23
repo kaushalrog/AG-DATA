@@ -266,5 +266,6 @@
   "lang.kn": "ಕನ್ನಡ",
   "reason.forecast_expired": "जिन तारीखों के लिए यह अनुमान बनाया गया था, वे बीत चुकी हैं।",
   "decision.at_snapshot": "आख़िरी डेटा तारीख {date} को अनुमान था: {signal}। यह पुरानी जानकारी है, आज की सलाह नहीं।",
-  "warning.forecast_origin_differs": "यह अनुमान दिखाए गए नवीनतम भाव से पहले की रिपोर्ट पर आधारित है।"
+  "warning.forecast_origin_differs": "यह अनुमान दिखाए गए नवीनतम भाव से पहले की रिपोर्ट पर आधारित है।",
+  "origin.official": "आधिकारिक दैनिक रिपोर्ट (data.gov.in)"
 }

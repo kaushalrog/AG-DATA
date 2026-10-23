@@ -359,3 +359,43 @@ Measured on the silver layer of source 5a with DuckDB. The queries are in `docs/
 * **Timing.** The renaming and the drop in volume start in November 2025, which matches the portal go-live date (2025-11-07) recorded in §1. After the migration the archive holds about 20–35% of its earlier monthly volume.
 * **Effect on forecasts.** Forecasts for Nov 2025–Apr 2026 therefore rest on sparser series, and the test-period metrics are reported for 2025-01..2025-10 and 2025-11..2026-04 separately where it matters (see `docs/EXPERIMENTS.md`).
 * **Grade relabel.** A separate FAQ→Local relabel starts on 2025-01-27. On no day does a (market, commodity, variety) carry two grades, so it is treated as a relabel.
+
+---
+
+## Addendum 2 (2026-10-23): data.gov.in verified live with a user-supplied API key
+
+The key is stored only in the git-ignored `.env` and is never logged or committed (the adapter redacts it from URLs, errors and checkpoints).
+
+### `9ef84268-…` Current Daily Price (verified)
+* **Response shape** (previously UNVERIFIED): `{status:"ok", version:"2.2.0", total, count, limit, offset, records:[…], field:[…], field_exposed:[…], updated_date, …}`.
+* **Fields:** `state, district, market, commodity, variety, grade, arrival_date (dd/mm/yyyy), min_price, max_price, modal_price`. Prices are JSON numbers.
+* **Current day only.** At 05:36 IST on 2026-10-23 it held 4 records, all dated 23/10/2026. A `filters[arrival_date]` for an earlier date still returned the current day's 4 records. Historical retrieval is not possible from this resource.
+* **Filtering:** `filters[state.keyword]` is accepted.
+* **Headers:** `X-Ratelimit-Limit: -1`, `X-Ratelimit-Remaining: 0`. No throttling was observed at 1 request/s.
+* **Spelling:** the state "Kerala" is now published as **"Keralam"**.
+
+### `35985678-…` Variety-wise Daily Market Prices (verified; the historical backfill source)
+* **Size:** `total` = **82,666,523** records on 2026-10-23. History runs at least from 2009 to today (sorted by `Arrival_Date` desc, the newest records are from 23/10/2026).
+* **Fields** are capitalised: `Arrival_Date (dd/mm/yyyy), Commodity, Commodity_Code, District, Grade, Market, Max_Price, Min_Price, Modal_Price, State, Variety`. Prices are **strings**.
+* **Filtering:** `filters[Arrival_Date]`, `filters[State]` and `sort[Arrival_Date]` work. Daily totals: 17,000–25,000 records (e.g. 22,716 on 2026-04-20).
+* **Paging:** `limit` up to at least 10,000. 5,000 records take about 3 s.
+* **User-Agent sensitivity:** requests sent with the default `python-requests` User-Agent stalled past 60 s, while the same request with an identifying agent returned in about 3 s. The adapter sends `AG-DATA-ingest/2.0 (research; mandi price forecasting)`.
+* **Spelling differences from the Kaggle archive:**
+  * no space before "(" in commodity and market names (`Bhindi(Ladies Finger)`, `Karur(Uzhavar Sandhai )`);
+  * " APMC" suffixes;
+  * "Keralam".
+
+  `Features.normalizeName` / `normalizeState` map these to the archive spelling. On 2026-04-20, **all 5,152 archive keys were found among the API's 22,716 records**, and 5,036 (97.7%) had identical modal prices.
+
+### Completeness of the Kaggle archive (source 5a) against the official API
+| Date | Official records (API) | Archive records | Archive / API |
+|---|---:|---:|---:|
+| 2025-03-12 | 22,040 | 21,967 | 0.997 |
+| 2025-09-17 | 20,703 | 19,542 | 0.944 |
+| 2025-10-15 | 21,899 | 20,611 | 0.941 |
+| 2025-11-20 | 17,824 | 0 | 0.000 |
+| 2025-12-17 | 19,566 | 10,559 | 0.540 |
+| 2026-02-18 | 18,979 | 5,992 | 0.316 |
+| 2026-04-20 | 22,716 | 5,162 | 0.227 |
+
+**Correction to Addendum 1.** The "volume collapse" after November 2025 is mainly a gap in the **Kaggle mirror**, not in AGMARKNET. Official volume fell only modestly, from about 21–22k to 18–20k records a day. Silver v2 (`ingestion/IngestLanding.scala`) therefore uses the official API from 2025-11-01 on. The full overlap comparison is in `results/ingest/revision_report.json`.

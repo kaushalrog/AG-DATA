@@ -355,7 +355,7 @@ fill "comparable?" using the rules in Section 5.
 
 **Hypotheses after the experiments.**
 * **H1: supported.** Learned models beat persistence and SES only modestly, and most clearly at 7–14 days.
-* **H2: partly supported.** Coverage is near nominal overall and across volatility bins, but falls to 68–73% after the Nov 2025 source change.
+* **H2: supported, with a caveat.** Coverage is near nominal overall and across volatility bins: 78–80% on complete official data, including after the Nov 2025 source change, and 76.9–80.1% on six prospective months. The 68–73% measured on the mirror was a data-completeness artefact.
 * **H3: supported as an engineering result.** Single-host evidence is in `docs/EXPERIMENTS.md` Part C.
 * **H4: supported.** Gains vary by commodity (rel. MAE 0.88–0.97 at h7) and by period.
 * **H5: not testable.** There is no labelled spike list; injected corruptions were used instead.

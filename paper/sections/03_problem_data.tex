@@ -51,7 +51,9 @@ Two changes in how the source publishes identifiers would otherwise break series
 Harmonisation merges \num{117623} fragmented series into \num{75814} entities.
 It removes \num{191} same-day collisions.
 Without it, essentially no panel series would continue into 2026.
-Around the migration, monthly volume collapses to about 6\% of its earlier level in November 2025 and recovers only to roughly 20--35\% in December 2025 to April 2026, so we report test metrics separately before and after November 2025.
+In the Kaggle mirror, monthly volume around the migration falls to about 6\% of its earlier level in November 2025 and to 20--35\% in December 2025 to April 2026.
+After an API key became available, we back-filled the official record (Section~\ref{sec:prospective}). That comparison shows the official volume fell only modestly, from about 21--22k to 18--20k reports a day, and that the mirror holds just 30\% of the official reports from October 2025 to April 2026.
+Of the archive records in that window, 100\% are present in the official data, and 99.3\% have identical modal prices.
 
 \paragraph{Cleaning.}
 A causal sanity rule removes reports that differ by more than a factor of five from the geometric mean of the entity's previous ten reports.

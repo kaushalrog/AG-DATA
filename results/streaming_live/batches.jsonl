@@ -1,0 +1,1 @@
+{"batch_processing_ms": 1125, "wall_clock": "2026-10-23T00:22:40.204Z", "latency_producer_to_sink_max_s": 3.205, "latency_producer_to_sink_p95_s": 3.205, "latency_producer_to_sink_p50_s": 3.205, "quality_not_valid": 0, "latency_broker_to_sink_p50_s": 3.205, "data_origin": ["live"], "batch_id": 1, "rows_silver": 4, "alerts": 0}

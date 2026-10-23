@@ -36,6 +36,11 @@ object ForecastPublish {
   def main(args: Array[String]): Unit = {
     val o = args.flatMap(_.split("=", 2) match { case Array(k, v) => Some(k -> v); case _ => None }).toMap
     val expId = o.getOrElse("exp", sys.error("exp=<experiment_id> is required"))
+    // archive = Kaggle snapshot only; official = silver v2 with data.gov.in records
+    val origin = o.getOrElse("origin", "archive")
+    // models are read from the experiment that produced them, even when features come from another root
+    val modelsRoot = o.getOrElse("models", s"$ModelsPath/$expId")
+    require(Set("archive", "official", "replay")(origin), s"unknown origin $origin")
     val spark = SparkSetup.session("forecast-publish")
     val expDir = s"$ResultsRoot/$expId"
     val manifest = new ObjectMapper().readTree(new File(s"$expDir/manifest.json"))
@@ -123,7 +128,7 @@ object ForecastPublish {
       val pred = s"pred_$sel"
       val withPred =
         if (Seq("gbt", "rf", "lr").contains(sel)) {
-          val model = PipelineModel.load(s"$ModelsPath/$expId/${h.name}/$sel")
+          val model = PipelineModel.load(s"$modelsRoot/${h.name}/$sel")
           model.transform(base).select((base.columns :+ pred).map(col): _*)
         } else ForecastBenchmark.withBaselines(base, h)
       val conf = readConformal(s"$expDir/conformal_${h.name}.csv")
@@ -146,7 +151,7 @@ object ForecastPublish {
     val meta = Map(
       "data_as_of" -> dataEnd.toString,
       "generated_at" -> Instant.now().toString,
-      "data_origin" -> "archive",
+      "data_origin" -> origin,
       "model_version" -> expId,
       "selected_models" -> selected,
       "horizons" -> Horizons.map(_.name),
@@ -155,8 +160,11 @@ object ForecastPublish {
       "latest_prices_rows" -> spark.read.parquet(s"$GoldRoot/latest_prices").count(),
       "alerts_rows" -> spark.read.parquet(s"$GoldRoot/alerts").count(),
       "forecast_rows" -> counts,
-      "source" -> Map("name" -> "AGMARKNET daily mandi prices (archived via data.gov.in / Kaggle snapshot)",
-        "licence" -> "GODL-India", "url" -> "https://www.data.gov.in/"))
+      "source" -> (if (origin == "official")
+        Map("name" -> "AGMARKNET daily mandi prices via data.gov.in (official API from 2025-10-01; Kaggle archive before)",
+          "licence" -> "GODL-India", "url" -> "https://www.data.gov.in/resource/variety-wise-daily-market-prices-data-commodity")
+      else Map("name" -> "AGMARKNET daily mandi prices (archived via data.gov.in / Kaggle snapshot)",
+        "licence" -> "GODL-India", "url" -> "https://www.data.gov.in/")))
     Files.writeString(Paths.get(s"$GoldRoot/meta.json"), ResultsIO.json(meta))
     println(ResultsIO.json(meta))
     spark.stop()

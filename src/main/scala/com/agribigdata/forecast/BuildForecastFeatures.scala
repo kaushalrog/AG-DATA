@@ -78,10 +78,19 @@ object BuildForecastFeatures {
         count(lit(1)).as("n_obs"))
       .withColumn("in_panel", col("elig_days") >= MinReportingDays)
 
-    SparkSetup.timed("F1 write panel_entities") {
-      entities.coalesce(4).write.mode(SaveMode.Overwrite).parquet(EntitiesPath)
+    // AGRI_PANEL_FROM reuses an existing eligibility table (e.g. the main experiment's),
+    // required when HistoryStart is later than the eligibility window.
+    val ent = sys.env.get("AGRI_PANEL_FROM") match {
+      case Some(p) =>
+        println(s"[F1] reusing panel eligibility from $p")
+        spark.read.parquet(p)
+      case None =>
+        require(HistoryStart <= EligibilityStart, "history must cover the eligibility window, or set AGRI_PANEL_FROM")
+        SparkSetup.timed("F1 write panel_entities") {
+          entities.coalesce(4).write.mode(SaveMode.Overwrite).parquet(EntitiesPath)
+        }
+        spark.read.parquet(EntitiesPath)
     }
-    val ent = spark.read.parquet(EntitiesPath)
     val panelEntities = ent.filter(col("in_panel")).count()
 
     // Materialise per-entity features once: the cross-section aggregates and

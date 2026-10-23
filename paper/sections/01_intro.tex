@@ -37,8 +37,8 @@ to an installable six-language web application. Our contributions are evidence-b
     calibrated on a validation year. Their test-period coverage is reported by horizon, by volatility bin and before and after a
     change in the publishing system (Section~\ref{sec:intervals}).
   \item \textbf{Data-integrity findings that affect any study of this source.} These are a grade relabel in January 2025
-    and a market rename and volume collapse after the November 2025 migration of AGMARKNET. Left untreated, they fragment
-    series and silently shrink the test set (Section~\ref{sec:data}).
+    and a market rename after the November 2025 migration of AGMARKNET, which fragment series unless harmonised.
+    We also find that the widely used public mirror holds only 30\% of the official reports from October 2025 on. This produced an apparent distribution shift that disappears on the official record (Sections~\ref{sec:data} and~\ref{sec:prospective}).
   \item \textbf{An end-to-end, reproducible system.} The system has shared batch/stream canonicalisation that is tested for parity,
     a Kafka/Structured Streaming path with stated delivery semantics, an HDFS layout, an API, and a
     low-bandwidth progressive web app in six languages whose decision rule is back-tested

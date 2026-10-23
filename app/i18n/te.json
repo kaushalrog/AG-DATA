@@ -266,5 +266,6 @@
   "lang.kn": "ಕನ್ನಡ",
   "reason.forecast_expired": "ఈ అంచనా వేసిన తేదీలు ఇప్పటికే గడిచిపోయాయి.",
   "decision.at_snapshot": "చివరి డేటా తేదీ {date} నాడు అంచనా: {signal}. ఇది గత సమాచారం, ఈ రోజుకు సలహా కాదు.",
-  "warning.forecast_origin_differs": "ఈ అంచనా, చూపిన తాజా ధర కంటే ముందటి నివేదిక ఆధారంగా చేయబడింది."
+  "warning.forecast_origin_differs": "ఈ అంచనా, చూపిన తాజా ధర కంటే ముందటి నివేదిక ఆధారంగా చేయబడింది.",
+  "origin.official": "అధికారిక రోజువారీ నివేదికలు (data.gov.in)"
 }

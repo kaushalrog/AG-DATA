@@ -1,6 +1,6 @@
 \section{Limitations}\label{sec:limitations}
 \begin{itemize}
-  \item \textbf{Archived data.} The system runs on an archive that ends on 2026-04-21. The live API adapter has been tested only against fixtures, because no key was available.
+  \item \textbf{Data refresh.} Model development used a third-party mirror that turned out to be incomplete after September 2025. The official back-fill and the current-day pull run on demand, not on a schedule.
   \item \textbf{Training and coverage of the panel.} Models were trained once on data up to 2023. The panel favours well-reported mandis, so thinly reported markets receive forecasts of unknown accuracy.
   \item \textbf{Features.} Same-day cross-market features assume timely publication of other markets' reports. They are also the most useful feature group, so this assumption matters.
   \item \textbf{Intervals.} Coverage degrades under the source change, and we did not implement adaptive conformal inference.

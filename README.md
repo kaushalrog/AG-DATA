@@ -7,9 +7,11 @@ Scala · Apache Spark 4.2 (SQL, MLlib, Structured Streaming) · Kafka 4.3 · Had
 
 AG-DATA forecasts the **modal price that an Indian mandi will report** for 36 staple commodities, at 1 (next report), 3, 7 and 14 days ahead. Each forecast comes with **conformal prediction intervals whose test coverage is measured**. The forecasts are served to an installable web app in English, Tamil, Telugu, Malayalam, Hindi and Kannada. The app turns them into cautious **SELL / HOLD / WATCH / COMPARE** market-outlook cards that a farmer can adjust with their own costs.
 
-> **Status of the data.** The system runs on the archived AGMARKNET dataset, which ends on **2026-04-21**. No data.gov.in API key was available, so the live adapter has been built and tested but never run against the endpoint. The app says this everywhere: it shows a "historical snapshot" banner, and every card on a passed date reads `forecast_expired`. No public deployment exists.
+> **Status of the data (2026-10-23).** The models were trained and tested on the archived AGMARKNET dataset (Kaggle mirror, to 2026-04-21). With a data.gov.in API key the official data was then back-filled: **7.7 M records, 2025-10-01 → 2026-10-22**, from the variety-wise history resource. The gold layer the app serves is now current to **2026-10-22**. The live current-day resource was streamed through Kafka once as a check, and runs only when triggered. The back-fill showed that the Kaggle mirror holds only about 30% of official reports after September 2025. No public deployment exists.
 
-## Results (test period 2025-01-01 … 2026-04-21, scored once)
+## Results
+
+### Main test (2025-01-01 … 2026-04-21, archive data, scored once)
 
 Every number below comes from `results/forecast/fc_main_v3/`; the protocol is in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 
@@ -25,12 +27,21 @@ Every number below comes from `results/forecast/fc_main_v3/`; the protocol is in
   * 11,845 mandi series and 1.5–1.7 M test forecasts per horizon.
   * The model beats persistence on 58–76% of individual series.
   * At 7 days it improves on persistence for all 36 commodities.
-* **Distribution shift is measured, not hidden.** After the AGMARKNET 2.0 migration (Nov 2025), gains shrink and 80% intervals cover only 68–73%.
+* **A data-quality artefact, found and corrected.** On the archive, the gains seemed to shrink and 80% intervals covered only 68–73% after the AGMARKNET 2.0 migration (Nov 2025). Re-scoring the same frozen models on the **complete official data** shows 78.0–78.7% coverage after Nov 2025, and relative MAE of 0.962–0.976. Most of the apparent "shift" was the mirror's missing reports.
 * **Decision cards are conservative.**
   * WATCH on about 98% of report-days.
   * HOLD on 0.5%, correct 80% of the time at 7 days; SELL on 1.0%, correct 68%.
   * These are hit rates on published prices, not farm profits.
 * **Anomaly flags** are evaluated on injected corruptions: PR-AUC 0.70, against 0.35 for the legacy IQR rule. No accuracy is claimed for real anomalies, because no labels exist.
+
+### Frozen models on new data (no refitting; `results/forecast/fc_main_v3/{test_complete,prospective}/`)
+
+| Evaluation | next | 3 d | 7 d | 14 d | 80% coverage | DM p |
+|---|---:|---:|---:|---:|---:|---:|
+| Same test period, complete official data (1.8–2.0 M forecasts per horizon) | 0.972 | 0.954 | 0.943 | 0.925 | 79.2–80.3% | ≤ 3e-41 |
+| **Prospective: 2026-04-22 → 2026-10-22**, data that did not exist in the archive (0.27–0.31 M per horizon) | **0.963** | **0.955** | **0.958** | **0.952** | 76.9–80.1% | ≤ 1e-15 |
+
+Values are relative MAE against persistence (lower is better). The prospective period was never seen by any model, tuning step or calibration: models trained on data to 2023 still beat persistence by 4–5% six months past the archive's end.
 
 > The earlier README claimed "95.66% accuracy / 86.55% precision". No code or log in the repository produces those numbers, so they have been withdrawn. See [docs/AUDIT_PRIOR_RESULTS.md](docs/AUDIT_PRIOR_RESULTS.md). The previous README is kept in [docs/legacy/README_v1.md](docs/legacy/README_v1.md).
 
@@ -51,12 +62,13 @@ Why each piece exists, the delivery semantics, the HDFS layout and the replay pr
 
 | Path | Contents |
 |---|---|
-| `src/main/scala/com/agribigdata/forecast/` | `BuildForecastFeatures`, `ForecastBenchmark`, `ForecastBacktest`, `ForecastPublish`, plus `Features`, `ForecastModels`, `ForecastEval`, `DecisionRules` |
+| `src/main/scala/com/agribigdata/forecast/` | `BuildForecastFeatures`, `ForecastBenchmark`, `ForecastBacktest`, `ForecastProspective` (frozen-model scoring), `ForecastPublish`, plus `Features`, `ForecastModels`, `ForecastEval`, `DecisionRules` |
+| `src/main/scala/com/agribigdata/ingestion/IngestLanding.scala` | official back-fill → silver v2, revision report |
 | `src/main/scala/com/agribigdata/streaming/` | `PriceEventStream` (Kafka → bronze/quarantine/silver/alerts), `CanonicalEvent` (shared batch/stream canonicalisation), `StreamParityCheck` |
 | `src/main/scala/com/agribigdata/bench/` | `ScalabilityBench` |
 | `src/main/scala/com/agribigdata/{ingestion,preprocessing,profiling}` | readers, quality rules, de-duplication, profiling (v1, retained) |
 | `src/test/scala/` | leakage/perturbation, metric, conformal, decision and streaming tests (ScalaTest) |
-| `py/agri/ingest/` | data.gov.in adapter (retry, rate limit, delivery-tied checkpoints, key redaction), archive replay, Kafka producer CLI |
+| `py/agri/ingest/` | data.gov.in adapter for both resources (retry, rate limit, `Retry-After`, delivery-tied checkpoints, key redaction), resumable back-fill, archive replay, Kafka producer CLI |
 | `py/agri/api/` | FastAPI service and decision rule |
 | `py/agri/analysis/` | DM tests and report tables/figures, anomaly benchmark, SES baseline, stream summary, demo export |
 | `app/` | the PWA (no framework, 69 KB of JS, six languages, service worker, real-data demo snapshot) |
@@ -80,6 +92,24 @@ Reproduce the experiment and serve the app. This needs the raw archive in `data/
 ```bash
 scripts/run_forecast_pipeline.sh fc_main_v3
 PYTHONPATH=py .venv/bin/uvicorn agri.api.app:app --app-dir py --port 8000   # then open http://localhost:8000
+```
+
+Refresh from the official API (key in a git-ignored `.env`, see `.env.example`), then rebuild and republish without retraining:
+
+```bash
+set -a; . ./.env; set +a; PYTHONPATH=py .venv/bin/python -m agri.ingest.backfill --from 2025-10-01 --to $(date -v-1d +%F)
+```
+
+```bash
+scripts/submit.sh com.agribigdata.ingestion.IngestLanding cutoff=2025-10-01
+```
+
+```bash
+AGRI_HISTORY_START=2023-10-01 AGRI_PANEL_FROM=data/forecast/panel_entities AGRI_SILVER_DAILY=data/processed/daily_market_prices_v2 AGRI_FORECAST_ROOT=data/forecast_v2 scripts/submit.sh com.agribigdata.forecast.BuildForecastFeatures
+```
+
+```bash
+AGRI_SILVER_DAILY=data/processed/daily_market_prices_v2 AGRI_FORECAST_ROOT=data/forecast_v2 scripts/submit.sh com.agribigdata.forecast.ForecastPublish exp=fc_main_v3 origin=official models=data/forecast/models/fc_main_v3
 ```
 
 Streaming demonstration (real archived reports replayed through Kafka, with labelled fault injection) and the HDFS check:

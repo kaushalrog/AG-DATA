@@ -50,7 +50,7 @@ test('/meta', () => {
   const m = rd(idx.files.meta);
   assert.match(m.data_as_of, ISO);
   assert.ok(Number.isInteger(m.days_since_data));
-  assert.ok(['archive', 'replay', 'live'].includes(m.data_origin));
+  assert.ok(['archive', 'replay', 'live', 'official'].includes(m.data_origin));
   for (const k of ['name', 'licence', 'url']) assert.equal(typeof m.source[k], 'string');
   assert.deepEqual(m.horizons, ['next', 'h3', 'h7', 'h14']);
   assert.equal(m.price_unit, 'INR/quintal');

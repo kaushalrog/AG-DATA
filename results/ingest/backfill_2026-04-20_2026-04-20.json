@@ -1,0 +1,14 @@
+{
+ "resource": "35985678-0d79-46b4-9ed6-6f13308a1d24",
+ "range": [
+  "2026-04-20",
+  "2026-04-20"
+ ],
+ "skipped_completed": 0,
+ "fetched_days": 1,
+ "records": 22716,
+ "failed": [],
+ "requests": 5,
+ "retries": 0,
+ "finished_at": "2026-10-23T00:16:08+00:00"
+}

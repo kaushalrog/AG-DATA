@@ -85,6 +85,20 @@ class StreamingSpec extends AnyFunSuite with BeforeAndAfterAll {
     assert(batch.filter(col(Canonical.commodity) === "Tomato").select(Features.EntityId).distinct().count() == 1)
   }
 
+  test("API spellings (no space before '(', Keralam, APMC suffix) map to the archive entity") {
+    val s = spark
+    import s.implicits._
+    val cols = Seq(Canonical.state, Canonical.district, Canonical.market, Canonical.commodity, Canonical.variety,
+      Canonical.grade, Canonical.arrivalDate, Canonical.minPrice, Canonical.maxPrice, Canonical.modalPrice)
+    val archive = Seq(("Kerala", "Ernakulam", "Karur (Uzhavar Sandhai )", "Bhindi (Ladies Finger)", "Bhindi", "FAQ", "2026-04-20", 1.0, 3.0, 2.0),
+      ("Tamil Nadu", "Salem", "Salem", "Bengal Gram (Gram)(Whole)", "Desi", "FAQ", "2026-04-20", 1.0, 3.0, 2.0)).toDF(cols: _*)
+    val api = Seq(("Keralam", "Ernakulam", "Karur(Uzhavar Sandhai ) APMC", "Bhindi(Ladies Finger)", "Bhindi", "Local", "20/04/2026", 1.0, 3.0, 2.0),
+      ("Tamil Nadu", "Salem", "Salem APMC", "Bengal Gram(Gram)(Whole)", "Desi", "FAQ", "20/04/2026", 1.0, 3.0, 2.0)).toDF(cols: _*)
+    val ids = (df: DataFrame) => CanonicalEvent.batchToCanonical(df).select(Features.EntityId, Canonical.commodity).as[(Long, String)].collect().toSet
+    assert(ids(archive) == ids(api))
+    assert(ids(api).map(_._2) == Set("Bhindi (Ladies Finger)", "Bengal Gram (Gram)(Whole)"))
+  }
+
   test("exact re-sends are dropped; corrected prices for the same key are kept as revisions") {
     val s = spark
     import s.implicits._
