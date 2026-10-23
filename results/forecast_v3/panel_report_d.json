@@ -1,0 +1,22 @@
+{
+  "stage": "F1_build_forecast_features",
+  "silver_input": "data/processed/daily_market_prices_v2",
+  "commodities": 9,
+  "history_start": "2014-10-01",
+  "rows_valid_in_scope": 3781251,
+  "entities_in_scope": 13293,
+  "entity_key": "state|district|market(APMC suffix removed)|commodity|variety (grade is an attribute)",
+  "harmonize_collisions_removed": 9556,
+  "sanity_jump_rows_removed": 2574,
+  "sanity_jump_share": 6.80727092700273E-4,
+  "eligibility_window": ["2021-01-01", "2023-12-31"],
+  "min_reporting_days": 300,
+  "panel_entities": 11845,
+  "feature_rows": 34507998,
+  "feature_rows_panel": 21377395,
+  "feature_date_range": ["2014-10-06", "2026-10-22"],
+  "labelled_rows_by_horizon": {"next": 33547976, "h3": 31987539, "h7": 31703267, "h14": 31063846},
+  "seconds_harmonise_sanity_stage": 15.546979333,
+  "seconds_counts": 0.478723417,
+  "seconds_features_write": 21.968523584
+}

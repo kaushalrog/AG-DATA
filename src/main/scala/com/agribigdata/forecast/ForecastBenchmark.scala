@@ -80,7 +80,20 @@ object ForecastBenchmark {
     val out = ResultsIO.dir(s"$ResultsRoot/$expId").toString
     println(s"[F2] experiment $expId -> $out; horizons=${horizons.map(_.name).mkString(",")}")
 
-    val feats = spark.read.parquet(FeaturesPath).filter(col("in_panel"))
+    // crossSection=lag1 replaces the same-day cross-market features with the PREVIOUS
+    // calendar day's values: information certainly published before the origin. This tests
+    // whether the same-day assumption (KNOWN_LIMITATIONS #24) drives the gains. The lagged
+    // aggregates are computed over the feature table's (warm-up filtered) rows of all entities.
+    val crossSection = opts.getOrElse("crossSection", "same_day")
+    val rawFeats = spark.read.parquet(FeaturesPath)
+    val feats0 = if (crossSection == "lag1") {
+      val cs = rawFeats.groupBy("commodity", "day").agg(avg("dev30").as("cs_dev30"), avg("ret1").as("cs_ret1"),
+        count(lit(1)).cast("double").as("cs_n")).withColumn("day", col("day") + 1)
+      val sc = rawFeats.groupBy("state", "commodity", "day").agg(avg("dev30").as("sc_dev30")).withColumn("day", col("day") + 1)
+      rawFeats.drop("cs_dev30", "cs_ret1", "cs_n", "sc_dev30")
+        .join(cs, Seq("commodity", "day"), "left").join(sc, Seq("state", "commodity", "day"), "left")
+    } else rawFeats
+    val feats = feats0.filter(col("in_panel"))
     val allFeatureCols = (Features.BaseFeatures ++ Horizons.map(Features.horizonFeature)).distinct
     val dataEnd = feats.agg(max("arrival_date")).head().getDate(0).toString
 
@@ -110,6 +123,7 @@ object ForecastBenchmark {
       val manifest = Map(
         "experiment_id" -> expId,
         "completed" -> final_,
+        "cross_section" -> crossSection,
         "created_utc" -> Instant.now().toString,
         "git_commit" -> ResultsIO.gitCommit,
         "git_dirty" -> ResultsIO.gitDirty,

@@ -2,7 +2,7 @@
 
 Every number that may appear in the README, paper, slides, viva material or the app must come from this table. The **source** column is the file the number is read from. Anything not listed here must not be presented as a measured result.
 
-Status: 2026-10-23. Retraining results (experiment `fc_retrain_2025`) are added to section 4 only once that run completes.
+Status: 2026-10-23. All runs referenced here have completed.
 
 ## 1. Data (silver layer and back-fill)
 | Quantity | Value | Source |
@@ -42,7 +42,22 @@ Source: `results/forecast/fc_main_v3/manifest.json`. Models: `data/forecast/mode
 | Rolling-origin folds 2021–2024 (range) | 0.970–0.976 | 0.952–0.960 | 0.936–0.946 | 0.920–0.936 | — | `backtest_*.csv` |
 | Per-series SES on 400 sampled series (SES / global model) | 0.975 / 0.976 | 0.962 / 0.960 | 0.967 / 0.946 | 0.975 / 0.935 | — | `stat_baseline_ses.json` |
 
+*Prospective* here means a post-development hold-out. The models were saved on 2026-10-22, and the official reports after 2026-04-21 were first downloaded on 2026-10-23 (`model_artifacts.json`, `results/ingest/backfill_*.json`). The forecasts were not issued in real time.
+
+DM robustness: with a Newey–West lag of 20, every horizon still gives p ≤ 7.9e-13 (`results/forecast/fc_main_v3/dm_tests_lag20.json`).
+
 Rel. MAE = MAE of the model ÷ MAE of persistence on identical rows (lower is better; < 1 beats "last price").
+
+**Global LightGBM baseline (L1, same features, 2M-row sample, tuned and early-stopped on 2024 validation only, mean of 3 seeds).** Source: `results/forecast/fc_main_v3/lgbm_baseline.json`. Test rows are identical to those of the MLlib model.
+
+| Horizon | Rel. MAE, MLlib selected | Rel. MAE, LightGBM | DM p (LightGBM vs MLlib) | Seed MAE spread (₹/q) |
+|---|---:|---:|---:|---:|
+| next | 0.971 | **0.944** | 1.6e-92 | 0.02 |
+| h3 | 0.953 | **0.926** | 6.3e-73 | 0.05 |
+| h7 | 0.938 | **0.915** | 3.1e-9 | 0.26 |
+| h14 | 0.923 | **0.892** | 1.4e-10 | 1.15 |
+
+LightGBM is significantly better than the production MLlib model at every horizon. The MLlib model is therefore **not** the best model available for this task.
 
 **Decision cards, test period, h7.** WATCH on 98.5% of report-days. HOLD on 0.5%, hit rate 80.0%. SELL on 1.0%, hit rate 67.8%. Source: `decisions.csv`.
 
@@ -55,8 +70,30 @@ Rel. MAE = MAE of the model ÷ MAE of persistence on identical rows (lower is be
 
 There are no labels for real anomalies. **No accuracy figure for real anomalies exists.**
 
-## 4. Retraining `fc_retrain_2025`
-Pending. Filled from `results/forecast/fc_retrain_2025/` when the run completes.
+## 4. Retraining `fc_retrain_2025` (completed 2026-10-23)
+**Protocol.** Train origins 2016-01-01 .. 2024-12-31; validation 2025 (model and hyper-parameter selection only); final test 2026-01-01 .. 2026-10-22, not used for any retraining choice; it overlaps the main test (Jan–Apr) and the frozen hold-out (Apr–Oct) (silver v2, official records). Same feature definitions, panel and model grid as `fc_main_v3`. Selected on validation: next GBT, h3 GBT, h7 RF, h14 GBT. Sources: `results/forecast/fc_retrain_2025/manifest.json` (`completed: true`), `tuning.csv`, `metrics_overall.csv`, `intervals.csv`, `comparison_vs_frozen.json`. Command: `scripts/retrain_recent.sh` (142 min).
+
+**Comparison on identical 2026 test rows** with the frozen `fc_main_v3` models (trained to 2023, not refitted; `results/forecast/fc_main_v3/final_test_2026/`).
+
+| Horizon | Test rows | Persistence MAE ₹/q | Rel. MAE frozen | Rel. MAE retrained | DM p (retrained vs frozen) | 80% coverage frozen / retrained | Best other baseline (rel.) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| next | 553,801 | 202.3 | 0.965 | 0.966 | 0.12 | 77.0% / 77.5% | 1.101 |
+| h3 | 531,321 | 252.9 | 0.955 | 0.955 | 0.99 | 78.6% / 78.8% | 1.043 |
+| h7 | 519,251 | 317.3 | 0.958 | 0.958 | 0.74 | 79.3% / 78.9% | 1.023 |
+| h14 | 496,306 | 411.5 | 0.946 | 0.950 | 0.35 | 79.7% / 78.1% | 1.007 |
+
+Both models beat persistence at every horizon (DM p ≤ 1.4e-12). The other baselines (MA7, MA30, seasonal naive, seasonally adjusted) are all worse than persistence (rel. MAE > 1).
+
+**Finding.** Adding 2024–2025 data did **not** produce a measurable improvement: no difference is significant (p 0.12–0.99), and the retrained h14 model is numerically slightly worse. The frozen models remain defensible on 2026 data in the sense that they still beat persistence by 3.5–5.4%. That does not make them "current": they encode nothing after 2023. `AGRI_SERVING_MODEL` stays `fc_main_v3`; switching is not justified by this evidence.
+
+**Disclosure.** The 2026-04-22 .. 2026-10-22 slice had already been used to score the frozen models (prospective check, §2). No retraining choice used any 2026 data.
+
+**Cross-market timing (LightGBM, `fc_main_v3` periods, seed 1).** Source: `results/forecast/fc_main_v3/crosssection_timing.json`. Rel. MAE with same-day / previous-day / no cross-market features:
+* next: 0.946 / 0.948 / 0.955;
+* h7: 0.918 / 0.922 / 0.932;
+* h14: 0.893 / 0.899 / 0.908.
+
+Lagging the cross-market features by one day (always published before the forecast origin) costs only 0.002–0.006. Most of their value is therefore not an artefact of same-day publication timing.
 
 ## 5. Systems
 | Quantity | Value | Source |
@@ -66,7 +103,7 @@ Pending. Filled from `results/forecast/fc_retrain_2025/` when the run completes.
 | HDFS | 692 MB silver, replication 3, HEALTHY; readable with 1 DataNode down | `results/hdfs/summary.md` |
 | Spark cluster (Docker, 2 workers × 3 cores, one host) | 11.27 M rows: W1 9.2 s, W2 14.4 s | `results/hdfs/cluster_bench.txt` |
 | Local scaling (Apple M5, 10 cores) | full 75.6 M rows: W1 42.2 s, W2 65.9 s; speed-up at 10 cores: 2.4× (W1), 3.0× (W2) | `results/scalability/runs.jsonl` |
-| Tests | Scala 21, Python 62 (59 + 3 skipped in CI without data), app 56 | CI run 39896120182 and local runs |
+| Tests | Scala 21, Python 74 locally (71 + 3 skipped in CI without data), app 56, browser end-to-end 15 checks | local runs 2026-10-23 (`logs/final_sbt.log`); CI run 39899466902 |
 
 ## 6. Withdrawn claims (never use)
 | Claim | Why |

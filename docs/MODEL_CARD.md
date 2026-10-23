@@ -41,7 +41,9 @@
 
 * Diebold–Mariano tests against persistence give p < 1e-9 at every horizon.
 * On the archive, the gains appeared to shrink after the AGMARKNET 2.0 migration (Nov 2025 on), with 80% coverage of only 68–73%. Re-scored on **complete official data**, the post-migration figures are relative MAE 0.962–0.976 and coverage 78.0–78.7%. The archive was missing about 70% of reports in that period.
-* **Prospective check** (frozen models, 2026-04-22 → 2026-10-22, official data never seen in development): relative MAE 0.963 / 0.955 / 0.958 / 0.952, 80% coverage 76.9–80.1%, and Diebold–Mariano p ≤ 1e-15 at every horizon.
+* **Prospective check** (frozen models, 2026-04-22 → 2026-10-22, official reports first downloaded after the models were saved; a post-development hold-out, not a real-time evaluation): relative MAE 0.963 / 0.955 / 0.958 / 0.952, 80% coverage 76.9–80.1%, and Diebold–Mariano p ≤ 1e-15 at every horizon.
+* **Retraining check** (`fc_retrain_2025`: train to 2024, validate 2025, test 2026-01-01 → 2026-10-22, not used for any retraining choice): relative MAE 0.966 / 0.955 / 0.958 / 0.950, against frozen 0.965 / 0.955 / 0.958 / 0.946 on identical rows. There is no significant difference (DM p 0.12–0.99), so the frozen models are kept.
+* **Stronger baseline.** A global LightGBM is significantly more accurate (0.944 / 0.926 / 0.915 / 0.892 on the main test). The served MLlib model is not the most accurate model measured (`docs/EXPERIMENTS.md` E.2).
 * **Serving data.** The gold layer now serves official data to 2026-10-22 (`data_origin: official`).
 * Per-commodity and per-state breakdowns are in `results/forecast/fc_main_v3/test_by_*`.
 
@@ -70,8 +72,8 @@ HOLD signals concentrate on unusually low reports that then revert. COMPARE is n
 ## Limitations and risks
 * **Coverage of the panel.** Results describe well-reported mandis. Thinly reported series get forecasts with a `sparse_history` warning, and their accuracy is unknown.
 * **Sensitivity to the source.** Accuracy and coverage degrade when the publishing system changes (Nov 2025). Re-calibrate after any source change.
-* **Same-day cross-market features** assume timely publication of other markets' reports.
-* **Training age.** The models were trained once, on data to 2023, and have not been retrained since.
+* **Same-day cross-market features** assume timely publication of other markets' reports. With a one-day lag, LightGBM loses only 0.002–0.006 rel. MAE (EXPERIMENTS E.3).
+* **Training age.** The served models were trained on data to 2023. A refit on data to 2024 was evaluated on 2026 and gave no measurable gain (`fc_retrain_2025`). The models encode no information after 2023.
 * **Translations** of the explanations are provisional.
 * Full list: `docs/KNOWN_LIMITATIONS.md`.
 

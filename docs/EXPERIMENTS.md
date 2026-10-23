@@ -392,9 +392,9 @@ Test rows per horizon are 1.82–1.97 M on complete data and 0.27–0.31 M prosp
 | h7 | 0.938 | 0.962 | 80.3% | 78.7% |
 | h14 | 0.923 | 0.937 | 80.7% | 78.5% |
 
-**Correction to B.4.** On the archive, post-migration coverage was 67.6–72.9% and gains appeared to shrink sharply. On complete data the shift is small: coverage falls by 1.5–2.2 points and relative MAE rises by 0.006–0.024. Most of B.4's degradation came from the mirror's missing reports. Those made series artificially sparse and the reported "next" prices further apart.
+**Correction to B.4.** On the archive, post-migration coverage was 67.6–72.9% and gains appeared to shrink sharply. On complete data the shift is small: coverage falls by 1.2–2.2 points and relative MAE rises by 0.006–0.024. Most of B.4's degradation came from the mirror's missing reports. Those made series artificially sparse and the reported "next" prices further apart.
 
-**Prospective verdict.** Six months after the archive ends, with no refitting, the models beat persistence by 4–5% at every horizon, significantly, and the intervals stay within 3.1 points of nominal coverage. The improvement at 7–14 days is smaller than in the main test (0.958 vs 0.938 at h7), consistent with models trained only to 2023 ageing. Retraining was not evaluated.
+**Prospective verdict.** Six months after the archive ends, with no refitting, the models beat persistence by 4–5% at every horizon, significantly, and the intervals stay within 3.1 points of nominal coverage. The improvement at 7–14 days is smaller than in the main test (0.958 vs 0.938 at h7), consistent with models trained only to 2023 ageing. Retraining was evaluated afterwards in Part E.1 and did not measurably help.
 
 ### D.5 Current serving data
 `ForecastPublish exp=fc_main_v3 origin=official` on silver v2 / features v2:
@@ -407,3 +407,67 @@ The app's decision cards are therefore current, not expired, until the data is m
 
 ### D.6 Live current-day path
 On 2026-10-23 the current-day resource `9ef84268-…` (4 records at 05:36 IST) was pulled by `agri.ingest.cli live` into Kafka. From there it went through `PriceEventStream` into silver: 4/4 records, producer→sink about 2–3 s, `data_origin: live`, "Keralam" normalised to "Kerala" (`results/streaming_live/`).
+
+## Part E: retraining, stronger baseline and feature-timing checks (2026-10-23)
+
+### E.1 Retraining with data to 2025 (`fc_retrain_2025`)
+* **Command.** `scripts/retrain_recent.sh` (142 min on the laptop). It builds features on silver v2 in 4 commodity shards (`conf/shards/`), then runs `ForecastBenchmark exp=fc_retrain_2025` with `AGRI_TRAIN_END=2024-12-31 AGRI_VAL_START=2025-01-01 AGRI_VAL_END=2025-12-31 AGRI_TEST_START=2026-01-01`, and scores the frozen `fc_main_v3` models on the same test with `ForecastProspective ... label=final_test_2026`.
+* **Splits.**
+  * Train origins 2016-01-01 .. 2024-12-31, with targets purged at 2024-12-31.
+  * Validation 2025, used for selection and conformal calibration.
+  * **Untouched final test 2026-01-01 .. 2026-10-22.**
+  * The grid and features are identical to `fc_main_v3`; nothing was tuned on 2026.
+* **Selected on 2025 validation.**
+  * next: GBT absolute loss d7/i150/s0.5, validation MAE 182.2 vs persistence 187.2.
+  * h3: GBT absolute loss d6/i300/s0.25 (232.0 vs 243.1).
+  * h7: RF 60×10 (293.5 vs 311.9).
+  * h14: GBT squared loss d6/i200 (372.8 vs 405.0).
+
+| Horizon | Persistence MAE ₹/q | Rel. MAE frozen | Rel. MAE retrained | DM p retrained vs frozen | DM p vs persistence (frozen / retrained) | 80% cov. frozen / retrained |
+|---|---:|---:|---:|---:|---:|---:|
+| next | 202.3 | 0.965 | 0.966 | 0.12 | 6e-55 / 2e-54 | 77.0% / 77.5% |
+| h3 | 252.9 | 0.955 | 0.955 | 0.99 | 4e-77 / 2e-76 | 78.6% / 78.8% |
+| h7 | 317.3 | 0.958 | 0.958 | 0.74 | 7e-44 / 1e-46 | 79.3% / 78.9% |
+| h14 | 411.5 | 0.946 | 0.950 | 0.35 | 2e-27 / 1e-12 | 79.7% / 78.1% |
+
+* **Other baselines on this test** (rel. MAE, retrained run): MA7 1.007–1.130; MA30 1.199–1.745; seasonal naive 1.99–3.98; seasonally adjusted 1.10–1.31. All are worse than persistence.
+* **Comparison.** Source: `results/forecast/fc_retrain_2025/comparison_vs_frozen.json`. The DM tests use daily mean absolute-error differences, with the HLN correction and lag h+3 (7 for next).
+
+**Verdict.**
+* Retraining on two more years gives **no measurable improvement** at any horizon.
+* The frozen models remain significantly better than persistence on 2026.
+* The serving model is unchanged (`fc_main_v3`).
+* This is a null result for "retrain annually". It does not show that retraining never helps, only that this one refit, with this model class, did not help on this test.
+* **Disclosure.** Months 4–10 of 2026 had already been used to score the frozen models (Part D). No retraining decision used any 2026 data.
+
+### E.2 Global LightGBM baseline (`py/agri/analysis/lgbm_baseline.py`)
+* **Setup.**
+  * Same features, panel and `fc_main_v3` periods; 2 M-row training sample; L1 objective.
+  * Validation (2024) chooses `num_leaves` ∈ {63, 255} with early stopping.
+  * The test is scored once, as the mean of 3 seeds, on rows joined to the MLlib test predictions.
+* **Output.** `results/forecast/fc_main_v3/lgbm_baseline.json`.
+
+| Horizon | Val MAE (63 / 255 leaves) | Chosen | Rounds | Rel. MAE MLlib selected | Rel. MAE LightGBM | DM p |
+|---|---:|---:|---:|---:|---:|---:|
+| next | 199.4 / 199.1 | 255 | 886 | 0.971 | 0.944 | 2e-92 |
+| h3 | 260.6 / 260.4 | 255 | 901 | 0.953 | 0.926 | 6e-73 |
+| h7 | 336.0 / 335.2 | 255 | 844 | 0.938 | 0.915 | 3e-09 |
+| h14 | 426.7 / 426.0 | 255 | 329 | 0.923 | 0.892 | 1e-10 |
+
+**LightGBM is better than the production MLlib model at every horizon** (by 0.023–0.031 rel. MAE). The served model is therefore not the best one measured. LightGBM is not served, because the serving and publish path is Spark and porting it has not been done. See KNOWN_LIMITATIONS #12.
+
+### E.3 Same-day cross-market features (`py/agri/analysis/crosssection_timing.py`)
+The LightGBM configuration from E.2 (seed 1) was refitted with the cross-market features:
+* same-day (as published);
+* recomputed from the **previous** day, which is always available at the origin;
+* removed.
+
+The Spark benchmark supports the same lag via `crossSection=lag1`.
+
+| Horizon | same day | previous day | none |
+|---|---:|---:|---:|
+| next | 0.946 | 0.948 | 0.955 |
+| h7 | 0.918 | 0.922 | 0.932 |
+| h14 | 0.893 | 0.899 | 0.908 |
+
+Lagging the features costs 0.002–0.006, while removing them costs 0.009–0.015. Most of their contribution does not depend on same-day publication. Source: `results/forecast/fc_main_v3/crosssection_timing.json`.

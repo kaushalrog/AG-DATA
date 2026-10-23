@@ -2,8 +2,7 @@
 
 Date of check: **2026-10-23**. Scope: where to submit the forecasting paper, how to structure it, and which
 claims hold up against prior work. Every measured number below comes from `docs/EXPERIMENTS.md`
-(Parts B–D). The 2016–2024 retraining with an untouched 2026 test is **still running**. Nothing here assumes
-how it will come out.
+(Parts B–D). The 2016–2024 retraining (`fc_retrain_2025`) has completed: no measurable gain over the frozen models (VERIFIED_METRICS §4).
 
 **Verification labels**
 - **VERIFIED**: read on the publisher, indexer or Crossref page given.
@@ -454,19 +453,32 @@ Keep it as an illustrative section.
 
 ## 4. Novelty statement and claims to avoid
 
-### 4.1 Novelty statement (for the cover letter and introduction)
+### 4.1 Novelty statement (for the cover letter and introduction; revised 2026-10-23 against VERIFIED_METRICS)
 
-> We present the first national-scale, leakage-safe benchmark of daily mandi price forecasts for India
-> (11,845 market–commodity–variety series, four horizons, honest statistical baselines). On it we show that
-> how one evaluates matters as much as which model one fits. Because 17–34% of target changes are exactly
-> zero, squared-loss learners cannot beat persistence under MAE, while an absolute-loss model can. A widely
-> used public mirror of AGMARKNET, holding only 30% of official reports after the 2025 portal migration,
-> produces an apparent distribution shift and loss of interval calibration that disappears on the complete
-> official record. Frozen models, scored prospectively on six months of official data created after
-> development, keep significant 4–5% MAE gains over persistence and near-nominal conformal coverage.
+> **Primary novelty: evaluation validity under data provenance (F4 + F6).** To our knowledge, this is the
+> first study to show, at national mandi scale, that an incomplete public mirror of AGMARKNET is enough
+> to manufacture an apparent post-migration distribution shift and loss of interval calibration. The mirror
+> holds 30% of official reports after October 2025. On the complete official record, the same frozen models
+> lose only 1.2–2.2 coverage points (68–72% against 79–80% on identical rows). We identify the mechanism (median report gaps of 3 days against 1) and
+> pair the audit with a post-development hold-out: six months of official reports first downloaded after the
+> models were saved.
+>
+> **Supporting findings.**
+> * The scoring function decides whether learners beat persistence when 17–34% of changes are exactly zero.
+>   This is an application of Gneiting (2011), not new theory.
+> * Retraining on two further years gave no measurable gain on a final period not used for any retraining choice (DM p 0.12–0.99).
+> * A global LightGBM beats the deployed MLlib model. The benchmark therefore separates what the evaluation
+>   protocol changes from what the model class changes.
 
-The word "first" in this statement rests on our searches (§3) and the `RESEARCH_GAP.md` review. Soften it to
-"to our knowledge" in the manuscript.
+Must stay hedged:
+* "to our knowledge";
+* "post-development hold-out", not "real-time";
+* "largely disappears" or "is small", not "disappears";
+* never "widely used" (no usage evidence).
+
+The earlier draft of this statement used "first national-scale benchmark", "widely used" and "data created
+after development". Those phrasings are withdrawn: the first two lack evidence, and the third is inaccurate,
+because the reports existed when the models were saved.
 
 ### 4.2 Claims we must NOT make
 
@@ -505,7 +517,7 @@ The word "first" in this statement rests on our searches (§3) and the `RESEARCH
 | Cross-section timing check: re-run with cross-market features lagged one day | Leakage concern (KNOWN_LIMITATIONS #24) | **Yes**: one extra run |
 | Mechanism of the mirror effect: gap-length and inter-report-interval distributions, mirror vs official | Makes C-F4 causal rather than correlational | **Yes**: data on disk |
 | Evidence that the mirror is widely used (Kaggle usage, citing papers) | Supports the "widely used" framing | **Yes**: manual |
-| Retraining 2016–2024 with an untouched 2026 test | Ageing gap of the frozen models | **In progress**; report as-is |
+| Retraining 2016–2024, final test 2026 | Ageing gap of the frozen models | **Done**: no measurable gain (DM p 0.12–0.99) |
 | Economic evaluation of the decision rule against naive policies, with storage costs | Decision value | **Partly**: back-test yes, real costs need external data |
 | Field or user study with farmers | Real-world value | **No**: not feasible locally |
 | Arrivals or volume features, weather | Domain completeness | **Partly**: arrivals depend on the data.gov.in resource (UNVERIFIED) |

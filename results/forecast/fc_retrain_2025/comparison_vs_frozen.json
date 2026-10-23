@@ -1,0 +1,135 @@
+{
+ "next": {
+  "n_retrain": 553801,
+  "n_frozen": 553801,
+  "mae_persistence": 202.256,
+  "mae_retrained": 195.455,
+  "mae_frozen": 195.192,
+  "rel_retrained": 0.966379,
+  "rel_frozen": 0.965075,
+  "cov80_retrained": 0.774789,
+  "cov80_frozen": 0.770147,
+  "baselines_rel": {
+   "ma7": 1.12961,
+   "ma30": 1.74511,
+   "snaive": 3.98018,
+   "sadj": 1.10061
+  },
+  "dm_retrained_minus_frozen": {
+   "stat": 1.5596342246074257,
+   "p": 0.11992577840169351,
+   "days": 294,
+   "mean_daily_diff": 0.23114351454606807
+  },
+  "dm_retrained_vs_persistence": {
+   "stat": -19.407400171611584,
+   "p": 1.5907952019927915e-54,
+   "days": 294
+  },
+  "dm_frozen_vs_persistence": {
+   "stat": -19.5176827865834,
+   "p": 6.222918785909236e-55,
+   "days": 294
+  }
+ },
+ "h3": {
+  "n_retrain": 531321,
+  "n_frozen": 531321,
+  "mae_persistence": 252.949,
+  "mae_retrained": 241.474,
+  "mae_frozen": 241.505,
+  "rel_retrained": 0.954634,
+  "rel_frozen": 0.954758,
+  "cov80_retrained": 0.78813,
+  "cov80_frozen": 0.786013,
+  "baselines_rel": {
+   "ma7": 1.04323,
+   "ma30": 1.48853,
+   "snaive": 3.19529,
+   "sadj": 1.19815
+  },
+  "dm_retrained_minus_frozen": {
+   "stat": -0.015624864011394289,
+   "p": 0.98754437651734,
+   "days": 292,
+   "mean_daily_diff": -0.002652863401323689
+  },
+  "dm_retrained_vs_persistence": {
+   "stat": -25.575985696753783,
+   "p": 2.0474670280602196e-76,
+   "days": 292
+  },
+  "dm_frozen_vs_persistence": {
+   "stat": -25.775527570603472,
+   "p": 4.2540095140544465e-77,
+   "days": 292
+  }
+ },
+ "h7": {
+  "n_retrain": 519251,
+  "n_frozen": 519251,
+  "mae_persistence": 317.309,
+  "mae_retrained": 303.961,
+  "mae_frozen": 303.875,
+  "rel_retrained": 0.957933,
+  "rel_frozen": 0.957663,
+  "cov80_retrained": 0.788792,
+  "cov80_frozen": 0.792981,
+  "baselines_rel": {
+   "ma7": 1.02282,
+   "ma30": 1.32792,
+   "snaive": 2.56069,
+   "sadj": 1.31414
+  },
+  "dm_retrained_minus_frozen": {
+   "stat": 0.33590992467059816,
+   "p": 0.7371842310925905,
+   "days": 288,
+   "mean_daily_diff": 0.04488768514464228
+  },
+  "dm_retrained_vs_persistence": {
+   "stat": -17.344665553811563,
+   "p": 1.3623884936891502e-46,
+   "days": 288
+  },
+  "dm_frozen_vs_persistence": {
+   "stat": -16.605638329131782,
+   "p": 7.278742641985139e-44,
+   "days": 288
+  }
+ },
+ "h14": {
+  "n_retrain": 496306,
+  "n_frozen": 496306,
+  "mae_persistence": 411.508,
+  "mae_retrained": 390.873,
+  "mae_frozen": 389.178,
+  "rel_retrained": 0.949854,
+  "rel_frozen": 0.945737,
+  "cov80_retrained": 0.780835,
+  "cov80_frozen": 0.797032,
+  "baselines_rel": {
+   "ma7": 1.00746,
+   "ma30": 1.19896,
+   "snaive": 1.98655,
+   "sadj": 1.31082
+  },
+  "dm_retrained_minus_frozen": {
+   "stat": 0.9311724571627544,
+   "p": 0.3525665250809022,
+   "days": 281,
+   "mean_daily_diff": 1.7038572707929722
+  },
+  "dm_retrained_vs_persistence": {
+   "stat": -7.421783226111754,
+   "p": 1.3910685388460113e-12,
+   "days": 281
+  },
+  "dm_frozen_vs_persistence": {
+   "stat": -12.1145976742629,
+   "p": 1.9176865311987897e-27,
+   "days": 281
+  }
+ },
+ "_note": "Final test 2026-01-01..2026-10-22, identical rows. Retrained: train 2016-2024, validation 2025 (selection only), test untouched. Frozen: fc_main_v3 models (train to 2023) scored without refitting. The 2026-04-22..10-22 slice had been used earlier to score the frozen models (prospective check); no retraining choice used any 2026 data."
+}

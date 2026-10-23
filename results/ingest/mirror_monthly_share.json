@@ -1,0 +1,48 @@
+{
+ "note": "silver row counts after quality filtering and de-duplication; official = silver v2 rows from 2025-10-01 (data.gov.in), mirror = archive silver rows; same months",
+ "months": [
+  {
+   "mon": "2025-10",
+   "official": 528925,
+   "mirror": 372328,
+   "share": 0.7039334499220117
+  },
+  {
+   "mon": "2025-11",
+   "official": 556611,
+   "mirror": 32927,
+   "share": 0.059156215022699875
+  },
+  {
+   "mon": "2025-12",
+   "official": 529105,
+   "mirror": 171602,
+   "share": 0.3243250394534166
+  },
+  {
+   "mon": "2026-01",
+   "official": 491498,
+   "mirror": 190961,
+   "share": 0.3885285392819503
+  },
+  {
+   "mon": "2026-02",
+   "official": 479277,
+   "mirror": 151418,
+   "share": 0.31593003628381916
+  },
+  {
+   "mon": "2026-03",
+   "official": 759343,
+   "mirror": 120242,
+   "share": 0.15835004734355884
+  },
+  {
+   "mon": "2026-04",
+   "official": 513936,
+   "mirror": 116624,
+   "share": 0.22692319666261948
+  }
+ ],
+ "overall_share": 0.2996095830326056
+}

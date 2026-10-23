@@ -49,6 +49,16 @@ An alert that fails to send is logged and never hides the refresh failure.
 * The status file records the version actually being served.
 * Changing the serving model is a deliberate edit, made after the evaluation in `docs/EXPERIMENTS.md` Part E. The refresh never retrains.
 
+## End-to-end run (2026-10-23)
+`scripts/refresh.sh --skip-fetch` ran for real in 4 min 39 s (`logs/refresh_e2e.log`), with run id `20261023T062346924428Z` and `ok: true`.
+* **First run.** The existing `data/gold` directory was adopted as `data/gold_releases/adopted_20261023T115826`, and `data/gold` became a symlink to the new release.
+* **Release checks.** `data_as_of` 2026-10-22, `model_version` fc_main_v3, 58,637 latest prices, 10,422 supported forecasts.
+* **API.** It was started on the switched symlink and `/api/v1/meta` returned `refresh.last_run_ok: true`. `days_since_data` was 1.
+
+This run did not exercise network fetching (`--skip-fetch`). Fetching was exercised separately by the back-fill (`results/ingest/backfill_*.json`). A failure in a real run is covered only by the unit tests above.
+
+**Known side effect.** Step 3 rewrites `results/ingest/revision_report.json` and `results/forecast_v2/panel_report.json` in the working tree. The row counts were unchanged, but hand-added fields (the 2025-10-01..2026-04-21 overlap window) were dropped. These files were restored from Git. Until the job writes run-scoped report copies, do not commit those two files after a refresh. The 30.0% share is also recorded in `results/ingest/mirror_monthly_share.json`.
+
 ## Scheduling (not installed)
 `ops/launchd/com.agdata.refresh.plist` runs `scripts/refresh.sh` daily at 07:30. The install and remove commands are in the file. It was **not** installed during development, because installing it is a persistent change to the user's machine. On Linux, the equivalent cron line is:
 ```

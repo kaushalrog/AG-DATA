@@ -40,11 +40,14 @@ object ForecastConfig {
    * reproduces their features exactly with far less shuffle.
    */
   val HistoryStart: String = env("AGRI_HISTORY_START", "2014-10-01")
-  val TrainStart   = "2016-01-01"
-  val TrainEnd     = "2023-12-31"
-  val ValStart     = "2024-01-01"
-  val ValEnd       = "2024-12-31"
-  val TestStart    = "2025-01-01"
+  // Defaults are the main experiment (fc_main_v3). The retraining experiment
+  // overrides them via AGRI_* environment variables; every manifest records
+  // the periods actually used.
+  val TrainStart: String = env("AGRI_TRAIN_START", "2016-01-01")
+  val TrainEnd: String   = env("AGRI_TRAIN_END", "2023-12-31")
+  val ValStart: String   = env("AGRI_VAL_START", "2024-01-01")
+  val ValEnd: String     = env("AGRI_VAL_END", "2024-12-31")
+  val TestStart: String  = env("AGRI_TEST_START", "2025-01-01")
 
   // ---- Panel eligibility (decided from training data only) -------------
   val EligibilityStart  = "2021-01-01"

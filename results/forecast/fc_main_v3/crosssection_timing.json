@@ -1,0 +1,74 @@
+{
+ "protocol": "fc_main_v3 periods; LightGBM L1, num_leaves and rounds fixed from lgbm_baseline.json; seed 1",
+ "horizons": {
+  "next": {
+   "same_day": {
+    "test_rows": 1674682,
+    "mae": 178.70130237278343,
+    "mae_persistence": 188.95095115230436,
+    "rel_mae": 0.9457549765321944,
+    "seconds": 409.8
+   },
+   "lag1": {
+    "test_rows": 1674682,
+    "mae": 179.1565315846505,
+    "mae_persistence": 188.95095115230433,
+    "rel_mae": 0.9481642219426617,
+    "seconds": 431.8
+   },
+   "none": {
+    "test_rows": 1674682,
+    "mae": 180.50009811518768,
+    "mae_persistence": 188.95095115230436,
+    "rel_mae": 0.9552748849075396,
+    "seconds": 377.9
+   }
+  },
+  "h7": {
+   "same_day": {
+    "test_rows": 1580395,
+    "mae": 283.5160701966564,
+    "mae_persistence": 308.82649993373576,
+    "rel_mae": 0.9180432063229349,
+    "seconds": 499.9
+   },
+   "lag1": {
+    "test_rows": 1580395,
+    "mae": 284.74862215990294,
+    "mae_persistence": 308.82649993373576,
+    "rel_mae": 0.9220342885762745,
+    "seconds": 502.8
+   },
+   "none": {
+    "test_rows": 1580395,
+    "mae": 287.90831177078564,
+    "mae_persistence": 308.82649993373576,
+    "rel_mae": 0.9322655660461829,
+    "seconds": 359.4
+   }
+  },
+  "h14": {
+   "same_day": {
+    "test_rows": 1546914,
+    "mae": 354.56270468368706,
+    "mae_persistence": 397.04804983165326,
+    "rel_mae": 0.892996968084896,
+    "seconds": 353.1
+   },
+   "lag1": {
+    "test_rows": 1546914,
+    "mae": 356.8713543948149,
+    "mae_persistence": 397.0480498316532,
+    "rel_mae": 0.8988115029053207,
+    "seconds": 265.4
+   },
+   "none": {
+    "test_rows": 1546914,
+    "mae": 360.39519996641525,
+    "mae_persistence": 397.04804983165326,
+    "rel_mae": 0.9076866140489075,
+    "seconds": 81.0
+   }
+  }
+ }
+}

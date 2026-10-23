@@ -116,7 +116,10 @@ object BuildForecastFeatures {
         Features.BaseFeatures ++ horizonCols).distinct.map(col): _*)
 
     val (_, tWrite) = SparkSetup.timed("F1 features: compute + write") {
-      out.repartition(col("year"), pmod(col(Features.EntityId), lit(4))).write.mode(SaveMode.Overwrite).partitionBy("year").parquet(FeaturesPath)
+      // AGRI_FEATURES_WRITE_MODE=append lets the table be built in commodity shards
+      // (features and cross-sections are per commodity, so shards are exact).
+      val mode = if (sys.env.get("AGRI_FEATURES_WRITE_MODE").contains("append")) SaveMode.Append else SaveMode.Overwrite
+      out.repartition(col("year"), pmod(col(Features.EntityId), lit(4))).write.mode(mode).partitionBy("year").parquet(FeaturesPath)
     }
     val written = spark.read.parquet(FeaturesPath)
     val summary = written.agg(count(lit(1)).as("rows"),
@@ -154,7 +157,7 @@ object BuildForecastFeatures {
     val fs = org.apache.hadoop.fs.FileSystem.get(new java.net.URI(Root), spark.sparkContext.hadoopConfiguration)
     Seq(cleanPath, entFeatPath).foreach(p => fs.delete(new org.apache.hadoop.fs.Path(p), true))
     Files.createDirectories(Paths.get(ResultsRoot))
-    Files.writeString(Paths.get(s"$ResultsRoot/panel_report.json"), json)
+    Files.writeString(Paths.get(s"$ResultsRoot/panel_report${sys.env.get("AGRI_SHARD_TAG").map("_" + _).getOrElse("")}.json"), json)
     println(json)
     spark.stop()
   }

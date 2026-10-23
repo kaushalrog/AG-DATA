@@ -1,0 +1,49 @@
+\section{Forecasting task and evaluation protocol}\label{sec:protocol}
+
+\paragraph{Task.}
+Entity $e$ reports modal prices $P_{e,t}$ (INR per quintal) on irregular dates.
+For an origin $t$ and $h\in\{3,7,14\}$ days, the target is the first report dated in $[t+h,t+h+3]$. If there is none, there is no label.
+The \emph{next} horizon is the next report, if it falls within 7 days.
+Models predict $y=\ln P_{e,\tau}-\ln P_{e,t}$, and errors are measured in rupees on $P_{e,t}\exp(\hat y)$.
+
+\paragraph{Periods (main experiment).}
+\begin{itemize}
+  \item Training origins: 2016--2023.
+  \item Validation: 2024, used for tuning, model choice and conformal calibration.
+  \item Test origins: 2025-01-01 to 2026-04-20, scored once.
+\end{itemize}
+A row is kept only if its target date also lies in its period; a unit test enforces this purge.
+A perturbation test multiplies all future prices, and all other entities' prices, by arbitrary factors and requires every feature at the origin to be unchanged.
+Training uses a uniform sample of $2\times10^6$ rows per horizon (fixed seed).
+
+\paragraph{Selection.}
+The family with the lowest validation MAE is selected, baselines included.
+The search space was amended twice, both times on validation evidence, before any test metric was read:
+\begin{itemize}
+  \item first, after squared-loss learners tied persistence;
+  \item second, after finding that MLlib's absolute-loss boosting is mis-scaled for log returns.
+\end{itemize}
+An aborted first run had already written test predictions for one horizon. They were deleted unread, and we disclose this.
+
+\paragraph{Metrics and tests.}
+We report:
+\begin{itemize}
+  \item MAE, RMSE, WAPE, sMAPE and bias;
+  \item MASE, scaled by each entity's in-sample $h$-step naive MAE on training rows \cite{hyndman2006another};
+  \item MAE relative to persistence on identical rows;
+  \item the share of series (at least 30 test rows) on which a model beats persistence.
+\end{itemize}
+Diebold--Mariano tests \cite{diebold1995comparing} use daily mean absolute-error differences, a Newey--West variance with lag $h+3$ (7 for the next report) and the HLN correction. Same-day errors are aggregated first because they are correlated across markets.
+
+\paragraph{Frozen-model and retraining evaluations.}
+After the official back-fill, we score the frozen models, quantiles and MASE scales on complete official data:
+\begin{itemize}
+  \item on the original test period;
+  \item on 2026-04-22 to 2026-10-22, reports first downloaded after the models were saved.
+\end{itemize}
+Separately, we retrain with the same search space, selection rule, sample size and seed, on a protocol fixed before the run:
+\begin{itemize}
+  \item training: 2016--2024;
+  \item validation: 2025;
+  \item final test: 2026-01-01 to 2026-10-22, not used for any retraining choice. Its first months overlap the main test, and its later months had already been used to score the frozen models.
+\end{itemize}

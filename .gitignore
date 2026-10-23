@@ -55,3 +55,6 @@ paper/*.out
 results/streaming/sent.ndjson
 paper/main.pdf.tmp
 results/streaming*/sent.ndjson
+
+# refresh runtime state (status, history, alerts) is per-machine
+results/refresh/

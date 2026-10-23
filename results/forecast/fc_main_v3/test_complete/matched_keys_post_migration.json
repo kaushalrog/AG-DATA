@@ -1,0 +1,42 @@
+{
+ "window": "2025-11-01..2026-04-20",
+ "keys": "(entity_id, origin date) present in both mirror and official test predictions",
+ "horizons": {
+  "next": {
+   "n": 78773.0,
+   "rel_mirror": 0.9976999712197215,
+   "rel_official": 0.972174304854298,
+   "cov_mirror": 0.6797760654031204,
+   "cov_official": 0.7875033323600726,
+   "n_mirror": 97079.0,
+   "n_official": 391425.0
+  },
+  "h3": {
+   "n": 58201.0,
+   "rel_mirror": 0.9832813487233358,
+   "rel_official": 0.9581201192160508,
+   "cov_mirror": 0.7156749884022612,
+   "cov_official": 0.7968419786601605,
+   "n_mirror": 71576.0,
+   "n_official": 369273.0
+  },
+  "h7": {
+   "n": 55421.0,
+   "rel_mirror": 0.9709433644874134,
+   "rel_official": 0.9592973908027953,
+   "cov_mirror": 0.71868064452103,
+   "cov_official": 0.7968820483210336,
+   "n_mirror": 68339.0,
+   "n_official": 354606.0
+  },
+  "h14": {
+   "n": 50923.0,
+   "rel_mirror": 0.9417955306622909,
+   "rel_official": 0.9303706407447248,
+   "cov_mirror": 0.7231310017084618,
+   "cov_official": 0.7934921351844942,
+   "n_mirror": 62845.0,
+   "n_official": 332275.0
+  }
+ }
+}
