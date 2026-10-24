@@ -29,7 +29,7 @@ The project strictly processes real agricultural data:
 - **Real source records:** 132.9M
 - **Canonical dataset:** 93.41M records
 - **Real raw data volume:** ≈ 10.9 GB
-- **Synthetic Scalability Workload:** ≈ 7.1 GB (Used exclusively for isolated scalability testing)
+- **Synthetic Scalability Workload:** ≈ 7.10 GB (Used exclusively for isolated scalability testing)
 - **Total Experimental Workload:** ≈ 18 GB
 
 ##  Price Analytics & Forecasting
