@@ -4,7 +4,7 @@
 //  * GET /api/*: network-first with timeout; on failure the last good response is returned
 //    with header X-From-Cache: <ISO time it was saved> so the UI can say "Offline – saved data from …"
 //  * never caches non-GET requests or error responses; old caches removed on activate
-const VERSION = 'v-8436b142d208';
+const VERSION = 'v-5df760a05cc5';
 const SHELL = `agri-shell-${VERSION}`;
 const API = `agri-api-${VERSION}`;
 const API_TIMEOUT = 5000;
@@ -63,6 +63,17 @@ async function apiNetworkFirst(req) {
   return net || Response.error();
 }
 
+async function pointerNetworkFirst(req) {
+  const cache = await caches.open(SHELL);
+  try {
+    const res = await fetchWithTimeout(new Request(req.url, { cache: 'no-store' }), API_TIMEOUT);
+    if (res.ok) cache.put(req.url, res.clone());
+    return res;
+  } catch {
+    return (await cache.match(req.url)) || Response.error();
+  }
+}
+
 async function shellCacheFirst(req) {
   const hit = await caches.match(req, { ignoreSearch: true });
   if (hit) {
@@ -88,6 +99,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.pathname.includes('/api/')) { e.respondWith(apiNetworkFirst(req)); return; }
   if (url.origin !== self.location.origin) return;
+  // the published-snapshot pointer must be fresh (its versioned files are immutable and cache-first)
+  if (url.pathname.endsWith('/snapshot/current.json')) { e.respondWith(pointerNetworkFirst(req)); return; }
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).catch(async () => (await caches.match('index.html')) || caches.match('offline.html')));
     return;

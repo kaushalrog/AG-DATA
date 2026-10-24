@@ -291,7 +291,7 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
         total = store().q(f"SELECT count(*) n FROM prices p WHERE {w}", p)[0]["n"]
         rows = store().q(f"SELECT p.*, coalesce(f.supported, false) AS fsup FROM prices p LEFT JOIN "
                          f"(SELECT entity_id, supported FROM fc WHERE horizon='h7') f USING (entity_id) WHERE {w} "
-                         f"ORDER BY p.arrival_date DESC, p.commodity, p.market LIMIT {limit} OFFSET {offset}", p)
+                         f"ORDER BY p.arrival_date DESC, p.commodity, p.market, p.entity_id LIMIT {limit} OFFSET {offset}", p)
         items = [{"entity": entity(r), "date": _clean(r["arrival_date"]), "min_price": _clean(r["min_price"]),
                   "max_price": _clean(r["max_price"]), "modal_price": _clean(r["modal_price"]), "unit": "INR/quintal",
                   "freshness": freshness(r["arrival_date"]), "change_7d_pct": _clean(r["change_7d_pct"]),
@@ -330,7 +330,7 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
         p = [r["commodity"], r["variety"], r["state"]] + ([r["district"]] if scope == "district" else [])
         rows = store().q(f"SELECT p.*, f.median AS f7 FROM prices p LEFT JOIN (SELECT entity_id, median FROM fc "
                          f"WHERE horizon='h7' AND supported) f USING (entity_id) WHERE {where} AND entity_id <> ? "
-                         f"ORDER BY modal_price DESC LIMIT {limit}", p + [r["entity_id"]])
+                         f"ORDER BY modal_price DESC, entity_id LIMIT {limit}", p + [r["entity_id"]])
         max_gap = load_rules()["compare_max_staleness_days"]
         items = [{"entity": entity(x), "modal_price": _clean(x["modal_price"]), "date": _clean(x["arrival_date"]),
                   "diff_pct": _clean((x["modal_price"] / r["modal_price"] - 1) * 100), "freshness": freshness(x["arrival_date"]),
@@ -429,7 +429,7 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
         where, p = ["arrival_date >= ?"], [date.fromordinal(store().data_as_of.toordinal() - days)]
         if state: where.append("state = ?"); p.append(state)
         if commodity: where.append("commodity = ?"); p.append(commodity)
-        rows = store().q(f"SELECT * FROM alerts WHERE {' AND '.join(where)} ORDER BY arrival_date DESC, abs(log_dev) DESC LIMIT {limit}", p)
+        rows = store().q(f"SELECT * FROM alerts WHERE {' AND '.join(where)} ORDER BY arrival_date DESC, abs(log_dev) DESC, entity_id LIMIT {limit}", p)
         return {"items": [{"entity": entity(x), "date": _clean(x["arrival_date"]), "modal_price": _clean(x["modal_price"]),
                            "type": x["type"], "log_dev": _clean(x["log_dev"]), "robust_z": _clean(x["robust_z"]),
                            "ref_mean_price": _clean(x["ref_mean_price"])} for x in rows]}
@@ -441,8 +441,8 @@ def create_app(gold: str | None = None, results: str | None = None, app_dir: str
                          [state, date.fromordinal(store().data_as_of.toordinal() - 14)])
         rows = [{"commodity": x["commodity"], "median_change_7d_pct": _clean(x["ch"]), "markets": x["markets"]} for x in rows]
         return {"state": state, "as_of": store().meta["data_as_of"],
-                "rising": sorted([x for x in rows if x["median_change_7d_pct"] > 0], key=lambda x: -x["median_change_7d_pct"])[:limit],
-                "falling": sorted([x for x in rows if x["median_change_7d_pct"] < 0], key=lambda x: x["median_change_7d_pct"])[:limit]}
+                "rising": sorted([x for x in rows if x["median_change_7d_pct"] > 0], key=lambda x: (-x["median_change_7d_pct"], x["commodity"]))[:limit],
+                "falling": sorted([x for x in rows if x["median_change_7d_pct"] < 0], key=lambda x: (x["median_change_7d_pct"], x["commodity"]))[:limit]}
 
     adir = app_dir if app_dir is not None else os.environ.get("AGRI_APP_DIR", "app")
     if adir and Path(adir).is_dir():

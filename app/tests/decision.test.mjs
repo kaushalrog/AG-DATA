@@ -96,6 +96,7 @@ test('defaults mirror conf/decision_rules.json', () => {
   assert.equal(defaultWeeklyPct(false), 1);
 });
 
+// evaluated as of the export time: the stored server decision is a snapshot, while expiry depends on the clock
 test('demo forecasts: client rule reproduces the server decision with default costs', () => {
   const idx = JSON.parse(readFileSync(path.join(APP, 'demo', 'index.json'), 'utf8'));
   const meta = JSON.parse(readFileSync(path.join(APP, 'demo', idx.files.meta), 'utf8'));
@@ -105,7 +106,7 @@ test('demo forecasts: client rule reproduces the server decision with default co
     const h = fc.horizons.find((x) => x.horizon === RULES.primaryHorizon) || null;
     const perishable = fc.decision.costs.perishable;
     const r = decide({ today: fc.origin.modal_price, horizon: h, supported: fc.supported, unsupportedReason: fc.unsupported_reason,
-      stale: fc.freshness.stale, expired: isExpired(h, meta), perishable, weeklyPct: defaultWeeklyPct(perishable), compareItems: cmp.items });
+      stale: fc.freshness.stale, expired: isExpired(h, meta, new Date(meta.generated_at)), perishable, weeklyPct: defaultWeeklyPct(perishable), compareItems: cmp.items });
     assert.equal(r.signal, fc.decision.signal, `entity ${id}`);
     assert.deepEqual(r.reasons, fc.decision.reason_codes, `entity ${id} reasons`);
     if (fc.decision.at_snapshot) assert.equal(r.snapshot.signal, fc.decision.at_snapshot.signal, `entity ${id} snapshot`);

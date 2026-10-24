@@ -33,6 +33,19 @@ jobs:
           mkdir -p _site
           rsync -a --exclude tests --exclude tools app/ _site/
           touch _site/.nojekyll
+      # Full published data (scripts/publish_snapshot.sh uploads it to the "data-snapshot" release).
+      # Without it the site still works from the small bundled demo (app/demo).
+      - name: Full data snapshot
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: |
+          if gh release download data-snapshot -R "$GITHUB_REPOSITORY" -p snapshot.tar.gz -D "$RUNNER_TEMP"; then
+            mkdir -p _site/snapshot && tar -xzf "$RUNNER_TEMP/snapshot.tar.gz" -C _site/snapshot
+            v=$(python3 -c 'import json;print(json.load(open("_site/snapshot/current.json"))["version"])')
+            test -f "_site/snapshot/$v/meta.json" && test -f "_site/snapshot/$v/series/0.json"
+            echo "snapshot $v: $(find _site/snapshot -type f | wc -l) files"
+          else
+            echo "no data-snapshot release: deploying the demo only"
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: {path: _site}

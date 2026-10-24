@@ -58,19 +58,24 @@ await cdp('Page.enable'); await cdp('Runtime.enable'); await cdp('Network.enable
 
 
 const ERR = 'Could not load this';
+// --mode snapshot: the full published snapshot (snapshot/) instead of the bundled demo; with
+// --markets-per-state N only the first N markets of each state are walked exhaustively
+const MODE = process.argv.includes('--mode') ? process.argv[process.argv.indexOf('--mode') + 1] : 'demo';
+const MAXM = process.argv.includes('--markets-per-state') ? +process.argv[process.argv.indexOf('--markets-per-state') + 1] : 1e9;
 await cdp('Emulation.setDeviceMetricsOverride', { width: 360, height: 740, deviceScaleFactor: 2, mobile: true });
 const seedLoc = (loc) => `localStorage.setItem('agri.lang','"en"');localStorage.setItem('agri.onboarded','true');localStorage.setItem('agri.loc',${JSON.stringify(JSON.stringify(loc))})`;
 await go(BASE); await evaljs(seedLoc({ state: 'Tamil Nadu' })); await reload();
 await waitFor(`document.querySelector('main, #app') && document.body.innerText.length > 50`);
 
-// 1. API client in demo mode, exhaustively
+// 1. API client in the static-host mode, exhaustively (or the first MAXM markets per state)
 const api = await evaljs(`(async () => {
   const api = await import(new URL('js/api.js', location.href).href);
-  const out = { states: 0, markets: 0, empty: [], entities: 0, failed: [] };
+  const out = { states: 0, markets: 0, empty: [], entities: 0, failed: [], ids: [], names: [] };
   const states = await api.states();
   for (const s of states) {
     out.states++;
-    const ms = (await api.markets({ state: s.state, limit: 500 })).items;
+    out.names.push(s.state);
+    const ms = (await api.markets({ state: s.state, limit: 500 })).items.slice(0, ${MAXM});
     for (const m of ms) {
       out.markets++;
       const p = await api.latest({ state: s.state, market: m.market, limit: 200 });
@@ -78,6 +83,7 @@ const api = await evaljs(`(async () => {
       for (const it of p.items) {
         out.entities++;
         const id = it.entity.entity_id;
+        if (out.entities % 97 === 1) out.ids.push(id);
         for (const [k, f] of [['forecast', api.forecast], ['series', api.series], ['compare', api.compare]]) {
           try { await f(id); } catch (e) { out.failed.push(k + ':' + id + ':' + (e.code || e.message)); }
         }
@@ -87,12 +93,12 @@ const api = await evaljs(`(async () => {
   out.mode = api.status.mode;
   return out;
 })()`);
-check('demo mode is active', api.mode === 'demo', api.mode);
+check(`${MODE} mode is active`, api.mode === MODE, api.mode);
 check('every listed market has prices', api.markets > 0 && api.empty.length === 0, { states: api.states, markets: api.markets, empty: api.empty.slice(0, 5) });
 check('every price row opens forecast, series and comparison', api.entities > 0 && api.failed.length === 0, { entities: api.entities, failed: api.failed.slice(0, 5) });
 
 // 2. UI: market lists per state, and a sample of commodity pages
-const states = await evaljs(`fetch('demo/states.json').then(r => r.json()).then(s => s.map(x => x.state))`);
+const states = api.names;
 const bad = [];
 for (const st of states) {
   await evaljs(seedLoc({ state: st })); await go(BASE + '#/markets'); await reload();
@@ -113,7 +119,7 @@ const mktTxt = await evaljs('document.body.innerText');
 check('a saved market missing from the snapshot does not show an empty market on the Markets screen',
   !mktTxt.includes('No prices found') && !mktTxt.includes('No Such'), {});
 check('a saved market missing from the snapshot is forgotten and home still lists prices', homeRows > 0 && !savedLoc.includes('No Such'), { homeRows, savedLoc });
-const sample = await evaljs(`fetch('demo/index.json').then(r => r.json()).then(i => i.entities.forecast.filter((_, k) => k % 97 === 0))`);
+const sample = api.ids.slice(0, 15);
 const badC = [];
 for (const id of sample) {
   await go(BASE + '#/commodity/' + encodeURIComponent(id)); await reload();
