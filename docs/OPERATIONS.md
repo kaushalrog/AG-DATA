@@ -85,17 +85,28 @@ To roll back, point the symlink at a previous release; the last 3 releases are k
 ln -sfn "$PWD/data/gold_releases/<run_id>" data/gold.tmp && mv -f data/gold.tmp data/gold
 ```
 
-## Public demo links
+## Public links
 | Link | Data | Availability |
 |---|---|---|
-| https://kaushalrog.github.io/AG-DATA/ (GitHub Pages) | A demo snapshot of real reports: 40 whole markets in 10 states, labelled "Demo snapshot" | Always on |
-| `scripts/demo_tunnel.sh` → `https://<random>.trycloudflare.com` | **The full real app and API**: every market (3,899), forecast and comparison of the served release | Only while the script runs on this laptop. The link changes on every start |
+| **https://kaushalrog.github.io/AG-DATA/** (GitHub Pages) | **The complete served release:** all 3,899 markets and 58,637 series, with prices, charts, forecasts, comparisons and alerts | **Always on.** Static files: no server, no sleep, nothing running on the laptop |
+| `scripts/demo_tunnel.sh` → `https://<random>.trycloudflare.com` | The same data through the real API | Only while the script runs on the laptop. Optional |
 
-`scripts/demo_tunnel.sh` does three things:
-1. assembles the bundle with `scripts/build_space.sh`;
-2. runs it in Docker, bound to 127.0.0.1 only;
-3. exposes it through a free Cloudflare quick tunnel (no account needed). Ctrl-C stops both the tunnel and the container.
+**How the always-on site works.**
+* `scripts/publish_snapshot.sh` runs `py/agri/analysis/export_snapshot.py`, which re-packs every API response of the served release as static files (about 4 min, 211 MB, with a 29 MB archive).
+* The script uploads the archive to the GitHub Release **`data-snapshot`**, replacing the previous one, so the data never enters the Git history.
+* It then re-runs the Pages workflow, which unpacks the archive into the site.
+* When no API is reachable, the app reads the snapshot (`app/js/api.js`, "snapshot" mode). If none is deployed, it falls back to the small bundled demo.
+* Data age is computed from the viewer's date. After 3 days the usual "These are not today's prices" banner appears, and forecasts expire as on the live server.
 
-The bundle contains no API key and no raw data. It was verified on 2026-10-23 through the tunnel: 15/15 headless-Chrome checks, plus real prices for every market.
+**Parity.**
+* `node tests/snapshot_parity.mjs build/snapshot http://127.0.0.1:7861/api/v1 --sample 2000` compares snapshot mode with a running API container (start it with a high `AGRI_API_RATE_PER_MIN`).
+* On 2026-10-24: **46,489 comparisons, 0 differences**. Items tied in the API's sort order are compared as sets.
+* The same check found that unstable sort ties made API pages skip or repeat rows. Total orders were added.
 
-**Hosts tried.** Hugging Face Docker Spaces now need a paid PRO plan (HTTP 402 on create), so no Space was created. The same bundle also runs on any Docker host (`deploy/hf-space/Dockerfile`, port 7860, about 190 MB RAM).
+**Updating the public data** (on the laptop, which has the data.gov.in key):
+```bash
+scripts/refresh.sh && scripts/publish_snapshot.sh
+```
+Nothing runs on a schedule. The site shows exactly the release published last, with its date.
+
+**Hosts tried.** Hugging Face Docker Spaces now need a paid PRO plan (HTTP 402 on create), so no Space was created. The server bundle (`deploy/hf-space/Dockerfile`, port 7860, about 190 MB RAM) still runs on any Docker host.

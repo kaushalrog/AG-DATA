@@ -24,6 +24,11 @@ AG-DATA forecasts the **modal price that an Indian mandi will report** for 36 st
 >
 > It replaced `fc_main_v3` under a rule committed before training ([docs/PREREG_LGBM_SWITCH.md](docs/PREREG_LGBM_SWITCH.md)). The 2026 test had been used before, so this is not an independent confirmation ([docs/VERIFIED_METRICS.md](docs/VERIFIED_METRICS.md) §4b). The tables below are the original `fc_main_v3` study.
 
+> **Live app (always on): https://kaushalrog.github.io/AG-DATA/**
+> * Coverage: all 3,899 markets in 31 states, with official AGMARKNET data as of the date shown in the app.
+> * Delivery: published as static files by `scripts/publish_snapshot.sh` ([docs/OPERATIONS.md](docs/OPERATIONS.md#public-links)).
+> * Not a live feed: it updates when the pipeline is refreshed and republished.
+
 ## Results
 
 ### Main test (2025-01-01 … 2026-04-21, archive data, scored once)
