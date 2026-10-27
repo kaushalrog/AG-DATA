@@ -2,7 +2,7 @@
 
 This repository contains the complete implementation of a big data analytics and real-time anomaly detection system built entirely from scratch. The system ingests 132.9M real agricultural records, cleans them, engineers features, performs large-scale price analysis, predicts anomalies using machine learning, and visualizes results in a real-time streaming dashboard.
 
-## Complete Architecture
+### Complete Architecture
 
 ```mermaid
 graph TD
